@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // GenericScan.cc
 //
 // Kari Pulli
@@ -13,7 +13,7 @@
 //############################################################
 
 
-#include <fstream.h>
+#include <fstream>
 #include <sys/stat.h>
 #include "GenericScan.h"
 #include "defines.h"
@@ -46,7 +46,7 @@ GenericScan::_Init()
 }
 
 
-GenericScan::GenericScan (Mesh* mesh, const crope& name)
+GenericScan::GenericScan (Mesh* mesh, const string& name)
 {
   _Init();
   insertMesh (mesh, name);
@@ -61,7 +61,7 @@ GenericScan::~GenericScan ()
     delete meshes.back();
     meshes.pop_back();
   }
-  
+
   while (kdtree.size()) {
     delete kdtree.back();
     kdtree.pop_back();
@@ -141,9 +141,8 @@ GenericScan::setMTColor (Mesh* mesh, MeshTransport* mt,
     }
   } else if (source == colorBoundary) {
       colors->reserve (colorsize * mesh->bdry.size());
-      char* end = mesh->bdry.end();
-      for (char* c = mesh->bdry.begin(); c < end; c++)
-	pushConf (*colors, colorsize, (uchar)(*c ? 0 : 255));
+      for (char c: mesh->bdry)
+	pushConf (*colors, colorsize, (uchar)(c ? 0 : 255));
   } else { // real diffuse color, not confidence
     if (perVertex) {
       // per-vertex truecolor or intensity
@@ -204,7 +203,7 @@ void
 GenericScan::computeBBox()
 {
   bool nonEmpty;
-  
+
   bbox.clear();
   for (int i = 0; i < meshes.size(); i++) {
     if (meshes[i]->num_verts() != 0) {
@@ -212,7 +211,7 @@ GenericScan::computeBBox()
       nonEmpty = 1;
     }
   }
-  
+
   if (nonEmpty) {
     rot_ctr = bbox.center();
   } else {
@@ -226,16 +225,16 @@ GenericScan::num_vertices(void)
   return currentMesh()->num_verts();
 }
 
-void 
+void
 GenericScan::subsample_points(float rate, vector<Pnt3> &p,
 			      vector<Pnt3> &n)
-{ 
+{
   currentMesh()->subsample_points(rate, p, n);
 }
 
 
 bool
-GenericScan::read (const crope &fname)
+GenericScan::read (const string &fname)
 {
   bool success = FALSE;
 
@@ -247,8 +246,8 @@ GenericScan::read (const crope &fname)
     success = readSet (fname);
   } else {
     // treat filename as directory name, and look for .set file
-    crope fn(get_name());
-    fn += crope("/") + get_name() + ".set";
+    string fn(get_name());
+    fn += string("/") + get_name() + ".set";
     if (0 == access (fn.c_str(), R_OK)) {
       success = readSet (fn);
       if (success)
@@ -276,7 +275,7 @@ GenericScan::read (const crope &fname)
 
 
 void
-GenericScan::setd (const crope& dir, bool bCreate)
+GenericScan::setd (const string& dir, bool bCreate)
 {
   char setDir [PATH_MAX];
   strcpy (setDir, dir.c_str());
@@ -319,14 +318,14 @@ GenericScan::popd (void)
     assert (!pusheddir.empty());
 
     chdir (pusheddir.c_str());
-    pusheddir = crope();
+    pusheddir = string();
   }
   //cout << "pop: count is " << pushcount << endl;
 }
 
 
 bool
-GenericScan::readSet (const crope& fn)
+GenericScan::readSet (const string& fn)
 {
   //read .set file
   ifstream in (fn.c_str());
@@ -369,7 +368,7 @@ GenericScan::readSet (const crope& fn)
       if (mesh)
 	insertMesh (mesh, path, true, true, nRes);
       //else
-      //cerr << "Mesh " << path 
+      //cerr << "Mesh " << path
       //     << " named in .set file does not exist" << endl;
     } else {         // insert dummy mesh
       insertMesh (new Mesh, path, false, false, nRes);
@@ -387,8 +386,8 @@ GenericScan::readSet (const crope& fn)
 }
 
 
-bool 
-GenericScan::readSingleFile (const crope& fn)
+bool
+GenericScan::readSingleFile (const string& fn)
 {
   const char* filename = fn.c_str();
 
@@ -419,7 +418,7 @@ GenericScan::readSingleFile (const crope& fn)
     myRangeGrid = rangeGrid;
 
   } else {
-    
+
     Mesh* mesh = readMeshFile (filename);
     if (!mesh)
       return false;
@@ -511,8 +510,8 @@ GenericScan::delete_resolution (int nPolys)
   }
 
   delete meshes[iRes];
-  meshes.erase (&meshes[iRes]);
-  resolutions.erase (&resolutions[iRes]);
+  meshes.erase (meshes.begin() + iRes);
+  resolutions.erase (resolutions.begin() + iRes);
 
   select_coarser();
   return true;
@@ -529,7 +528,7 @@ GenericScan::flipNormals (void)
 
 
 void
-GenericScan::insertMesh(Mesh *m, const crope& filename,
+GenericScan::insertMesh(Mesh *m, const string& filename,
 		    bool bLoaded, bool bAlwaysLoad,
 		    int nRes)
 {
@@ -540,8 +539,8 @@ GenericScan::insertMesh(Mesh *m, const crope& filename,
 
   // now add to mesh vector, sorted parallel to resolution vector
   int iPos = findLevelForRes (nRes);
-  meshes.insert (&meshes[iPos], m);
-  kdtree.insert (&kdtree[iPos], NULL);
+  meshes.insert (meshes.begin() + iPos, m);
+  kdtree.insert (kdtree.begin() + iPos, NULL);
 }
 
 
@@ -577,7 +576,7 @@ GenericScan::load_resolution (int i)
     loaded->bNeedsSave = true;
   } else {
     // mesh should be plyfile on disk
-    
+
     pushd();
     loaded = readMeshFile (resolutions[i].filename.c_str());
     if (!loaded) {
@@ -616,7 +615,7 @@ GenericScan::release_resolution (int nPolys)
 }
 
 
-bool 
+bool
 GenericScan::getXformFilename (const char* meshName, char* xfName)
 {
   const char* meshFile = meshName;
@@ -638,8 +637,8 @@ GenericScan::get_current_kdtree()
     return kdtree[iTree];
 
   Mesh* mesh = currentMesh();
-  kdtree[iTree] = CreateKDindtree(mesh->vtx.begin(), 
-				  mesh->nrm.begin(),
+  kdtree[iTree] = CreateKDindtree(mesh->vtx.data(),
+				  mesh->nrm.data(),
 				  mesh->vtx.size());
 
   return kdtree[iTree];
@@ -647,7 +646,7 @@ GenericScan::get_current_kdtree()
 
 
 bool
-GenericScan::closest_point(const Pnt3 &p, const Pnt3 &n, 
+GenericScan::closest_point(const Pnt3 &p, const Pnt3 &n,
 			   Pnt3 &cp, Pnt3 &cn,
 			   float thr, bool bdry_ok)
 {
@@ -657,7 +656,7 @@ GenericScan::closest_point(const Pnt3 &p, const Pnt3 &n,
 
   int ind, ans;
   Mesh* mesh = currentMesh();
-  ans = tree->search(mesh->vtx.begin(), mesh->nrm.begin(), p, n, ind, thr);
+  ans = tree->search(mesh->vtx.data(), mesh->nrm.data(), p, n, ind, thr);
   if (ans) {
     if (bdry_ok == 0) {
       // disallow closest points that are on the mesh boundary
@@ -666,26 +665,26 @@ GenericScan::closest_point(const Pnt3 &p, const Pnt3 &n,
     }
     cp = mesh->vtx[ind];
     short *sp = &mesh->nrm[ind*3];
-    cn.set(sp[0]/32767.0, 
-	   sp[1]/32767.0, 
+    cn.set(sp[0]/32767.0,
+	   sp[1]/32767.0,
 	   sp[2]/32767.0);
   }
   return ans;
 }
 
 
-crope
+string
 GenericScan::getInfo (void)
 {
   char info[512];
   sprintf(info, "Polygon file: %ld resolutions\n"
 	  "verts %d tris %ld strips %ld\n\n",
 	  resolutions.size(),
-	  currentMesh()->num_verts(), 
+	  currentMesh()->num_verts(),
 	  currentMesh()->tris.size() / 3,
 	  currentMesh()->tstrips.size());
 
-  return crope(info) + RigidScan::getInfo();
+  return string(info) + RigidScan::getInfo();
 }
 
 
@@ -732,8 +731,8 @@ GenericScan::highestRes (void)
 */
 void GenericScan::PrintVoxelInfo()
 {
- printf("Printing voxel information...\n"); 
- 
+ printf("Printing voxel information...\n");
+
  Mesh *mesh = currentMesh();
  if (!mesh->hasVoxels) {
    printf("There is no voxel information stored\n"); return;
@@ -755,7 +754,7 @@ void GenericScan::PrintVoxelInfo()
 	  mesh->vtx[mesh->tris[i+2]][0], mesh->vtx[mesh->tris[i+2]][1],
 	  mesh->vtx[mesh->tris[i+2]][2]);
    printf("came from voxel at\n");
-   printf("(%f, %f, %f)\n", mesh->fromVoxels[i], 
+   printf("(%f, %f, %f)\n", mesh->fromVoxels[i],
 	  mesh->fromVoxels[i+1], mesh->fromVoxels[i+2]);
  }
 
@@ -798,8 +797,8 @@ GenericScan::filtered_copy(const VertexFilter& filter)
 	  newIndices[oldMesh->tris[i+2]] >= 0) {
 	triCount++;
       }
-    }	
-	
+    }
+
     // copy other mesh properties
     newMesh->hasVertNormals = oldMesh->hasVertNormals;
     if (oldMesh->vertMatDiff != NULL)
@@ -845,7 +844,7 @@ GenericScan::filtered_copy(const VertexFilter& filter)
 	  newMesh->fromVoxels[count+1] = oldMesh->fromVoxels[i+1];
 	  newMesh->fromVoxels[count+2] = oldMesh->fromVoxels[i+2];
 	}
-	
+
 	count += 3;
       }
     }
@@ -855,7 +854,7 @@ GenericScan::filtered_copy(const VertexFilter& filter)
     newMesh->computeBBox();
 
     // and insert it into new GenericScan
-    crope clipName(get_basename());
+    string clipName(get_basename());
     char info[20];
     sprintf (info, "Clip.%d.ply", triCount);
     clipName += info;
@@ -890,14 +889,14 @@ GenericScan::filter_inplace(const VertexFilter &filter)
 
     // and then which faces remain
     int triCount = 0;
-    for (i = 0; i < oldMesh->getTris().size(); i += 3) {
+    for (int i = 0; i < oldMesh->getTris().size(); i += 3) {
       if (newIndices[oldMesh->tris[i  ]] >= 0 &&
 	  newIndices[oldMesh->tris[i+1]] >= 0 &&
 	  newIndices[oldMesh->tris[i+2]] >= 0) {
 	triCount++;
       }
-    }	
-	
+    }
+
     // copy other mesh properties
     newMesh->hasVertNormals = oldMesh->hasVertNormals;
     if (oldMesh->vertMatDiff != NULL)
@@ -916,7 +915,7 @@ GenericScan::filter_inplace(const VertexFilter &filter)
     newMesh->vtx.reserve (vertCount);
     if (oldMesh->nrm.size())
       newMesh->nrm.reserve (vertCount);
-    for (i = 0; i < oldMesh->num_verts(); i++) {
+    for (int i = 0; i < oldMesh->num_verts(); i++) {
       if (newIndices[i] > 0) {
 	newIndices[i] = count;
 	newMesh->copyVertFrom (oldMesh, i, count);
@@ -927,11 +926,11 @@ GenericScan::filter_inplace(const VertexFilter &filter)
     // copy and reindex the surviving faces
     count = 0;
     newMesh->tris.reserve (triCount * 3);
-    for (i = 0; i < oldMesh->tris.size(); i += 3) {
+    for (int i = 0; i < oldMesh->tris.size(); i += 3) {
       if (newIndices[oldMesh->tris[i  ]] >= 0 &&
 	  newIndices[oldMesh->tris[i+1]] >= 0 &&
 	  newIndices[oldMesh->tris[i+2]] >= 0) {
-	// newIndices holds renumbered vertices	
+	// newIndices holds renumbered vertices
 	newMesh->copyTriFrom (oldMesh, i/3, count/3);
 	newMesh->tris[count  ] = newIndices[oldMesh->tris[i  ]];
 	newMesh->tris[count+1] = newIndices[oldMesh->tris[i+1]];
@@ -974,10 +973,9 @@ GenericScan::filter_vertices (const VertexFilter& filter, vector<Pnt3>& p)
 {
   Mesh* mesh = currentMesh();
 
-  Pnt3* vtxend = mesh->vtx.end();
-  for (Pnt3* pnt = mesh->vtx.begin(); pnt < vtxend; pnt++) {
-    if (filter.accept (*pnt))
-      p.push_back (*pnt);
+  for (Pnt3& pnt: mesh->vtx) {
+    if (filter.accept (pnt))
+      p.push_back (pnt);
   }
 
   return true;
@@ -1010,15 +1008,15 @@ GenericScan::write_metadata (MetaData data)
 }
 
 
-bool 
-GenericScan::write(const crope &fname)
+bool
+GenericScan::write(const string &fname)
 {
   if (fname.empty()) {  // no filename given...
     if (!bNameSet)      // and we don't already have one
       return false;     // so bail
   } else if (name != fname) {
     cout << "Scan " << name << " being saved as " << fname << endl;
-    
+
     // need to force all meshes to load before changing name
     for (int i = 0; i < resolutions.size(); i++) {
       load_resolution (i);
@@ -1029,7 +1027,7 @@ GenericScan::write(const crope &fname)
     bNameSet = false;    // mark that we need to regenerate child names
   }
 
-  if (ending == crope("set")) {
+  if (ending == string("set")) {
   } else {
     //need to generate .set name from current name
     const char* dirName = strrchr (name.c_str(), '/');
@@ -1038,7 +1036,7 @@ GenericScan::write(const crope &fname)
     } else {
       dirName++; // skip past the /
     }
-    name += crope("/") + crope(dirName);
+    name += string("/") + string(dirName);
 
     set_name (name + ".set");
     cout << "Creating new set file " << name << endl;
@@ -1086,7 +1084,7 @@ GenericScan::write(const crope &fname)
 
 
 bool
-GenericScan::write_resolution_mesh (int nPolys, const crope& fname,
+GenericScan::write_resolution_mesh (int nPolys, const string& fname,
 				    Xform<float> xfBy)
 {
   if (!xfBy.isIdentity()) {
@@ -1098,7 +1096,7 @@ GenericScan::write_resolution_mesh (int nPolys, const crope& fname,
   if (iRes < 0 || iRes >= resolutions.size())
     return false;
 
-  crope& meshName = resolutions[iRes].filename;
+  string& meshName = resolutions[iRes].filename;
   if (!fname.empty())
     meshName = fname;
 
@@ -1116,13 +1114,13 @@ GenericScan::write_resolution_mesh (int nPolys, const crope& fname,
 }
 
 
-int 
-PlvWritePlyForVripCmd(ClientData clientData, 
+int
+PlvWritePlyForVripCmd(ClientData clientData,
 		      Tcl_Interp *interp,
 		      int argc, char* argv[])
 {
   if (argc < 3) {
-      interp->result = 
+      interp->result =
 	"Usage: PlvWritePlyForVripCmd <res level, 0=max> <dir> ";
       return TCL_ERROR;
   }
@@ -1132,20 +1130,20 @@ PlvWritePlyForVripCmd(ClientData clientData,
   portable_mkdir (dir, 00775);
 
   char name[PATH_MAX];
-  crope result;
+  string result;
   bool success = true;
 
   // vrip can't read tstrips
-  char* oldStripVal = Tcl_GetVar (interp, "meshWriteStrips", 
+  char* oldStripVal = Tcl_GetVar (interp, "meshWriteStrips",
 				  TCL_GLOBAL_ONLY);
-  Tcl_SetVar (interp, "meshWriteStrips", "never", 
+  Tcl_SetVar (interp, "meshWriteStrips", "never",
 	      TCL_GLOBAL_ONLY);
 
   char confFN[PATH_MAX];
   sprintf (confFN, "%s/vrip.conf", dir);
   ofstream conffile (confFN, ios::app);
 
-  DisplayableMesh** dm = theScene->meshSets.begin();
+  vector<DisplayableMesh*>::iterator dm = theScene->meshSets.begin();
   for (; dm < theScene->meshSets.end(); dm++) {
     if (!(*dm)->getVisible())
       continue;
@@ -1166,7 +1164,7 @@ PlvWritePlyForVripCmd(ClientData clientData,
       filename = slash + 1;
 
     sprintf(name, "%s/%s-v.ply", dir, filename);
-	
+
     if (access (name, R_OK)) {
 	  cout << "Writing " << name << " ... " << flush;
     } else {
@@ -1180,18 +1178,18 @@ PlvWritePlyForVripCmd(ClientData clientData,
 
     sd->existing_resolutions (ri);
     int res = ri[thisIRes].abs_resolution;
-	
+
     if (res) {
-	  
+
 	  // write plyfile
 	  if (!gs->write_resolution_mesh (res, name, Xform<float>())) {
-	    cerr << "Scan " << sd->get_name() 
+	    cerr << "Scan " << sd->get_name()
 		 << " failed to write self!"  << endl;
 	    return TCL_ERROR;
 	  }
-	  
+
 	  cout << "done." << endl;
-	  
+
 	  // write config string:
 	  // bmesh filename x y z i j k r
 	  char bmesh[PATH_MAX + 200];
@@ -1200,17 +1198,17 @@ PlvWritePlyForVripCmd(ClientData clientData,
 	  Xform<float> xf = sd->getXform();
 	  xf.toQuaternion (q);
 	  xf.getTranslation (t);
-	  sprintf (bmesh, "bmesh %s %g %g %g %g %g %g %g", 
+	  sprintf (bmesh, "bmesh %s %g %g %g %g %g %g %g",
 		   1+strrchr(name,'/'),
 		   t[0], t[1], t[2], -q[1], -q[2], -q[3], q[0]);
-	  
+
 	  // write xf
 	  strcpy (name + strlen(name) - 3, "xf");
 	  cout << "Writing " << name << " ... " << flush;
 	  ofstream xffile (name);
 	  xffile << xf;
 	  if (xffile.fail()) {
-	    cerr << "Scan " << sd->get_name() 
+	    cerr << "Scan " << sd->get_name()
 		 << " failed to write xform!" << endl;
 	    success = false;
 	    break;
@@ -1218,13 +1216,13 @@ PlvWritePlyForVripCmd(ClientData clientData,
 	  cout << "done." << endl;
 
 	  conffile << bmesh << endl;
-	
+
     }
 
   }
-  
+
   // cleanup
-  Tcl_SetVar (interp, "meshWriteStrips", oldStripVal, 
+  Tcl_SetVar (interp, "meshWriteStrips", oldStripVal,
 	      TCL_GLOBAL_ONLY);
 
   if (!success)

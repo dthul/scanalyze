@@ -6,11 +6,11 @@
 // ModelMaker scan commands
 //############################################################
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <assert.h>
 #include <sys/stat.h>
-#include <fstream.h>
+#include <fstream>
 
 #include "Progress.h"
 #include "plvMMCmds.h"
@@ -139,7 +139,7 @@ MmsNumScansCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 int
-MmsVripOrientCmd(ClientData clientData, Tcl_Interp *interp, 
+MmsVripOrientCmd(ClientData clientData, Tcl_Interp *interp,
 	  int argc, char *argv[])
 {
   if ((argc != 3) && (argc != 4)) {
@@ -160,14 +160,14 @@ MmsVripOrientCmd(ClientData clientData, Tcl_Interp *interp,
 
   char* dir = argv[2];
   portable_mkdir (dir, 00775);
-  
+
   MMScan *mm = dynamic_cast<MMScan *>(theMesh);
   if (!mm) {
     printf("Selected mesh is not a ModelMaker scan.\n");
     return TCL_OK;
   }
 
-  crope confLines;
+  string confLines;
   int numFragsFound;
 
   printf("Auto-aligning meshes with Z-axis for VRIP...\n");
@@ -177,7 +177,7 @@ MmsVripOrientCmd(ClientData clientData, Tcl_Interp *interp,
       numFragsFound = mm->write_xform_ply(4, dir, confLines, false);
     }
   }
-  else 
+  else
      numFragsFound = mm->write_xform_ply(4, dir, confLines, true);
 
   cout << "Aligned " << numFragsFound << "modelmaker fragments for VRIP"
@@ -189,34 +189,34 @@ MmsVripOrientCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvWriteMMForVripCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvWriteMMForVripCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
    if (argc < 3) {
-      interp->result = 
+      interp->result =
 	 "Usage: plv_write_mm_for_vrip reslevel directory [-noxform]\n";
       return TCL_ERROR;
    }
-   
+
    int iRes = atoi (argv[1]);
    char* dir = argv[2];
    portable_mkdir (dir, 00775);
-  
-   crope result;
+
+   string result;
    bool success = true;
-   
+
    // vrip can't read tstrips
-   char* oldStripVal = Tcl_GetVar (interp, "meshWriteStrips", 
+   char* oldStripVal = Tcl_GetVar (interp, "meshWriteStrips",
 				   TCL_GLOBAL_ONLY);
-   Tcl_SetVar (interp, "meshWriteStrips", "never", 
+   Tcl_SetVar (interp, "meshWriteStrips", "never",
 	       TCL_GLOBAL_ONLY);
-   
+
    Progress* prog = new Progress (theScene->meshSets.size() * 1000,
-				  "Output plyfiles for vrip", 
+				  "Output plyfiles for vrip",
 				  true);
-   
-   
-   DisplayableMesh** dm = theScene->meshSets.begin();
+
+
+   vector<DisplayableMesh*>::iterator dm = theScene->meshSets.begin();
 
    bool noXform = false;
    if ((argc > 3) && (strcmp(argv[3], "-noxform") == 0)) {
@@ -232,11 +232,11 @@ PlvWriteMMForVripCmd(ClientData clientData, Tcl_Interp *interp,
       MMScan* mmScan = dynamic_cast<MMScan*> (rigidScan);
       if (!mmScan)
 	 continue;
-      
+
       int numSweeps;
 
       // functionality to write out ply fragments without x-forms
-      
+
       if (noXform)
 	numSweeps = mmScan->write_xform_ply(iRes, dir, result, false);
       else
@@ -264,12 +264,12 @@ PlvWriteMMForVripCmd(ClientData clientData, Tcl_Interp *interp,
 
    // cleanup
    delete prog;
-   Tcl_SetVar (interp, "meshWriteStrips", oldStripVal, 
+   Tcl_SetVar (interp, "meshWriteStrips", oldStripVal,
 	       TCL_GLOBAL_ONLY);
-   
+
    if (!success)
       return TCL_ERROR;
-   
+
    Tcl_SetResult (interp, (char*)result.c_str(), TCL_VOLATILE);
    return TCL_OK;
 }
@@ -381,7 +381,7 @@ MmsDeleteScanCmd(ClientData clientData, Tcl_Interp *interp,
 
   mm->deleteScan(atoi(argv[2]));
   dm->invalidateCachedData();
-  
+
   return TCL_OK;
 }
 
@@ -410,7 +410,7 @@ MmsFlipScanNormsCmd(ClientData clientData, Tcl_Interp *interp,
 
   mm->flipNormals(atoi(argv[2]));
   dm->invalidateCachedData();
-  
+
   return TCL_OK;
 }
 
@@ -420,7 +420,7 @@ MmsFlipScanNormsCmd(ClientData clientData, Tcl_Interp *interp,
  * things still.
 
 int
-PlvVripOrientCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvVripOrientCmd(ClientData clientData, Tcl_Interp *interp,
 	  int argc, char *argv[])
 {
   if (argc != 2) return TCL_ERROR;
@@ -440,7 +440,7 @@ PlvVripOrientCmd(ClientData clientData, Tcl_Interp *interp,
 
   FILE *vfile = fopen("vrip.conf", "a");
   if (!vfile) return TCL_ERROR;
-  
+
   float q[4], t[3];
   tbView->getXform(q,t);
   Xform<float> viewer;
@@ -449,7 +449,7 @@ PlvVripOrientCmd(ClientData clientData, Tcl_Interp *interp,
   Xform<float> combined = theMesh->getXform();
   combined.removeTranslation();
   cout << "mesh xform is: " << endl << theMesh->getXform();
-  
+
   //  combined = viewer * theMesh->getXform();
   // theMesh->setXform(combined);
   MMScan *mm = (MMScan *)theMesh;
@@ -473,6 +473,6 @@ PlvVripOrientCmd(ClientData clientData, Tcl_Interp *interp,
   cout << "inverted xform is: " << endl << theMesh->getXform();
   return TCL_OK;
 }
-  
+
 */
 

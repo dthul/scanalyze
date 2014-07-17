@@ -2,13 +2,13 @@
 // DisplayMesh.cc
 // Matt Ginzton / Brian Curless
 // Wed Jul  1 15:08:21 PDT 1998
-// 
+//
 // Rendering code for mesh data
 //############################################################
 
 
-#include <vector.h>
-#include <algo.h>
+#include <vector>
+#include <algorithm>
 #include "RigidScan.h"
 #include "Mesh.h"
 #include "DisplayMesh.h"
@@ -200,7 +200,7 @@ DisplayableRealMesh::invalidateDisplayList (void)
 }
 
 
-void 
+void
 DisplayableRealMesh::setHome (void)
 {
   homePos.setXform (meshData->getXform());
@@ -208,7 +208,7 @@ DisplayableRealMesh::setHome (void)
 }
 
 
-void 
+void
 DisplayableRealMesh::goHome (void)
 {
   meshData->setXform (homePos.getXform());
@@ -245,14 +245,14 @@ DisplayableRealMesh::drawSelf (bool bAllowList)
 {
   if (!getVisible())
     return;
-  
+
   glMatrixMode (GL_MODELVIEW);
   glPushMatrix();
   meshData->gl_xform();
   glMatrixMode (GL_TEXTURE);
   glPushMatrix();
   meshData->gl_xform();
-  
+
   // get clipping filter, if we're using bbox acceleration
   if (theRenderParams->accelerateWithBbox)
     mBounds = new ScreenBox (NULL,
@@ -261,7 +261,7 @@ DisplayableRealMesh::drawSelf (bool bAllowList)
   // but if the whole thing is onscreen, testing the fragment bboxes
   // is a waste of time
   if (mBounds && mBounds->acceptFully (meshData->localBbox())) {
-    //cout << displayName << ": whole scan onscreen; no clip test necessary" 
+    //cout << displayName << ": whole scan onscreen; no clip test necessary"
     // << endl;
     delete mBounds;
     mBounds = NULL;
@@ -275,15 +275,15 @@ DisplayableRealMesh::drawSelf (bool bAllowList)
       glDepthMask (GL_FALSE);
       glBlendFunc (GL_SRC_ALPHA, GL_DST_ALPHA);
     }
-    
+
     if (bAllowList)
       drawList();
     else
       drawImmediate();
-    
+
     if (theScene->wantMeshBBox (this))
       drawBoundingBox();
-    
+
     if (transparent()) {
       glDisable(GL_BLEND);
       glDepthMask (GL_TRUE);
@@ -329,7 +329,7 @@ DisplayableRealMesh::drawList (void)
 // hidden line rendering -- works by rendering black polygons shifted
 // just slightly back in z, to fill the z buffer with the necessary values
 // for depth testing, then rendering visible lines -- which only win the
-// depth test if they should be visible (in case of a tie, they should win 
+// depth test if they should be visible (in case of a tie, they should win
 // due to the offset given the polygons).
 
 // This is carried out with glPolygonOffset, but it's a bit of a pain
@@ -337,7 +337,7 @@ DisplayableRealMesh::drawList (void)
 // whereas an older EXT flavor works fine.  On WIN32, at least with the
 // AccelGraphics card, glPolygonOffset with the same parameters works fine.
 
-// here, for nobody's benefit, but since it took me a while to figure this 
+// here, for nobody's benefit, but since it took me a while to figure this
 // out, is a table of what works where:
 // glPolygonOffset: (supp'd) (works); glPolygonOffsetEXT: (supp'd) (works)
 // Lambert: (RE2, OGL1.0)  no,no                           yes,yes
@@ -352,7 +352,7 @@ DisplayableRealMesh::drawList (void)
 
 // The problem appears to be that lambert, radiance, and aegean are using
 // pre-IRIX 6.5 OS's that implement OGL 1.0.  On IRIX 6.3 and 6.4,
-// glPolygonOffset is supported as a no-op; on IRIX 6.2 it fails and exits 
+// glPolygonOffset is supported as a no-op; on IRIX 6.2 it fails and exits
 // the program.  Hopefully once everyone is running IRIX 6.5 this can be
 // revisited.
 
@@ -378,7 +378,7 @@ DisplayableRealMesh::drawImmediate (void)
     //first render polys to fill depth buffer
     theRenderParams->polyMode = GL_FILL;
     drawImmediateOnce();
-      
+
     //then render the visible lines/points
     theRenderParams->polyMode = realMode;
     glDisable (ofsMode);
@@ -430,7 +430,7 @@ DisplayableRealMesh::getMeshTransport (bool perVertex, bool strips,
     int iOldRes = 0;
     if (bLores) {
       iOldRes = meshData->current_resolution().abs_resolution;
-      meshData->select_coarsest(); 
+      meshData->select_coarsest();
     }
     // RigidScan* meshData
     cache.mesh = meshData->mesh (perVertex, strips, color, cbColor);
@@ -490,7 +490,7 @@ DisplayableRealMesh::renderMeshArrays (void)
 	  glPointSize (2.0);
 	}
       }
-      
+
       if (theRenderParams->bRenderManipsUnlit) {
 	glDisable (GL_LIGHTING);
 	bGeometryOnly = true;
@@ -526,7 +526,7 @@ DisplayableRealMesh::renderMeshArrays (void)
 	}
       }
 
-      glVertexPointer (3, GL_FLOAT, 0, cache.mesh->vtx[imesh]->begin());
+      glVertexPointer (3, GL_FLOAT, 0, cache.mesh->vtx[imesh]->data());
 
       glMatrixMode (GL_MODELVIEW);
       glPushMatrix();
@@ -536,10 +536,10 @@ DisplayableRealMesh::renderMeshArrays (void)
       //glMatrixMode (GL_TEXTURE);
       //glPushMatrix();
       //glMultMatrixf (cache.mesh->xf[imesh]);
-      
+
       if (bWantNormals)
 	glNormalPointer (MeshTransport::normal_type, 0,
-			 cache.mesh->nrm[imesh]->begin());
+			 cache.mesh->nrm[imesh]->data());
 
       // the second test below avoids using color arrays of size 1, even
       // if there is only 1 vertex -- this tends to hang GL on maglio.
@@ -554,16 +554,16 @@ DisplayableRealMesh::renderMeshArrays (void)
 	// only enable vertex-array color if array is expected size.
 	glEnableClientState (GL_COLOR_ARRAY);
 	glColorPointer (4, GL_UNSIGNED_BYTE, 0,
-			cache.mesh->color[imesh]->begin());
+			cache.mesh->color[imesh]->data());
       } else {
 	// don't have a full color array...
 	glDisableClientState (GL_COLOR_ARRAY);
 	// but we might have a per-fragment color for all these vertices.
 	if (bWantColor && cache.mesh->color[imesh]->size() == 4) {
-	  glColor4ubv (cache.mesh->color[imesh]->begin());
+	  glColor4ubv (cache.mesh->color[imesh]->data());
 	}
       }
-      
+
       if (bPointsOnly) {
 	glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
 #if 1
@@ -604,12 +604,12 @@ DisplayableRealMesh::renderMeshArrays (void)
 	glDrawArrays (GL_POINTS, 0, cache.mesh->vtx[imesh]->size());
 #endif
       } else if (cache.bStrips) {
-	const int* lenEnd = cache.StripInds[imesh].end();
-	const int* start = cache.mesh->tri_inds[imesh]->begin();
-	for (const int* len = cache.StripInds[imesh].begin();
+	vector<int>::const_iterator lenEnd = cache.StripInds[imesh].end();
+	vector<int>::const_iterator start = cache.mesh->tri_inds[imesh]->begin();
+	for (vector<int>::const_iterator len = cache.StripInds[imesh].begin();
 	     len < lenEnd; len++) {
 	  glDrawElements (GL_TRIANGLE_STRIP, *len,
-			  GL_UNSIGNED_INT, start);
+			  GL_UNSIGNED_INT, &(*start));
 	  start += *len + 1;
 	}
       } else {
@@ -617,11 +617,11 @@ DisplayableRealMesh::renderMeshArrays (void)
 	int total = cache.mesh->tri_inds[imesh]->size();
 	int count = 600000; // must be divisible by 3
 	glDrawElements (GL_TRIANGLES, total%count,
-			GL_UNSIGNED_INT, cache.mesh->tri_inds[imesh]->begin());
+			GL_UNSIGNED_INT, cache.mesh->tri_inds[imesh]->data());
 	for (int i = total%count; i < total; i += count)
 	  glDrawElements (GL_TRIANGLES, count,
 			  GL_UNSIGNED_INT,
-			  cache.mesh->tri_inds[imesh]->begin() + i);
+			  cache.mesh->tri_inds[imesh]->data() + i);
 #else
 	glDrawElements (GL_TRIANGLES, cache.mesh->tri_inds[imesh]->size(),
 			GL_UNSIGNED_INT, cache.mesh->tri_inds[imesh]->begin());
@@ -662,7 +662,7 @@ DisplayableRealMesh::renderMeshSingle (void)
   DrawData& cache = bLores ? this->cache[1] : this->cache[0];
 
   bool bPointsOnly = (theRenderParams->polyMode == GL_POINT);
-  
+
   if (!bUseDisplayList || theRenderParams->bRenderManipsSkipDlist) {
     // don't stick the points-only view in a dlist!
     if (bManipulating) {
@@ -676,12 +676,12 @@ DisplayableRealMesh::renderMeshSingle (void)
 	  glPointSize (2.0);
 	}
       }
-      
+
       /* TODO: implement bGeometryOnly in renderMeshSingle*/
       if (theRenderParams->bRenderManipsUnlit) {
 	glDisable (GL_LIGHTING);
 	//bGeometryOnly = true;
-      } 
+      }
     }
   }
 
@@ -715,11 +715,11 @@ DisplayableRealMesh::renderMeshSingle (void)
     if (color)
       glEnable (GL_COLOR_MATERIAL);
 
-    if (bPointsOnly) 
+    if (bPointsOnly)
       glBegin (GL_POINTS);
-    else 
+    else
       glBegin(GL_TRIANGLES);
-    
+
     for (int it = 0; it < nTris; it++) {
       int it3 = 3*it;
       if (color)
@@ -747,9 +747,9 @@ DisplayableRealMesh::buildStripInds (DrawData& cache)
     for (int imesh = 0; imesh < cache.mesh->tri_inds.size(); imesh++) {
       cache.StripInds.push_back (vector<int>());
       vector<int>& si = cache.StripInds.back();
-      const int* last = cache.mesh->tri_inds[imesh]->begin() - 1;
-      const int* triEnd = cache.mesh->tri_inds[imesh]->end();
-      for (const int *i = cache.mesh->tri_inds[imesh]->begin();
+      const int* last = cache.mesh->tri_inds[imesh]->data() - 1;
+      const int* triEnd = &(*(cache.mesh->tri_inds[imesh]->end()));
+      for (const int *i = cache.mesh->tri_inds[imesh]->data();
 	   i < triEnd; i++) {
 	if (*i == -1) { // end of strip
 	  si.push_back (i - last - 1);
@@ -928,9 +928,9 @@ DisplayableRealMesh::draw_flat_confidence (const vector<Pnt3>& vtx,
     confColor[1] = conf;
     confColor[2] = conf;
     glColor4ubv(confColor);
-    
+
     glNormal3fv(nrm[iTri]);
-    
+
     glVertex3fv (vtx[tri[0]]);
     glVertex3fv (vtx[tri[1]]);
     glVertex3fv (vtx[tri[2]]);
@@ -956,7 +956,7 @@ DisplayableRealMesh::draw_flat_color (const vector<Pnt3>& vtx,
   int iTri = 0;
   for (const int* tri = &tri_inds[0];
        tri < triEnd; tri += 3, iTri++) {
-    
+
     if (colorsize == 3)
       glColor3ubv(&colors[3*iTri]);
     else
@@ -1024,7 +1024,7 @@ DisplayableRealMesh::setMaterials (int& colorSize,
   glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, nocolor);
   glMaterialubv(GL_FRONT, GL_SPECULAR, theRenderParams->specular);
   glMaterialfv(GL_BACK, GL_SPECULAR, nocolor);
-  glMaterialf (GL_FRONT, GL_SHININESS, 
+  glMaterialf (GL_FRONT, GL_SHININESS,
 	       theRenderParams->shininess);
   if (!theRenderParams->shadows) {
     glDisable(GL_TEXTURE_2D);
@@ -1036,7 +1036,7 @@ DisplayableRealMesh::setMaterials (int& colorSize,
   // not needed - two sided lighting takes care of back emmisive
   //if (theRenderParams->backFaceEmissive)
   //  glMaterialubv(GL_BACK, GL_EMISSION, theRenderParams->background);
- 
+
   if (theRenderParams->twoSidedLighting) {
     if (theRenderParams->backfaceMode == lit) {
       glMaterialubv(GL_BACK, GL_AMBIENT_AND_DIFFUSE, theRenderParams->backDiffuse);
@@ -1070,7 +1070,7 @@ DisplayableRealMesh::setMaterials (int& colorSize,
     GL_EMISSION : GL_AMBIENT_AND_DIFFUSE;
   if (!bDontReset)
     glMaterialubv(GL_FRONT, matMode, theRenderParams->diffuse);
-  
+
   switch (theRenderParams->colorMode) {
   case falseColor:
     if (!bDontReset) {
@@ -1078,12 +1078,12 @@ DisplayableRealMesh::setMaterials (int& colorSize,
       diff[1] = colorFalse[1]/255.0;
       diff[2] = colorFalse[2]/255.0;
       diff[3] = alpha;
-      
+
       glMaterialfv (GL_FRONT, matMode, diff);
       glColor4fv (diff);
     }
     break;
-    
+
   case boundaryColor:
   case confidenceColor:
   case intensityColor:
@@ -1099,14 +1099,14 @@ DisplayableRealMesh::setMaterials (int& colorSize,
     case boundaryColor:
       colorSource = RigidScan::colorBoundary; break;
     }
-    
+
     if (!bDontReset) {
       if (theRenderParams->useEmissive)
 	glMaterialfv(GL_FRONT, GL_SPECULAR, nocolor);
       glColorMaterial(GL_FRONT, matMode);
     }
     break;
-    
+
   case registrationColor:
     if (!bDontReset) {
       if (this == theSelectedScan) {
@@ -1124,7 +1124,7 @@ DisplayableRealMesh::setMaterials (int& colorSize,
       }
     }
     break;
-    
+
   case noColor:
     glColor4ubv (theRenderParams->diffuse);
     break;
@@ -1137,7 +1137,7 @@ DisplayableRealMesh::setMaterials (int& colorSize,
       break;
     }
     // else fall through...
-    
+
   case grayColor:
   default:
     // just set color in case it's not set from lighting
@@ -1183,10 +1183,10 @@ DisplayableRealMesh::setName (const char* baseName)
 {
   char bName[1024];
   strcpy(bName, baseName);
-  
+
   char* begin = strrchr (bName, '/');
   char tempName[500];
-  
+
   if (begin == NULL)
     {
       begin=bName;
@@ -1199,7 +1199,7 @@ DisplayableRealMesh::setName (const char* baseName)
       // Check if this is really a sweep, if so name funkyness
       if (strcmp(begin-3,".sd")==0)
 	{
-	 
+
 	  char* begin2 = strrchr (bName, '/');
 	  if (begin2 == NULL)
 	    {
@@ -1214,7 +1214,7 @@ DisplayableRealMesh::setName (const char* baseName)
 	  strcpy(tempName,begin2);
 	  strcat(tempName,"__");
 	  strcat(tempName,begin+1);
-	   
+
 	}
       else
 	{
@@ -1223,8 +1223,8 @@ DisplayableRealMesh::setName (const char* baseName)
 	strcpy(tempName,begin  );
 	}
     }
- 
- 
+
+
   //printf ("tempname:%s\n",tempName);
   int suffix = 0;
   while (FindMeshDisplayInfo (tempName) != NULL) {

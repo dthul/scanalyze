@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // ResolutionCtrl.h
 //
 // Kari Pulli
@@ -10,8 +10,10 @@
 #ifndef _RESOLUTIONCTRL_H_
 #define _RESOLUTIONCTRL_H_
 
-#include <vector.h>
-#include <rope.h>
+#include <vector>
+#include <string>
+
+using namespace std;
 
 class ResolutionCtrl {
 public:
@@ -19,7 +21,7 @@ public:
     int   abs_resolution; // number of vertices
     bool  in_memory;      // true == in memory, false == in file
     bool  desired_in_mem;
-    crope filename;
+    string filename;
 
     res_info(void) : abs_resolution(0),
       in_memory(false), desired_in_mem(true) { }
@@ -29,14 +31,14 @@ public:
 	return r1.abs_resolution > r2.abs_resolution;
       };
   };
-  
+
 protected:
   vector<res_info> resolutions;
 
   int     curr_res;
-  crope   name;
-  crope   basename;
-  crope   ending;
+  string   name;
+  string   basename;
+  string   ending;
 
 private:
   void    split_name(void);
@@ -49,10 +51,10 @@ public:
   // Functions for name
   //
   void  set_name(const char  *n);
-  void  set_name(const crope &n);
-  crope get_name(void);
-  crope get_basename(void);
-  crope get_nameending(void);
+  void  set_name(const string &n);
+  string get_name(void);
+  string get_basename(void);
+  string get_nameending(void);
   bool  has_ending(const char *end);
 
   //
@@ -94,11 +96,11 @@ public:
  protected:
   int          findLevelForRes (int n);
 
-  void         insert_resolution (int abs, crope filename,
+  void         insert_resolution (int abs, string filename,
 				  bool in_mem = true,
 				  bool desired_mem = true);
 
   virtual bool switchToResLevel (int iRes);
-}; 
+};
 
 #endif

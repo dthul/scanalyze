@@ -33,14 +33,14 @@ private:
 
   KDindtree* get_current_kdtree(void);
 
-  void insertMesh(Mesh *m, const crope& filename,
+  void insertMesh(Mesh *m, const string& filename,
 		  bool bLoaded = true, bool bAlwaysLoad = true,
 		  int nRes = 0);
   Mesh* currentMesh (void);
   Mesh* getMesh (int level);
   inline Mesh* highestRes (void);
-  bool readSet (const crope& fn);
-  bool readSingleFile (const crope& fn);
+  bool readSet (const string& fn);
+  bool readSingleFile (const string& fn);
 
   void _Init();
 
@@ -49,7 +49,7 @@ public:
       // default constructor:
   GenericScan(void);
       // wrapper constructor to display a single mesh:
-  GenericScan(Mesh* mesh, const crope& name);
+  GenericScan(Mesh* mesh, const string& name);
   ~GenericScan(void);
 
   // perVertex: colors and normals for every vertex (not every 3)
@@ -77,23 +77,23 @@ public:
 		     float thr = 1e33, bool bdry_ok = 0);
   void computeBBox();
   void flipNormals();
-  crope getInfo (void);
+  string getInfo (void);
 
   // smoothing
   void dequantizationSmoothing(int iterations, double maxDisplacement);
   void commitSmoothingChanges();
   
   // file I/O methods
-  bool read(const crope &fname);
+  bool read(const string &fname);
 
   // is data worth saving?
   virtual bool is_modified (void);
   // save to given name: if default, save to existing name if there is
   // one, or return false if there's not
-  virtual bool write(const crope& fname = crope()); 
+  virtual bool write(const string& fname = string()); 
   // for saving individual meshes
   virtual bool write_resolution_mesh (int npolys,
-				      const crope& fname = crope(),
+				      const string& fname = string(),
 				      Xform<float> xfBy = Xform<float>());
   // for saving anything else
   virtual bool write_metadata (MetaData data);
@@ -108,12 +108,12 @@ public:
 
  private:
   // file i/o helpers
-  void setd (const crope& dir = crope(), bool bCreate = false);
+  void setd (const string& dir = string(), bool bCreate = false);
   void pushd();
   void popd();
 
-  crope setdir;
-  crope pusheddir;
+  string setdir;
+  string pusheddir;
   int pushcount;
 
   Mesh* readMeshFile (const char* name);

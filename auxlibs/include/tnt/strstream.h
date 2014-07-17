@@ -17,7 +17,7 @@ any actual or intended publication of such source code.
 #define STRSTREAMH
 
 #ifndef IOSTREAMH
-#include <iostream.h>
+#include <iostream>
 #endif
 
 class strstreambuf : public streambuf

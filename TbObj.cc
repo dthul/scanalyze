@@ -19,7 +19,7 @@ int TbObj::real_size = 0;
 
 TbObj::TbObj(void)
 {
-  
+
 }
 
 const int UNDO_SIZE = 400;
@@ -78,18 +78,18 @@ TbObj::save_for_undo(void)
 
   // no more redo's
   if (real_size != undo_stack.size()) {
-    undo_stack.erase(&undo_stack[real_size], undo_stack.end());
+    undo_stack.erase(undo_stack.begin() + real_size, undo_stack.end());
   }
 
   assert(real_size == undo_stack.size());
 
   if (real_size >= UNDO_SIZE) {
     // forget the 100 first xforms
-    undo_stack.erase(undo_stack.begin(), &undo_stack[100]);
+    undo_stack.erase(undo_stack.begin(), undo_stack.begin() + 100);
   }
 
   // create the entry
-  TbRedoInfo a; a.self = this; 
+  TbRedoInfo a; a.self = this;
   a.xf = this ? this->xf : tbView->getUndoXform();
 
   // save the entry
@@ -166,7 +166,7 @@ TbObj::clear_undo (TbObj* objToRemove)
       }
     }
     real_size = top;
-    undo_stack.erase(&undo_stack[real_size], undo_stack.end());
+    undo_stack.erase(undo_stack.begin() + real_size, undo_stack.end());
   } else {
     // clear all
     undo_stack.clear();
@@ -175,7 +175,7 @@ TbObj::clear_undo (TbObj* objToRemove)
 }
 
 
-void 
+void
 TbObj::rotate(float q0, float q1, float q2, float q3,
 	      bool undoable)
 {
@@ -197,7 +197,7 @@ TbObj::translate(float t0, float t1, float t2,
 }
 
 
-void 
+void
 TbObj::new_rotation_center(const Pnt3 &wc)
 {
   // have to apply inverse transformation because
@@ -223,7 +223,7 @@ TbObj::setXform(const Xform<float> &x, bool undoable)
 
 bool
 TbObj::readXform(istream& in)
-{  
+{
   save_for_undo();
   in >> xf;
   return (!in.fail());
@@ -240,18 +240,18 @@ TbObj::writeXform(ostream& out)
 
 void
 TbObj::resetXform(void)
-{ 
+{
   save_for_undo();
   xf.identity();
 }
 
 
 bool
-TbObj::readXform(const crope& baseFile)
+TbObj::readXform(const string& baseFile)
 {
-  crope name = (baseFile + ".xf");
-  ifstream istr (name.c_str(), ios::in | ios::nocreate);
-  bool success = readXform(istr);
+  string name = (baseFile + ".xf");
+  ifstream istr (name.c_str(), ios::in);
+  bool success = (istr.is_open()) ? readXform(istr) : false;
   if (success)
     cout << "Read xform " << name << endl;
   //save_for_undo(); // already done by the other reader
@@ -260,22 +260,22 @@ TbObj::readXform(const crope& baseFile)
 
 
 bool
-TbObj::writeXform (const crope& baseFile)
+TbObj::writeXform (const string& baseFile)
 {
-  crope name = (baseFile + ".xf");
+  string name = (baseFile + ".xf");
 
   // find out whether the file exists already
   // and is readable
   if (access(name.c_str(), R_OK) == 0) {
     // append to the backup file, change also access mode
-    crope buname = name + ".bu";
+    string buname = name + ".bu";
 
     chmod (buname.c_str(), 0664);
 
-    crope tmpfile = buname + ".tmp";      
+    string tmpfile = buname + ".tmp";
     unlink(tmpfile.c_str());
-    FILE* to = fopen (tmpfile.c_str(), "w");	
-    
+    FILE* to = fopen (tmpfile.c_str(), "w");
+
     FILE* from = fopen (buname.c_str(), "r");
 
     bool problem = false;
@@ -291,17 +291,17 @@ TbObj::writeXform (const crope& baseFile)
       }
       fclose(from);
     }
-    
+
     time_t t;
-    fprintf(to, "%s", asctime(localtime (&t)));	
-      
+    fprintf(to, "%s", asctime(localtime (&t)));
+
     from = fopen(name.c_str(), "r");
     if (from) {
       char buf[2000];
       int r = fread (buf, 1, 2000, from);
       problem |= (r != fwrite (buf, 1, r, to));
 
-      fclose(from);      
+      fclose(from);
       fclose(to);
     }
     unlink(buname.c_str());
@@ -320,10 +320,10 @@ TbObj::writeXform (const crope& baseFile)
   } else {
     cerr << "No previous xform file " << name << endl;
   }
-  
+
   cerr << "Writing xform to " << name << " ... " << flush;
   // delete the file first so the owner changes
-  unlink(name.c_str()); 
+  unlink(name.c_str());
   ofstream ostr (name.c_str());
   bool success = TbObj::writeXform(ostr);
   cout << (success ? "ok" : "fail") << "." << endl;

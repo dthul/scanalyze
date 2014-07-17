@@ -7,7 +7,7 @@
 #  include <unistd.h>
 #endif
 
-#include <vector.h>
+#include <vector>
 #include <string>
 #include "plvScene.h"
 #include "ply++.h"
@@ -19,9 +19,11 @@
 #include "FileNameUtils.h"
 #include "plvAnalyze.h"
 
+using namespace std;
+
 #ifdef no_overlay_support
 // so I can free the saved image used to emulate overlay planes
-#include "plvDraw.h" 
+#include "plvDraw.h"
 #endif
 
 vector<char*> filenames;
@@ -33,7 +35,7 @@ EXTERN int		TkConsoleInit(Tcl_Interp *interp);
 // BUGBUG - shouldn't need this here, but it helps with the compile.
 int isPlyFile(char *filename);
 
-static bool 
+static bool
 isReadableFile (char* name)
 {
   remove_trailing_slash(name);
@@ -52,7 +54,7 @@ isReadableFile (char* name)
     return true;
 
   // ditto for modelmaker's cta and mms format
-  if ( filename_has_ending(name, ".cta") || 
+  if ( filename_has_ending(name, ".cta") ||
        filename_has_ending(name, ".mms") ||
        filename_has_ending(name, ".edges"))
     return true;
@@ -70,9 +72,9 @@ isReadableFile (char* name)
     return true;
 
   // recognize group files
-  if ( filename_has_ending( name, ".gp" ) ) 
+  if ( filename_has_ending( name, ".gp" ) )
     return true;
-  
+
 
   // if it's a directory containing a same-named .ply or .set file,
   // we'll read that instead... so we want it
@@ -178,7 +180,7 @@ main(int argc, char **argv)
 	       base++;
 	       *base_end = 0;
 	    }
-	    
+
 	    argv_storage.push_back (new std::string (base));
 
 	    base = end;
@@ -202,7 +204,7 @@ main(int argc, char **argv)
       argv[i] = (char*)argv_storage[i]->c_str();
    }
 #endif
-   
+
    int lastarg = argc;
    // take all input files from the end of the command line back
    while (isReadableFile(argv[lastarg-1])) {
@@ -242,7 +244,7 @@ main(int argc, char **argv)
      Tcl_Main(argc, argv, Tcl_AppInit);
    else
      Tk_Main(argc, argv, Tcl_AppInit);
-   
+
 #ifdef no_overlay_support
    // free the fake overaly plane
    delete [] theRenderParams->savedImage;
@@ -275,7 +277,7 @@ int
 Tcl_AppInit(Tcl_Interp *interp)
 {
     /*
-     * Call the init procedures for included packages.  
+     * Call the init procedures for included packages.
      * Each call should look like this:
      *
      * if (Mod_Init(interp) == TCL_ERROR) {
@@ -298,7 +300,7 @@ puts ("Tk...");
 
 #ifdef WIN32
       /*
-       * Set up a (GUI/Tk) console window. 
+       * Set up a (GUI/Tk) console window.
        * Delete the following statement if you do not need that.
        * Then it'll use a Windows (WINOLDAP) text console.
        */
@@ -336,17 +338,17 @@ puts ("about to plvinit");
     Tcl_GlobalEval (interp, "redraw block");
 
     // build up list of filenames, and in a separate list, build up a list
-    // of all group or .gp files. The .gp files are then loaded in after all 
-    // the files have been read, to avoid having to load files that would get 
+    // of all group or .gp files. The .gp files are then loaded in after all
+    // the files have been read, to avoid having to load files that would get
     // loaded anyway.
     if (filenames.size()) {
-      crope filelist ("readfile");
-      crope grouplist ("loadgroup");
-      crope space (" ");
-      crope inbrace ("{");
-      crope outbrace ("}");
+      string filelist ("readfile");
+      string grouplist ("loadgroup");
+      string space (" ");
+      string inbrace ("{");
+      string outbrace ("}");
       for (int i = 0; i < filenames.size(); i++) {
-	
+
 	// hack to determine whether the filename extension is .gp
 	if (strncmp(filenames[i] + strlen(filenames[i]) - 3, ".gp", 3) == 0) {
 	  grouplist += space + inbrace + filenames[i] + outbrace;
@@ -354,7 +356,7 @@ puts ("about to plvinit");
 	  filelist += space + inbrace + filenames[i] + outbrace;
 	}
       }
-      
+
       if (strcmp (filelist.c_str(), "readfile") != 0) {
 	if (TCL_OK != Tcl_Eval(interp, (char*)filelist.c_str())) {
 	  char* err = Tcl_GetVar (interp, "errorInfo", TCL_GLOBAL_ONLY);
@@ -381,11 +383,11 @@ puts ("about to plvinit");
     // display any errors that occur.
 #if 0
     /*
-     * Specify a user-specific startup file to invoke if the 
-     * application is run interactively.  
+     * Specify a user-specific startup file to invoke if the
+     * application is run interactively.
      * Typically the startup file is "~/.apprc"
-     * where "app" is the name of the application.  
-     * If this line is deleted then no user-specific 
+     * where "app" is the name of the application.
+     * If this line is deleted then no user-specific
      * startup file will be run under any conditions.
      */
     Tcl_SetVar(interp, "tcl_rcFileName", "~/.scanalyzerc", TCL_GLOBAL_ONLY);

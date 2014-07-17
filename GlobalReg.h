@@ -2,18 +2,18 @@
 // GlobalReg.h
 // Kari Pulli
 // Tue Jun 23 11:54:00 PDT 1998
-// 
+//
 // Global registration of several scans simultaneously
 //############################################################
 
 #ifndef _GLOBALREG_H_
 #define _GLOBALREG_H_
 
-#include <iostream.h>
-#include <hash_map.h>
-#include <hash_set.h>
-#include <vector.h>
-#include <rope.h>
+#include <iostream>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <string>
 #include <string>
 #include <time.h>
 #include "Random.h"
@@ -23,19 +23,21 @@
 #include "TbObj.h"
 #include "Bbox.h"
 
+using namespace std;
+
 class GlobalReg {
 private:
 
   typedef Xform<float> XF_F;
 
   float         ftol;
-  
+
   std::string   gr_dir;
   std::string   gr_auto_dir;
   char          *cyber_raw_name;
 
   //
-  // definitions for a hash_multimap
+  // definitions for a unordered_multimap
   // it stores pointers to view transformations
   // and points from those views (in current world coordinates)
   //
@@ -58,14 +60,14 @@ private:
     enum  { qual_Unknown, qual_Bad, qual_Fair, qual_Good };
     int     quality_grade; // 0..3 = unknown, bad, fair, good
     time_t  modifyDate;
-    
-    mapEntry(TbObj *xa, TbObj *xb, 
+
+    mapEntry(TbObj *xa, TbObj *xb,
 	     const vector<Pnt3> &a, const vector<Pnt3> &b,
-	     Xform<float> rxf, 
+	     Xform<float> rxf,
 	     int max_pairs = 0)
       : xfa(xa), xfb(xb), ptsa(a), ptsb(b),
       manually_aligned(false), rel_xf(rxf)
-      { 
+      {
 	if (ptsa.size() > max_pairs) {
 	  // too many pairs, remove some
 	  int n_left  = ptsa.size();
@@ -85,8 +87,8 @@ private:
 	  }
 	  if (max_pairs) {
 	    // clean the vectors
-	    ptsa.erase(&ptsa[max_pairs], ptsa.end());
-	    ptsb.erase(&ptsb[max_pairs], ptsb.end());
+	    ptsa.erase(ptsa.begin() + max_pairs, ptsa.end());
+	    ptsb.erase(ptsb.begin() + max_pairs, ptsb.end());
 	  }
 	}
 	//cout << "constructing " << int(this) << endl;
@@ -111,7 +113,7 @@ private:
 	if (quality_grade < qual_Unknown) return qual_Unknown;
 	return quality_grade;
       }
-    
+
     // return max distant, count, and sum of distants
     void stats(void);
 
@@ -133,10 +135,10 @@ private:
   };
  private:
 
-  //hash_multimap<Key, Data, HashFcn, EqualKey, Alloc>
+  //unordered_multimap<Key, Data, HashFcn, EqualKey, Alloc>
   typedef
-  hash_multimap<TbObj *,mapEntry*, hash_tbobj,equal_tbobj> HMM;
-  typedef hash_set<TbObj *,hash_tbobj,equal_tbobj> HS;
+  unordered_multimap<TbObj *,mapEntry*, hash_tbobj,equal_tbobj> HMM;
+  typedef unordered_set<TbObj *,hash_tbobj,equal_tbobj> HS;
   typedef HMM::iterator ITT;
   typedef HS::iterator  ITS;
 
@@ -161,13 +163,13 @@ private:
   } VolumeBucket;
 
   // helpers to normalize_points
-  bool should_delete_point(Pnt3 pt, VolumeBucket *vb, 
+  bool should_delete_point(Pnt3 pt, VolumeBucket *vb,
 			   int bucketInd);
-  int init_vol_buckets(VolumeBucket **vb, 
-		       Bbox worldBbox, 
+  int init_vol_buckets(VolumeBucket **vb,
+		       Bbox worldBbox,
 		       TbObj *scanToMoveTo,
 		       float bucket_side = 1.0);
-  int find_bucket(Pnt3 pt, VolumeBucket *vb, 
+  int find_bucket(Pnt3 pt, VolumeBucket *vb,
 		  float bucket_side, int numBuckets);
   void  get_pts(TbObj *x, vector<Pnt3> &P, vector<Pnt3> &Q,
 		TbObj* partner = NULL);
@@ -204,7 +206,7 @@ public:
   void initial_import(void);
   void perform_import(void);
   // manipulate pairs
-  mapEntry* addPair(TbObj *a, TbObj *b, 
+  mapEntry* addPair(TbObj *a, TbObj *b,
 		    const vector<Pnt3> &ap, const vector<Pnt3> &nrma,
 		    const vector<Pnt3> &bp, const vector<Pnt3> &nrmb,
 		    Xform<float> rel_xf = Xform<float>(),
@@ -212,7 +214,7 @@ public:
 		    int  max_pairs = 0,
 		    bool save = true,
 		    int saveQual = mapEntry::qual_Unknown);
-  mapEntry* addPair(TbObj *a, TbObj *b, 
+  mapEntry* addPair(TbObj *a, TbObj *b,
 		    const vector<Pnt3> &ap,
 		    const vector<Pnt3> &bp,
 		    float pw_point_rmsErr,
@@ -233,12 +235,12 @@ public:
 
   //void recalcPairwiseErrors(void);
 
-  // align: if you pass scanToMove = NULL (default), all scans 
+  // align: if you pass scanToMove = NULL (default), all scans
   // are aligned to all others.
   // If you pass an object as scanToMove, only pairs
   // involving that scan are considered, and for each alignment
   // it will be moved toward the other scan, which should have
-  // the effect of aligning it with a group of other 
+  // the effect of aligning it with a group of other
   // self-registered scans without moving any of them.
   // we'll need the worldBbox so we can compute buckets for area-
   // normalization (the second align fn)
@@ -256,7 +258,7 @@ public:
 		      bool &manual,
 		      bool transitiveAllowed = false);
   int   count_partners(TbObj *mesh);
-  crope list_partners (TbObj *mesh, 
+  string list_partners (TbObj *mesh,
 		       bool transitiveAllowed = false);
 
   std::string dump_meshpairs(int   choice,

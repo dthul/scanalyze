@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <tk.h>
+#include <string.h>
 
 #include "plvGlobals.h"
 #include "plvImageCmds.h"
@@ -15,7 +16,7 @@ static uint *theZBuf = NULL;
 static uchar *theColorBuf = NULL;
 
 int
-PlvWriteIrisCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvWriteIrisCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[])
 {
   struct Togl* togl = toglHash.FindTogl (argv[1]);
@@ -31,11 +32,11 @@ PlvWriteIrisCmd(ClientData clientData, Tcl_Interp *interp,
   Image img (width, height, 4);
 
   glReadBuffer(GL_FRONT);
-  glReadPixels(0, 0, width, height, GL_RGBA, 
+  glReadPixels(0, 0, width, height, GL_RGBA,
 	       GL_UNSIGNED_BYTE, img);
 
   if (!img.write(argv[2])) {
-#ifdef linux
+#ifdef __linux
 		// give an error message alerting that IFL is not supported under
 		// Linux
 		interp->result = "Image saving not supported under Linux";
@@ -92,7 +93,7 @@ PlvWriteIrisCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvCacheBufferCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvCacheBufferCmd(ClientData clientData, Tcl_Interp *interp,
 		  int argc, char *argv[])
 {
   GLint lastBuffer;
@@ -109,9 +110,9 @@ PlvCacheBufferCmd(ClientData clientData, Tcl_Interp *interp,
 
   glGetIntegerv(GL_DRAW_BUFFER, &lastBuffer);
   glDrawBuffer(GL_FRONT);
-  glReadPixels(0, 0, theWidth, theHeight, 
+  glReadPixels(0, 0, theWidth, theHeight,
 	       GL_RGBA, GL_UNSIGNED_BYTE, theColorBuf);
-  glReadPixels(0, 0, theWidth, theHeight, 
+  glReadPixels(0, 0, theWidth, theHeight,
 	       GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, theZBuf);
   glDrawBuffer(GLenum(lastBuffer));
 
@@ -120,7 +121,7 @@ PlvCacheBufferCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvReloadBufferCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvReloadBufferCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
   GLint lastBuffer;
@@ -129,9 +130,9 @@ PlvReloadBufferCmd(ClientData clientData, Tcl_Interp *interp,
 
   glGetIntegerv(GL_DRAW_BUFFER, &lastBuffer);
   glDrawBuffer(GL_FRONT);
-  glDrawPixels(theWidth, theHeight, 
+  glDrawPixels(theWidth, theHeight,
 	       GL_RGBA, GL_UNSIGNED_BYTE, theColorBuf);
-  glDrawPixels(theWidth, theHeight, 
+  glDrawPixels(theWidth, theHeight,
 	       GL_DEPTH_COMPONENT, GL_INT, theZBuf);
   glDrawBuffer(GLenum(lastBuffer));
 
@@ -189,7 +190,7 @@ loadTexture(MeshSet *meshSet, char *texFile, int flipX)
   }
 
   delete [] tempTexture;
-  
+
   meshSet->hasTexture = TRUE;
   meshSet->texXdim = 512;
   meshSet->texYdim = 512;
@@ -213,16 +214,16 @@ loadTexture(MeshSet *meshSet, char *texFile, int flipX)
 		float xoff = xx/512.0*texture->xdim;
 		int xint = int(xoff);
 		float dx = xoff - xint;
-		meshSet->texture[0+xx*3+yy*3*512] = 
-		    uchar((1-dx)*texture->elem(xint, yy, 0) 
+		meshSet->texture[0+xx*3+yy*3*512] =
+		    uchar((1-dx)*texture->elem(xint, yy, 0)
 			  + dx*texture->elem(xint+1, yy, 0));
-	    
-		meshSet->texture[1+xx*3+yy*3*512] = 
-		    uchar((1-dx)*texture->elem(xint, yy, 1) 
+
+		meshSet->texture[1+xx*3+yy*3*512] =
+		    uchar((1-dx)*texture->elem(xint, yy, 1)
 			  + dx*texture->elem(xint+1, yy, 1));
-	    
-		meshSet->texture[2+xx*3+yy*3*512] = 
-		    uchar((1-dx)*texture->elem(xint, yy, 2) 
+
+		meshSet->texture[2+xx*3+yy*3*512] =
+		    uchar((1-dx)*texture->elem(xint, yy, 2)
 			  + dx*texture->elem(xint+1, yy, 2));
 	    }
 	}
@@ -230,11 +231,11 @@ loadTexture(MeshSet *meshSet, char *texFile, int flipX)
 	if (!flipX) {
 	    for (yy = 0; yy < texture->ydim; yy++) {
 		for (xx = 0; xx < texture->xdim; xx++) {
-		    meshSet->texture[0+xx*3+yy*3*512] = 
+		    meshSet->texture[0+xx*3+yy*3*512] =
 			texture->elem(xx, yy, 0);
-		    meshSet->texture[1+xx*3+yy*3*512] = 
+		    meshSet->texture[1+xx*3+yy*3*512] =
 			texture->elem(xx, yy, 1);
-		    meshSet->texture[2+xx*3+yy*3*512] = 
+		    meshSet->texture[2+xx*3+yy*3*512] =
 			texture->elem(xx, yy, 2);
 		}
 	    }
@@ -242,37 +243,37 @@ loadTexture(MeshSet *meshSet, char *texFile, int flipX)
 	else {
 	    for (yy = 0; yy < texture->ydim; yy++) {
 		for (xx = 0; xx < texture->xdim; xx++) {
-		    meshSet->texture[0+xx*3+yy*3*512] = 
+		    meshSet->texture[0+xx*3+yy*3*512] =
 			texture->elem(texture->xdim-xx-1, yy, 0);
-		    meshSet->texture[1+xx*3+yy*3*512] = 
+		    meshSet->texture[1+xx*3+yy*3*512] =
 			texture->elem(texture->xdim-xx-1, yy, 1);
-		    meshSet->texture[2+xx*3+yy*3*512] = 
+		    meshSet->texture[2+xx*3+yy*3*512] =
 			texture->elem(texture->xdim-xx-1, yy, 2);
 		}
 	    }
 	}
     }
 
-    
-    
+
+
 // 	for (yy = 0; yy < texture->ydim; yy++) {
 // 	    for (xx = 0; xx < texture->xdim; xx++) {
-// 		tempTexture[0+xx*3+yy*3*texture->xdim] = 
+// 		tempTexture[0+xx*3+yy*3*texture->xdim] =
 // 		    texture->elem(xx, yy, 0);
-// 		tempTexture[1+xx*3+yy*3*texture->xdim] = 
+// 		tempTexture[1+xx*3+yy*3*texture->xdim] =
 // 		    texture->elem(xx, yy, 1);
-// 		tempTexture[2+xx*3+yy*3*texture->xdim] = 
+// 		tempTexture[2+xx*3+yy*3*texture->xdim] =
 // 		    texture->elem(xx, yy, 2);
 // 	    }
 // 	}
 
 
 // 	gluScaleImage(GL_RGB, texture->xdim, texture->ydim, GL_UNSIGNED_BYTE,
-// 		      tempTexture, 512, 512, 
-// 		      GL_UNSIGNED_BYTE, meshSet->texture); 
-	
+// 		      tempTexture, 512, 512,
+// 		      GL_UNSIGNED_BYTE, meshSet->texture);
+
     delete [] tempTexture;
-    
+
     meshSet->hasTexture = TRUE;
     meshSet->texXdim = 512;
     meshSet->texYdim = 512;
@@ -293,7 +294,7 @@ int countPixInRange (int x, int y, int w, int h,
   typedef struct {unsigned char r,g,b,a;} pix;
 
     unsigned char *img = (unsigned char *) new char[(w+1)*(h+1)*4];
-    
+
     glReadBuffer(GL_FRONT);
     glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, img);
 
@@ -309,16 +310,16 @@ int countPixInRange (int x, int y, int w, int h,
 	    count++;
 	  }
       }
-    
+
     delete [] img;
     return count;
 }
 
-int PlvCountPixelsCmd (ClientData clientData, Tcl_Interp *interp, 
+int PlvCountPixelsCmd (ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   int x,w,y,h;
-  
+
   if (argc==4 || argc==7)
     {
       // Use selection box
@@ -338,7 +339,7 @@ int PlvCountPixelsCmd (ClientData clientData, Tcl_Interp *interp,
 	  return TCL_ERROR;
 	}
 
-     
+
     }
   else if (argc==11)
     {
@@ -365,7 +366,7 @@ int PlvCountPixelsCmd (ClientData clientData, Tcl_Interp *interp,
   // Count pix  with specified value
   int Rmin,Gmin,Bmin;
   int Rmax,Gmax,Bmax;
-  
+
   Rmin=atoi(argv[1]);
   Gmin=atoi(argv[2]);
   Bmin=atoi(argv[3]);
@@ -388,6 +389,6 @@ int PlvCountPixelsCmd (ClientData clientData, Tcl_Interp *interp,
   int count = countPixInRange(x,y,w,h,Rmin,Gmin,Bmin,Rmax,Gmax,Bmax);
 
   sprintf(interp->result,"%d",count);
-			      
+
   return TCL_OK;
 }

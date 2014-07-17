@@ -7,7 +7,7 @@
 #include "TriMeshUtils.h"
 
 
-ProxyScan::ProxyScan (const crope& proxyForFileName,
+ProxyScan::ProxyScan (const string& proxyForFileName,
 		      const Pnt3& min, const Pnt3& max)
 {
   set_name (proxyForFileName);
@@ -45,7 +45,7 @@ ProxyScan::mesh (bool perVertex, bool stripped,
   vector<short>* nrm = new vector<short>;
   if (perVertex) {
     nrm->reserve(24);
-    for (i = 0; i < 8; i++) {
+    for (int i = 0; i < 8; i++) {
       pushNormalAsShorts (*nrm, (bbox.corner(i) - bbox.center()).normalize());
     }
   } else {
@@ -68,7 +68,7 @@ ProxyScan::mesh (bool perVertex, bool stripped,
   };
 
   vector<int>* tri_inds = new vector<int>;
-  for (i = 0; i < 12; i++) {
+  for (int i = 0; i < 12; i++) {
     int t1 = faceInd[i][0];
     int t2 = faceInd[i][1];
     int t3 = faceInd[i][2];
@@ -95,8 +95,8 @@ ProxyScan::mesh (bool perVertex, bool stripped,
 }
 
 
-crope
+string
 ProxyScan::getInfo (void)
 {
-  return crope ("Proxy scan, data not loaded.\n\n") + RigidScan::getInfo();
+  return string ("Proxy scan, data not loaded.\n\n") + RigidScan::getInfo();
 }

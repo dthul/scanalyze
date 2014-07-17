@@ -3,7 +3,7 @@
 // sczRegCmds.cc
 // Matt Ginzton, Kari Pulli
 // Fri Jun 12 15:19:16 PDT 1998
-// 
+//
 // Interface between C and Tcl code for various registration UIs
 //   1.  Correspondence registration
 //   2.  Drag registration
@@ -84,8 +84,8 @@ class CorrespondenceList
 {
 public:
   int AddPoint (DisplayableMesh* mesh, const Pnt3& pt);
-  CorrespondencePt* FindPoint (DisplayableMesh* mesh);
-  void DeletePoint (CorrespondencePt* cp);
+  vector<CorrespondencePt>::iterator FindPoint (DisplayableMesh* mesh);
+  void DeletePoint (vector<CorrespondencePt>::iterator cp);
   void ToString (char* text);
 
   int id;
@@ -106,7 +106,7 @@ public:
 
   vector<CorrespondenceList*> correspondences;
   int GetSelectedCorrespondenceId();
-  CorrespondenceList* GetSelectedCorrespondence();
+  CorrespondenceList* GetSelectedCorrespondence (void);
   CorrespondenceList* GetCorrespondenceById (int id);
   CorrespondenceList* GetCorrespondenceInProgress();
 
@@ -120,11 +120,11 @@ private:
 };
 
 
-int 
+int
 CorrespondenceList::AddPoint (DisplayableMesh* mesh, const Pnt3& pt)
 {
-  CorrespondencePt* cp = FindPoint (mesh);
-  if (cp != NULL) {
+  vector<CorrespondencePt>::iterator cp = FindPoint (mesh);
+  if (cp != points.end()) {
     // already have one for this mesh -- adjust it
     cp->pt = pt;
   } else {
@@ -139,36 +139,36 @@ CorrespondenceList::AddPoint (DisplayableMesh* mesh, const Pnt3& pt)
 }
 
 
-CorrespondencePt* 
+vector<CorrespondencePt>::iterator
 CorrespondenceList::FindPoint (DisplayableMesh* mesh)
 {
-  for (CorrespondencePt* cp = points.begin(); cp < points.end(); cp++) {
+  for (vector<CorrespondencePt>::iterator cp = points.begin(); cp < points.end(); cp++) {
     if (cp->mesh == mesh)
       return cp;
   }
 
-  return NULL;
+  return points.end();
 }
 
 
-void 
-CorrespondenceList::DeletePoint (CorrespondencePt* cp)
+void
+CorrespondenceList::DeletePoint (vector<CorrespondencePt>::iterator cp)
 {
   points.erase (cp);
 }
 
 
-void 
+void
 CorrespondenceList::ToString (char* text)
 {
   sprintf (text, "[%d]", id);
-  for (CorrespondencePt* cp = points.begin();
+  for (vector<CorrespondencePt>::iterator cp = points.begin();
        cp < points.end();
        cp++) {
     sprintf (text + strlen(text), " %s:(%.4g,%.4g,%.4g)",
 	     cp->mesh->getName(),
 	     cp->pt[0], cp->pt[1], cp->pt[2]);
-      
+
     if (cp + 1 < points.end())
       strcat (text, " <=>");
   }
@@ -207,8 +207,8 @@ AlignmentOverviewInfo::~AlignmentOverviewInfo ()
 }
 
 
-CorrespondenceList* 
-AlignmentOverviewInfo::AddCorrespondence (DisplayableMesh* mesh, 
+CorrespondenceList*
+AlignmentOverviewInfo::AddCorrespondence (DisplayableMesh* mesh,
 					  const Pnt3& pt)
 {
   CorrespondenceList* clSelected = GetSelectedCorrespondence();
@@ -227,8 +227,8 @@ AlignmentOverviewInfo::AddCorrespondence (DisplayableMesh* mesh,
 }
 
 
-CorrespondenceList* 
-AlignmentOverviewInfo::CompleteCorrespondence (bool bKeep, 
+CorrespondenceList*
+AlignmentOverviewInfo::CompleteCorrespondence (bool bKeep,
 					       char* text)
 {
   if (correspInProgress == NULL) {
@@ -255,7 +255,7 @@ AlignmentOverviewInfo::CompleteCorrespondence (bool bKeep,
 }
 
 
-CorrespondenceList* 
+CorrespondenceList*
 AlignmentOverviewInfo::GetSelectedCorrespondence (void)
 {
   return GetCorrespondenceById (GetSelectedCorrespondenceId());
@@ -269,14 +269,13 @@ AlignmentOverviewInfo::GetCorrespondenceInProgress (void)
 }
 
 
-CorrespondenceList* 
+CorrespondenceList*
 AlignmentOverviewInfo::GetCorrespondenceById (int id)
 {
   if (id == 0)
     return NULL;
 
-  CorrespondenceList** cl;
-  for (cl = correspondences.begin(); cl < correspondences.end(); cl++) {
+  for (vector<CorrespondenceList*>::iterator cl = correspondences.begin(); cl < correspondences.end(); cl++) {
     if ((*cl)->id == id)
       return *cl;
   }
@@ -286,7 +285,7 @@ AlignmentOverviewInfo::GetCorrespondenceById (int id)
 }
 
 
-int 
+int
 AlignmentOverviewInfo::GetSelectedCorrespondenceId (void)
 {
   Tcl_Interp* interp = Togl_Interp (togl);
@@ -300,7 +299,7 @@ AlignmentOverviewInfo::GetSelectedCorrespondenceId (void)
 }
 
 
-void 
+void
 AlignmentToglInfo::SetTargetMesh (DisplayableMesh* _md)
 {
   meshDisplay = _md;
@@ -316,7 +315,7 @@ AlignmentToglInfo::SetTargetMesh (DisplayableMesh* _md)
   Pnt3 obj = meshData->localCenter();
   float radius = meshData->radius();
   Pnt3 camera (0, 0, radius * 3);
-    
+
   //position camera in front of object
   camera += obj;
   tb->setup (camera, obj, up, radius);
@@ -351,7 +350,7 @@ DrawAlignmentPoint (const Pnt3& pt, uchar* color, bool bSelected = false)
       glEnable (GL_BLEND);
       glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
-    
+
     if (bSelected && iPass == 1) {
       glColor4ub (colorHilite[0], colorHilite[1], colorHilite[2], 255);
       glPointSize (7);
@@ -362,7 +361,7 @@ DrawAlignmentPoint (const Pnt3& pt, uchar* color, bool bSelected = false)
       else
 	glPointSize (4);
     }
-        
+
     glBegin (GL_POINTS);
     glVertex3fv (pt);
     glEnd();
@@ -394,7 +393,7 @@ DrawAlignmentPoints (struct Togl* togl)
 
 	bool bSelected = (cl->id == iCorresp);
 
-	for (CorrespondencePt* c = cl->points.begin();
+	for (vector<CorrespondencePt>::iterator c = cl->points.begin();
 	     c < cl->points.end();
 	     c++) {
 	  if (c->mesh == ati->meshDisplay) {
@@ -413,7 +412,7 @@ DrawAlignmentPoints (struct Togl* togl)
     // now draw correspondence in progress
     CorrespondenceList* cl = aoi->GetCorrespondenceInProgress();
     if (cl != NULL) {
-      for (CorrespondencePt* c = cl->points.begin();
+      for (vector<CorrespondencePt>::iterator c = cl->points.begin();
 	   c < cl->points.end();
 	   c++) {
 	if (c->mesh == ati->meshDisplay)
@@ -495,7 +494,7 @@ FreeAlignmentInfo (struct Togl* togl)
 
 
 int
-PlvBindToglToAlignmentOverviewCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvBindToglToAlignmentOverviewCmd(ClientData clientData, Tcl_Interp *interp,
 				  int argc, char *argv[])
 {
   if (argc < 2) {
@@ -524,7 +523,7 @@ PlvBindToglToAlignmentOverviewCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvCorrespRegParmsCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvCorrespRegParmsCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   if (argc < 3) {
@@ -553,7 +552,7 @@ PlvCorrespRegParmsCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvBindToglToAlignmentViewCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvBindToglToAlignmentViewCmd(ClientData clientData, Tcl_Interp *interp,
 			      int argc, char *argv[])
 {
   if (argc < 3) {
@@ -594,7 +593,7 @@ PlvBindToglToAlignmentViewCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvRegUIMouseCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvRegUIMouseCmd (ClientData clientData, Tcl_Interp *interp,
 		  int argc, char *argv[])
 {
   // argument string: togl button x y time [start|stop]
@@ -619,7 +618,7 @@ PlvRegUIMouseCmd (ClientData clientData, Tcl_Interp *interp,
 
   AlignmentToglInfo* ati = (AlignmentToglInfo*)Togl_GetClientData (togl);
   assert (ati != NULL);
-  
+
   if (button == 0)
     ati->tb->move (mouseX, mouseY, eventT);
   else
@@ -632,7 +631,7 @@ PlvRegUIMouseCmd (ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 				   int argc, char *argv[])
 {
   //argument string: togl overviewTogl x y
@@ -663,25 +662,27 @@ PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
     // allow removal of one point from an existing correspondence,
     // if it has more than two points
     CorrespondenceList* clSelected = aoi->GetSelectedCorrespondence();
-    CorrespondencePt* cpOld = NULL;
     if (clSelected != NULL) {
-      if (clSelected->points.size() > 2)
-	cpOld = clSelected->FindPoint (ati->meshDisplay);
+      if (clSelected->points.size() > 2) {
+        vector<CorrespondencePt>::iterator cpOld = clSelected->FindPoint (ati->meshDisplay);
+        if (cpOld != clSelected->points.end()) { // prompt to delete point
+          Tcl_VarEval (interp, "tk_dialog .reg.confirm {Delete point?} "
+               "{Delete meshset ",
+               ati->meshDisplay->getName(),
+               " from correspondence?} {} 0 No Yes", NULL);
+          if (atoi (interp->result) != 0) {
+            clSelected->DeletePoint (cpOld);
+            Tcl_Eval (interp, "rebuildSelectedCorrespondenceString");
+            DrawAlignmentMesh (togl);
+          }
+        }
+      }
       else
-	printf ("Cannot delete last two points from correspondence\n");
-    }
-
-    if (cpOld != NULL) { // prompt to delete point
-      Tcl_VarEval (interp, "tk_dialog .reg.confirm {Delete point?} "
-		   "{Delete meshset ", 
-		   ati->meshDisplay->getName(),
-		   " from correspondence?} {} 0 No Yes", NULL);
-      if (atoi (interp->result) != 0) {
-	clSelected->DeletePoint (cpOld);
-	Tcl_Eval (interp, "rebuildSelectedCorrespondenceString");
-	DrawAlignmentMesh (togl);
+      {
+        printf ("Cannot delete last two points from correspondence\n");
       }
     }
+
 
     interp->result = "";
     return TCL_OK;
@@ -705,7 +706,7 @@ PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvDeleteRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvDeleteRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 			       int argc, char *argv[])
 {
   if (argc != 3) {
@@ -724,7 +725,7 @@ PlvDeleteRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 
   int iCorresp = atoi (argv[2] + 1);  // in format [nnn] asdfasd
 
-  for (CorrespondenceList** cl = aoi->correspondences.begin();
+  for (vector<CorrespondenceList*>::iterator cl = aoi->correspondences.begin();
        cl < aoi->correspondences.end();
        cl++) {
     if ((*cl)->id == iCorresp) {
@@ -739,7 +740,7 @@ PlvDeleteRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvConfirmRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvConfirmRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 				int argc, char *argv[])
 {
   if (argc < 2) {
@@ -769,7 +770,7 @@ PlvConfirmRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvGetCorrespondenceInfoCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvGetCorrespondenceInfoCmd (ClientData clientData, Tcl_Interp *interp,
 			     int argc, char *argv[])
 {
   if (argc != 3) {
@@ -814,7 +815,7 @@ static int CorrespRegAllToAll (AlignmentOverviewInfo* aoi);
 
 
 int
-PlvCorrespondenceRegistrationCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvCorrespondenceRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 				  int argc, char *argv[])
 {
   // arguments are: overviewTogl mode from to
@@ -869,7 +870,7 @@ PlvCorrespondenceRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
       }
     }
   }
-    
+
   interp->result = "Bad mode passed to PlvCorrespRegistrationCmd";
   return TCL_ERROR;
 }
@@ -892,9 +893,9 @@ CorrespRegOneMesh (AlignmentOverviewInfo* aoi, DisplayableMesh* meshFrom,
   for (int i = 0; i < aoi->correspondences.size(); i++) {
     CorrespondenceList* cl = aoi->correspondences[i];
 
-    CorrespondencePt* cpThis = cl->FindPoint (meshFrom);
-    if (cpThis != NULL) { // references this mesh
-      for (CorrespondencePt* cpOther = cl->points.begin();
+    vector<CorrespondencePt>::iterator cpThis = cl->FindPoint (meshFrom);
+    if (cpThis != cl->points.end()) { // references this mesh
+      for (vector<CorrespondencePt>::iterator cpOther = cl->points.begin();
 	   cpOther < cl->points.end();
 	   cpOther++) {
 	// don't add us-us to list
@@ -948,10 +949,10 @@ CorrespRegAllToAll (AlignmentOverviewInfo* aoi)
 	CorrespondenceList* cl = aoi->correspondences[i];
 
 	// if correspondence mentions both meshes currently under consideration
-	CorrespondencePt* cpFrom = cl->FindPoint (mdFrom);
-	CorrespondencePt* cpTo = cl->FindPoint (mdTo);
+	vector<CorrespondencePt>::iterator cpFrom = cl->FindPoint (mdFrom);
+	vector<CorrespondencePt>::iterator cpTo = cl->FindPoint (mdTo);
 
-	if (cpFrom != NULL && cpTo != NULL) {
+	if (cpFrom != cl->points.end() && cpTo != cl->points.end()) {
 	  // then add points (in local coords) to pair data
 	  pntFrom.push_back (cpFrom->pt);
 	  pntTo.push_back (cpTo->pt);
@@ -974,7 +975,7 @@ CorrespRegAllToAll (AlignmentOverviewInfo* aoi)
 	   << endl;
     }
   }
-  
+
   gr.align (GLOBALREG_TOLERANCE, theScene->worldBbox());
   theScene->computeBBox();
 
@@ -995,7 +996,7 @@ CorrespRegAllToAll (AlignmentOverviewInfo* aoi)
 static void dragAlign (DisplayableMesh* mesh, AlignmentMethod method);
 
 int
-PlvDragRegisterCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvDragRegisterCmd (ClientData clientData, Tcl_Interp *interp,
 		    int argc, char *argv[])
 {
   // argument: name of mesh being registered (to all visible meshes)
@@ -1063,14 +1064,14 @@ public:
 
 // BUGBUG this next function is now very similar to ReadZBufferRect...
 // should merge code
-SceneBuf* 
+SceneBuf*
 GetScenePoints (DisplayableMesh* meshWithout = NULL)
 {
   // allocate buffer storage
   Togl_MakeCurrent (toglCurrent);
   int width = Togl_Width (toglCurrent);
   int height = Togl_Height (toglCurrent);
-  
+
   SceneBuf* sceneBuf = new SceneBuf (width, height);
 
   // clear z-buffer to get background z-value
@@ -1136,7 +1137,7 @@ GetMeshSceneOverlapPoints (DisplayableMesh* meshDisplay,
   Togl_MakeCurrent (toglCurrent);
   int width = Togl_Width (toglCurrent);
   int height = Togl_Height (toglCurrent);
-  
+
   unsigned int* bufMesh = new unsigned int[width*height];
 
   // now draw mesh alone
@@ -1207,7 +1208,7 @@ GetMeshSceneOverlapPoints (DisplayableMesh* meshDisplay,
 }
 
 
-static void 
+static void
 calculateNormals (vector<Pnt3>& normals, SceneBuf* sceneBuf,
 		  const vector<int>& sampPos)
 {
@@ -1233,7 +1234,7 @@ calculateNormals (vector<Pnt3>& normals, SceneBuf* sceneBuf,
 	if (sceneBuf->z[iofs] >= sceneBuf->zBackground)
 	  continue; // no data at this point
 
-	rays.push_back (sceneBuf->pt[x][y] - 
+	rays.push_back (sceneBuf->pt[x][y] -
 			sceneBuf->pt[ptX][ptY]);
       }
     }
@@ -1258,7 +1259,7 @@ calculateNormals (vector<Pnt3>& normals, SceneBuf* sceneBuf,
 }
 
 
-static void 
+static void
 dragAlign (DisplayableMesh* mesh, AlignmentMethod method)
 {
   const int nIterations = 20;
@@ -1283,7 +1284,7 @@ dragAlign (DisplayableMesh* mesh, AlignmentMethod method)
   // establish initial correspondences
   vector<Pnt3> ptOrigMesh, ptOrigScene;
   vector<int> ptSceneOfs;
-  GetMeshSceneOverlapPoints (mesh, *sceneBuf, 
+  GetMeshSceneOverlapPoints (mesh, *sceneBuf,
 			     ptOrigMesh, ptOrigScene,
 			     method == alignChenMedioni
 			     ? &ptSceneOfs : NULL);
@@ -1330,7 +1331,7 @@ dragAlign (DisplayableMesh* mesh, AlignmentMethod method)
 
     // if overlap is too small, reject this guess outright
     if (ptMesh.size() < minOverlap) {
-      printf ("\tOverlap region too small (%ld points)\n", 
+      printf ("\tOverlap region too small (%ld points)\n",
 	      ptMesh.size());
       continue;
     }
@@ -1370,7 +1371,7 @@ printf ("\tCost for %ld points is %g\n", ptMesh.size(), cost);
 
 
 int
-PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 			  int argc, char *argv[])
 {
   if (argc < 2) {
@@ -1461,11 +1462,11 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
       interp->result = "Bad mesh specified - sczRegCmds.cc:PlvGlobalRegistrationCmd listpairsfor";
       return TCL_ERROR;
     }
-    
+
     bool bTrans = false;
     if (argc > 3 && !strcmp (argv[3], "transitive"))
       bTrans = true;
-    crope partners = gr->list_partners(dm->getMeshData(), bTrans);
+    string partners = gr->list_partners(dm->getMeshData(), bTrans);
     Tcl_SetResult (interp, (char*)partners.c_str(), TCL_VOLATILE);
 
   } else if (!strcmp (argv[1], "dumpallpairs")) {
@@ -1506,10 +1507,10 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     }
     DisplayableMesh* dm1 = FindMeshDisplayInfo (argv[2]);
     DisplayableMesh* dm2 = FindMeshDisplayInfo (argv[3]);
-    // "mesh *" is allowed to leave dm2 NULL and delete 
+    // "mesh *" is allowed to leave dm2 NULL and delete
     // all involving mesh
     if (!dm1 || (!dm2 && argv[3][0] != '*')) {
-      interp->result = 
+      interp->result =
 	"Bad mesh in PlvGlobalRegistrationCmd killpair";
       return TCL_ERROR;
     }
@@ -1527,10 +1528,10 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     }
     DisplayableMesh* dm1 = FindMeshDisplayInfo (argv[2]);
     DisplayableMesh* dm2 = FindMeshDisplayInfo (argv[3]);
-    // "mesh *" is allowed to leave dm2 NULL and deals with 
+    // "mesh *" is allowed to leave dm2 NULL and deals with
     // all involving meshes
     if (!dm1 || (!dm2 && argv[3][0] != '*')) {
-      interp->result = 
+      interp->result =
 	"Bad mesh in PlvGlobalRegistrationCmd point_pair_count";
       return TCL_ERROR;
     }
@@ -1548,7 +1549,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     if (argc == 4) {
       DisplayableMesh* dm = FindMeshDisplayInfo (argv[3]);
       if (!dm) {
-	interp->result = 
+	interp->result =
 	  "Bad mesh in PlvGlobalRegistrationCmd deleteautopairs";
 	return TCL_ERROR;
       }
@@ -1636,7 +1637,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 ICP<RigidScan*> icp;
 
 int
-PlvRegIcpCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvRegIcpCmd(ClientData clientData, Tcl_Interp *interp,
 	  int argc, char *argv[])
 {
   if (argc != 14) {
@@ -1678,10 +1679,10 @@ PlvRegIcpCmd(ClientData clientData, Tcl_Interp *interp,
     assert (theScene->globalReg != NULL);
     vector<Pnt3> ptSrc, ptTrg, nrmSrc, nrmTrg;
     icp.get_pairs_for_global (ptSrc, nrmSrc, ptTrg, nrmTrg);
-    
+
     if (ptSrc.size() || ptTrg.size()) {
       cout << "Aligned pairs saved for global registration: "
-	   << mdSrc->getName() << " and " 
+	   << mdSrc->getName() << " and "
 	   << mdTrg->getName() << endl;
 
       int max_pairs = atoi(argv[12]);
@@ -1704,7 +1705,7 @@ PlvRegIcpCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvRegIcpMarkQualityCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvRegIcpMarkQualityCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   if (argc != 4) {
@@ -1737,7 +1738,7 @@ PlvRegIcpMarkQualityCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvShowIcpLinesCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvShowIcpLinesCmd(ClientData clientData, Tcl_Interp *interp,
 	  int argc, char *argv[])
 {
   if (argc < 2) {
@@ -1756,7 +1757,7 @@ PlvShowIcpLinesCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp, 
+SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   if (argc < 7) {
@@ -1772,7 +1773,7 @@ SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
 
   // error threshold
   float final_error_thresh = atof(argv[4]);
-  
+
   if (final_error_thresh <= 0) {
     interp->result = "Error threshold has to be positive!\n";
     return TCL_ERROR;
@@ -1804,9 +1805,9 @@ SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  DisplayableMesh** begin = scans.begin();
-  DisplayableMesh** end = scans.end();
-  DisplayableMesh** first, ** second;
+  vector<DisplayableMesh*>::iterator begin = scans.begin();
+  vector<DisplayableMesh*>::iterator end = scans.end();
+  vector<DisplayableMesh*>::iterator first, second;
 
   GlobalReg *gr = theScene->globalReg;
 
@@ -1831,8 +1832,8 @@ SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
 	  if (!bOverwrite) continue;
 	}
 
-	if (rs1->num_vertices() == 0 || 
-	    rs2->num_vertices() == 0) { 
+	if (rs1->num_vertices() == 0 ||
+	    rs2->num_vertices() == 0) {
 	  continue;
 	}
 
@@ -1882,23 +1883,23 @@ SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
 
 	// TODO: set threshold based on mesh resolutions
 
-	if (rs1->num_vertices() == 0 || 
-	    rs2->num_vertices() == 0) { 
+	if (rs1->num_vertices() == 0 ||
+	    rs2->num_vertices() == 0) {
 	  cout << "Skipping empty scan" << endl;
 	  continue;
 	}
-	
+
 	if (!progress.updateInc()) {
 	  cerr << "Warning: cancelled; "
 	       << "not all scan pairs considered." << endl;
 	  bBail = true;
 	  break;
 	}
-	
+
 	// ok, try to align
-	cout << "Trying " << (*first)->getName() << " and " 
+	cout << "Trying " << (*first)->getName() << " and "
 	     << (*second)->getName() << endl;
-	
+
 	// normal-space sample: bNormSSample
 	if (auto_align.add_pair (rs1, rs2, nTargetPairs, bNormSSample)) {
 	  cout << "Paired " << (*first)->getName()
@@ -1906,9 +1907,9 @@ SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
 	}
       }
     }
-    
+
     if (bBail) break;
   }
-  
+
   return TCL_OK;
 }

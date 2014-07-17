@@ -13,7 +13,7 @@
 #define REGION2D_H
 
 #include "index.h"
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 
 // const_Region2D needs the T parameter -- cannot rely on 

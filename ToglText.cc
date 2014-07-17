@@ -5,8 +5,11 @@
 #include "ToglText.h"
 #include "togl.h"
 
+#include <cstring>
+#include <unordered_map>
 
-#include <hash_map.h>
+using namespace std;
+
 struct eqtoglptr
 {
   bool operator()(unsigned long t1, unsigned long t2) const
@@ -15,7 +18,7 @@ struct eqtoglptr
   }
 };
 
-typedef hash_map<unsigned long, GLuint, hash<unsigned long>,
+typedef unordered_map<unsigned long, GLuint, hash<unsigned long>,
   eqtoglptr> FontlistToglHash;
 
 static FontlistToglHash fonthash;

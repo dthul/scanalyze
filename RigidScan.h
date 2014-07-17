@@ -33,8 +33,8 @@
 #ifndef _RIGID_SCAN_H_
 #define _RIGID_SCAN_H_
 
-#include <vector.h>
-#include <rope.h>
+#include <vector>
+#include <string>
 
 #include "ResolutionCtrl.h"
 #include "TbObj.h"
@@ -61,9 +61,9 @@ private:
   // inherit from ResolutionCtrl:
   // vector<res_info> resolutions;
   // int              curr_res;
-  // crope            name
-  // crope            basename
-  // crope            ending
+  // string            name
+  // string            basename
+  // string            ending
   //
   // inherit from TbObj:
   // Xform<float>     xf;
@@ -102,7 +102,7 @@ public:
   virtual RigidScan* filtered_copy(const VertexFilter &filter);
   virtual bool filter_inplace(const VertexFilter &filter);
   virtual bool filter_vertices (const VertexFilter& filter, vector<Pnt3>& p);
-  virtual crope getInfo(void);
+  virtual string getInfo(void);
   virtual void flipNormals (void);
   virtual void computeBBox (void);
   virtual unsigned long byteSize() { return 0; }
@@ -157,16 +157,16 @@ public:
   // File I/O
   //////////////////////////////////////////////////////////////
 
-  virtual bool read(const crope &fname);
+  virtual bool read(const string &fname);
 
   // is data worth saving?
   virtual bool is_modified (void);
   // save to given name: if default, save to existing name if there is
   // one, or return false if there's not
-  virtual bool write(const crope& fname = crope()); 
+  virtual bool write(const string& fname = string()); 
   // for saving individual meshes
   virtual bool write_resolution_mesh (int npolys,
-				      const crope& fname = crope(),
+				      const string& fname = string(),
 				      Xform<float> xfBy = Xform<float>());
   // for saving anything else
      // if you cut-and-paste these function delcarations to the .h file

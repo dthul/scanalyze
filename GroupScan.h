@@ -36,7 +36,7 @@ class GroupScan: public RigidScan
 			      int          colorSize = 3);
 
   virtual void computeBBox (void);
-  virtual crope getInfo(void);
+  virtual string getInfo(void);
 
   ////////////////////////////////////////////////////////////////
   // Aggregation
@@ -61,7 +61,7 @@ class GroupScan: public RigidScan
 
   bool write_metadata (MetaData data);
   virtual bool is_modified (void);
-  virtual bool write(const crope &fname);
+  virtual bool write(const string &fname);
   
   bool get_children_for_display (vector<DisplayableMesh*>& children) const;
   virtual RigidScan* filtered_copy (const VertexFilter &filter);

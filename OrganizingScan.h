@@ -27,7 +27,7 @@ class OrganizingScan: public RigidScan
 			      int          colorSize = 3);
 
   virtual void computeBBox (void);
-  virtual crope getInfo(void);
+  virtual string getInfo(void);
 
 };
 

@@ -77,8 +77,8 @@
 /* This is stuff that the stnadard include files on Irix define somewhere
    or other, but that MSVC does not include.
 
-   Note that defining PATH_MAX here causes extreme problems on Irix if the 
-   value is different than that in <limits.h>, depending on which value is 
+   Note that defining PATH_MAX here causes extreme problems on Irix if the
+   value is different than that in <limits.h>, depending on which value is
    used in a given situation.  And it's too hard to get at the one in
    <limits.h> from MSVC; so we define it here but only on Win32 and error
    if it's already been defined elsewhere.
@@ -93,7 +93,7 @@
 #  endif
 
 #  ifndef MAXFLOAT
-#    define MAXFLOAT ((float)3.40282346638528860e+38)   
+#    define MAXFLOAT ((float)3.40282346638528860e+38)
 #  endif
 
 #  ifdef PATH_MAX
@@ -102,6 +102,11 @@
 #    define PATH_MAX 1024
 #  endif
 
+#endif
+
+#ifdef __linux
+// for PATH_MAX
+#include <linux/limits.h>
 #endif
 
 #ifndef EQSTR

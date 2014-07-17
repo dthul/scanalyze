@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////
 // Timer.h
 // Kari Pulli
-// 
+//
 ////////////////////////////////////////////////////////////
 
 #ifndef _TIMER_H_
 #define _TIMER_H_
 
-#include <iostream.h>
+#include <iostream>
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
@@ -17,6 +17,8 @@
 #endif
 #include <time.h>		// for gettimeofday()
 #include <assert.h>
+
+using namespace std;
 
 const int NTICKS=100;
 #define REALTIME
@@ -35,7 +37,7 @@ public:
   const char* name() const    { return iname; }
   float real() const          { return ireal; }
   float user() const          { return float(tmspu+tmsps)/NTICKS; }
-  
+
   void start()
     {
       started = 1;
@@ -91,7 +93,7 @@ public:
       (void)times(&tm);
       return (int)tm.tms_utime + (int)tm.tms_stime;
 #     endif
-#endif      
+#endif
     }
 };
 

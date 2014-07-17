@@ -18,10 +18,10 @@ else
   OPTIMIZER = -g
 endif
 
-TARGET = -march=i686
+TARGET = 
 
 CC = gcc -w
-CXX = g++ -fno-for-scope -fpermissive -fwritable-strings -w
+CXX = g++ -fpermissive -w -std=c++11
 LINK = $(CXX) $(TARGET)
 
 
@@ -30,11 +30,12 @@ LINK = $(CXX) $(TARGET)
 #
 
 INCLUDES += -I../.. \
-	    -I../../auxlibs/include/tnt
+	    -I../../auxlibs/include/tnt \
+        -I/usr/include/tcl8.4
 
 LIBPATHS = -L../../auxlibs/lib/Linux -L/usr/lib -L/usr/X11R6/lib
 
-LIBS =  -ltk -ltcl -lGLU -lGL \
+LIBS =  -ltk8.4 -ltcl8.4 -lGLU -lGL \
 	-lX11 -lXext -lXmu -lz -lm
 AUXLIBS =
 

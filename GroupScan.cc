@@ -8,7 +8,7 @@
 
 
 #define FOR_EACH_CHILD(it) \
-   for (DisplayableMesh** it = children.begin(); it < children.end(); it++)
+   for (vector<DisplayableMesh*>::iterator it = children.begin(); it < children.end(); it++)
 #define FOR_EACH_CONST_CHILD(it) \
    for (vector<DisplayableMesh*>::const_iterator it = children.begin(); \
         it < children.end(); it++)
@@ -62,8 +62,8 @@ GroupScan::RemoveScan (DisplayableMesh* scan)
   return false;
 }
 
-bool 
-GroupScan::write(const crope &fname)
+bool
+GroupScan::write(const string &fname)
 {
   if (fname.empty()) {
       // try to save to default name; quit if there isn't one
@@ -74,20 +74,20 @@ GroupScan::write(const crope &fname)
       set_name(fname);
     }
   }
- 
+
   ofstream fout (name.c_str());
   if (fout) {
     FOR_EACH_CHILD(it) {
       const char* str = (*it)->getMeshData()->get_name().c_str();
-      for (int i = 0; i < strlen(str); i++) 
+      for (int i = 0; i < strlen(str); i++)
 	fout.put(str[i]);
       fout.put('\n');
-    } 
+    }
     fout.put ('\n');
     fout.close();
-    bDirty = false; 
+    bDirty = false;
     return true;
-  } 
+  }
   return false;
 }
 
@@ -148,7 +148,7 @@ GroupScan::computeBBox (void)
 }
 
 
-crope
+string
 GroupScan::getInfo (void)
 {
   char info[1000];
@@ -156,10 +156,10 @@ GroupScan::getInfo (void)
   sprintf (info, "Scan group containing %ld members.\n\n",
 	   children.size());
 
-  return crope (info) + RigidScan::getInfo();
+  return string (info) + RigidScan::getInfo();
 }
 
-bool 
+bool
 GroupScan::is_modified (void) {
   return bDirty;
 }
@@ -217,10 +217,11 @@ GroupScan::rebuildResolutions (void)
 	iPolysVis += childres[rs->current_resolution_index()].abs_resolution;
     }
 
-    insert_resolution (nThisRes, crope(), bInMem, bDesiredInMem);
+    insert_resolution (nThisRes, string(), bInMem, bDesiredInMem);
   }
 
   // switch to best approximation of average current resolution
+  int i;
   for (i = 0; i < nRes; i++) {
     if (iPolysVis >= resolutions[i].abs_resolution)
       break;
@@ -276,10 +277,10 @@ GroupScan::release_resolution (int nPolys)
    }
    if (!resolutions[iRes].in_memory)
      return true;
-   
+
    FOR_EACH_CHILD (it) {
      RigidScan *scan = (*it)->getMeshData();
-     
+
      if (!scan->release_resolution (scan->findResForLevel(iRes)))
        return false;
    }
@@ -295,30 +296,30 @@ GroupScan::filter_inplace (const VertexFilter &filter)
 
 
 
-RigidScan* 
+RigidScan*
 GroupScan::filtered_copy (const VertexFilter &filter)
 {
   BailDetector bail;
   RigidScan *newchild, *oldchild;
   vector <DisplayableMesh*> newchildren;
   VertexFilter *childFilter;
-  
+
   cout << "Clip " << children.size() << " children: " << flush;
   FOR_EACH_CHILD(it) {
-    
+
     oldchild = (*it)->getMeshData();
     // need to transform each child by the group transform b4 filtering
     childFilter = filter.transformedClone((float*)oldchild->getXform());
     newchild = oldchild->filtered_copy(*childFilter);
-  
+
     if (newchild) {
       if (newchild->num_resolutions() > 0 ) {
-	crope newname;
+	string newname;
 	newname = oldchild->get_basename()
 	  + "Clip." + oldchild->get_nameending();
-	
+
 	newchild->set_name(newname);
-	
+
 	DisplayableMesh *dm;
 	GroupScan *g = dynamic_cast<GroupScan*>(newchild);
 	if (!g) {
@@ -329,12 +330,12 @@ GroupScan::filtered_copy (const VertexFilter &filter)
 	} else {
 	  dm = GetMeshForRigidScan(newchild);
 	  assert(dm);
-	  newchildren.push_back(dm); 
+	  newchildren.push_back(dm);
 	}
 	//newchildren.push_back(dm);
       }
     }
-    
+
     cout << "." << flush;
     if (bail()) {
       cerr << "Warning: group clip interrupted; results are partial" << endl;
@@ -344,18 +345,18 @@ GroupScan::filtered_copy (const VertexFilter &filter)
   cout << " " << newchildren.size() << " of my kids made it." << endl;
   char buf[256];
   sprintf (buf, "%sClip.%s", basename.c_str(), ending.c_str());
-  
+
   // groupScans will make its own copy of buf
-  
+
   if (!newchildren.size()) return new GroupScan;
   DisplayableMesh *groupmesh = groupScans (newchildren, buf, true);
-  
+
   groupmesh->getMeshData()->setXform(getXform());
-  
+
   return groupmesh->getMeshData();
 }
 
-  
+
 
 
 
@@ -377,15 +378,15 @@ GroupScan::subsample_points(float rate, vector<Pnt3> &p,
     // apply local transformations
     Xform<float> xf = rs->getXform();
     if (xf != Xform<float>()) {
-      for (Pnt3* pi = cp.begin(); pi < cp.end(); pi++) {
-	xf (*pi);
+      for (Pnt3 pi: cp) {
+	xf (pi);
       }
       xf.removeTranslation();
-      for (pi = cn.begin(); pi < cn.end(); pi++) {
-	xf (*pi);
+      for (Pnt3 pi: cn) {
+	xf (pi);
       }
     }
-    
+
     //cout << "- adding " << cp.size() << " points from child" << endl;
     p.insert (p.end(), cp.begin(), cp.end());
     n.insert (n.end(), cn.begin(), cn.end());

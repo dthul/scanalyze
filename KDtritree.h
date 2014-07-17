@@ -10,7 +10,7 @@
 #ifndef _KDTRITREE_H_
 #define _KDTRITREE_H_
 #include "Pnt3.h"
-#include <vector.h>
+#include <vector>
 
 struct KDsphere {
   int   ind;

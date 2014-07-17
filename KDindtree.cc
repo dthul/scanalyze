@@ -4,7 +4,7 @@
 // 04/13/96
 //############################################################
 
-#include <iostream.h>
+#include <iostream>
 #include "KDindtree.h"
 #include "Bbox.h"
 #include "defines.h"

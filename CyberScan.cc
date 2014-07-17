@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // CyberScan.cc
 //
 // Kari Pulli
@@ -13,14 +13,14 @@
 #include <stdio.h>
 #include <string.h>
 #include "DirEntries.h"
-#include <fstream.h>
+#include <fstream>
 #ifdef WIN32
 #	include <float.h>
 #endif
 #ifdef sgi
 #	include <ieeefp.h>
 #endif
-#ifdef linux
+#ifdef __linux
 #       define MAXFLOAT FLT_MAX
 #endif
 #include "CyberScan.h"
@@ -35,7 +35,7 @@
 #include "Progress.h"
 #include "BailDetector.h"
 #include "ColorUtils.h"
-#include "algo.h"
+#include "algorithm"
 #include "MeshTransport.h"
 #include "VertexFilter.h"
 
@@ -52,8 +52,8 @@ CyberScan::get_current_kdtree()
     return kdtree[iTree];
 
   regLevelData* level = getCurrentRegLevel();
-  kdtree[iTree] = CreateKDindtree(level->pnts->begin(), 
-				  level->nrms->begin(),
+  kdtree[iTree] = CreateKDindtree(level->pnts->data(),
+				  level->nrms->data(),
 				  level->pnts->size());
 
   return kdtree[iTree];
@@ -83,7 +83,7 @@ CyberScan::read_postprocess(const char *filename)
 
   // by default, start at lowest res
 
-  for (i=0; i<sweeps.size(); i++) 
+  for (int i=0; i<sweeps.size(); i++)
     sweeps[i]->select_coarsest();
   select_coarsest();
 
@@ -91,7 +91,7 @@ CyberScan::read_postprocess(const char *filename)
 
   if (!strcmp(Tcl_GetVar(g_tclInterp, "subsamplePreserveHoles",
 	                 TCL_GLOBAL_ONLY), "filter")) {
-	for (i=0; i<sweeps.size(); i++) {
+	for (int i=0; i<sweeps.size(); i++) {
 	  sweeps[i]->sd.fill_holes(2, 30);
 	  sweeps[i]->sd.fill_holes(1, 20);
 	}
@@ -137,15 +137,15 @@ CyberScan::mesh(bool perVertex, bool stripped,
   if (!perVertex) {
     cerr << "No per face normals for CyberScan" << endl;
     return NULL;
-  } 
+  }
   */
-  
+
   int i = current_resolution_index();
   load_resolution (i);
 
   MeshTransport *mt = new MeshTransport;
   for (int iTurn = 0; iTurn < sweeps.size(); iTurn++) {
-    MeshTransport* turn = sweeps[iTurn]->mesh (perVertex, stripped, color, 
+    MeshTransport* turn = sweeps[iTurn]->mesh (perVertex, stripped, color,
 					       colorSize);
     if (turn) {
       mt->appendMT (turn, sweeps[iTurn]->getXform());
@@ -210,26 +210,26 @@ CyberScan::getRegLevelFor (int iRes)
       rl->nrms = new vector<short>; rl->nrms->reserve (nPts);
       rl->bdry = new vector<char>;  rl->bdry->reserve (nPts);
       rl->bFree = true;
-      
-      for (i = 0; i < sweeps.size(); i++) {
+
+      for (int i = 0; i < sweeps.size(); i++) {
 	levelData *ld = sweeps[i]->levels[iRes];
 	long ps = rl->pnts->size();
 	long ns = rl->nrms->size();
-	
-	rl->pnts->insert (rl->pnts->end(), 
+
+	rl->pnts->insert (rl->pnts->end(),
 			  ld->pnts.begin(), ld->pnts.end());
-	rl->nrms->insert (rl->nrms->end(), 
+	rl->nrms->insert (rl->nrms->end(),
 			  ld->nrms.begin(), ld->nrms.end());
-	rl->bdry->insert (rl->bdry->end(), 
+	rl->bdry->insert (rl->bdry->end(),
 			  ld->bdry.begin(), ld->bdry.end());
-	
+
 	Xform<float> sxf = sweeps[i]->getXform();
-	if (!sxf.isIdentity()) {	
+	if (!sxf.isIdentity()) {
 	  // need to apply sweep's transform to the new data
 	  for_each (rl->pnts->begin() + ps, rl->pnts->end(), sxf);
 	  sxf.removeTranslation();
-	  for (short* nb = rl->nrms->begin() + ns;
-	       nb < rl->nrms->end(); nb += 3) {
+	  for (short* nb = rl->nrms->data() + ns;
+	       nb < &(*(rl->nrms->end())); nb += 3) {
 	    Pnt3 n (nb[0], nb[1], nb[2]);
 	    sxf (n);
 	    nb[0] = n[0]; nb[1] = n[1]; nb[2] = n[2];
@@ -245,10 +245,10 @@ CyberScan::getRegLevelFor (int iRes)
 
 static Random rnd;
 
-void 
+void
 CyberScan::subsample_points(float rate, vector<Pnt3> &p,
 			    vector<Pnt3> &n)
-{ 
+{
   regLevelData* level = getCurrentRegLevel();
 
   int end = level->pnts->size();
@@ -257,13 +257,13 @@ CyberScan::subsample_points(float rate, vector<Pnt3> &p,
   for (int i = 0; i < end; i++) {
     if (rnd() <= rate) {
       p.push_back (level->pnts->operator[](i));    // save point
-      pushNormalAsPnt3 (n, level->nrms->begin(), i);
+      pushNormalAsPnt3 (n, level->nrms->data(), i);
     }
   }
 }
 
 
-RigidScan* 
+RigidScan*
 CyberScan::filtered_copy (const VertexFilter &filter)
 {
   BailDetector bail;
@@ -296,14 +296,14 @@ CyberScan::filtered_copy (const VertexFilter &filter)
 }
 
 
-RigidScan* 
+RigidScan*
 CyberScan::get_piece (int sweepNumber, int frameStart, int frameFinish)
 {
   if (sweepNumber >= sweeps.size()) {
     return NULL;
   }
 
-  RigidScan* newSweep = 
+  RigidScan* newSweep =
     sweeps[sweepNumber]->get_piece(frameStart, frameFinish);
 
   if (newSweep == NULL)
@@ -321,15 +321,15 @@ CyberScan::get_piece (int sweepNumber, int frameStart, int frameFinish)
 }
 
 
-bool 
+bool
 CyberScan::filter_inplace (const VertexFilter &filter)
 {
   return false;
 }
 
 
-bool 
-CyberScan::filter_vertices (const VertexFilter &filter, 
+bool
+CyberScan::filter_vertices (const VertexFilter &filter,
 			    vector<Pnt3>& p)
 {
   for (int i=0; i<sweeps.size(); i++) {
@@ -346,7 +346,7 @@ CyberScan::filter_vertices (const VertexFilter &filter,
 
 
 bool
-CyberScan::closest_point(const Pnt3 &p, const Pnt3 &n, 
+CyberScan::closest_point(const Pnt3 &p, const Pnt3 &n,
 			 Pnt3 &cp, Pnt3 &cn,
 			 float thr, bool bdry_ok)
 {
@@ -356,7 +356,7 @@ CyberScan::closest_point(const Pnt3 &p, const Pnt3 &n,
   int ind, ans;
 
   regLevelData* level = getCurrentRegLevel();
-  ans = tree->search(level->pnts->begin(), level->nrms->begin(), 
+  ans = tree->search(level->pnts->data(), level->nrms->data(),
 		     p, n, ind, thr);
   if (ans) {
     if (bdry_ok == 0) {
@@ -365,8 +365,8 @@ CyberScan::closest_point(const Pnt3 &p, const Pnt3 &n,
     }
     cp = level->pnts->operator[](ind);
     ind *= 3;
-    cn.set(level->nrms->operator[](ind  )/32767.0, 
-	   level->nrms->operator[](ind+1)/32767.0, 
+    cn.set(level->nrms->operator[](ind  )/32767.0,
+	   level->nrms->operator[](ind+1)/32767.0,
 	   level->nrms->operator[](ind+2)/32767.0);
   }
   return ans;
@@ -408,8 +408,8 @@ CyberSweep::computeBBox ()
 
   // and add its points to bbox
   if (level != NULL) {
-    for (Pnt3* p = level->pnts.begin(); p < level->pnts.end(); p++) {
-      bbox.add(*p);
+    for (Pnt3 p: level->pnts) {
+      bbox.add(p);
     }
   }
 }
@@ -430,15 +430,15 @@ CyberSweep::flipNormals (void)
     if (!resolutions[i].in_memory)
       continue;
 
-    for (int j = 0; j < levels[i]->nrms.size(); j++) 
+    for (int j = 0; j < levels[i]->nrms.size(); j++)
       levels[i]->nrms[j] = -levels[i]->nrms[j];
     flip_tris(levels[i]->tstrips, true);
   }
 }
 
 
-bool 
-CyberScan::read(const crope &fname)
+bool
+CyberScan::read(const string &fname)
 {
   cout << "cs::read()" << endl;
   set_name (fname);
@@ -493,7 +493,7 @@ CyberScan::read(const crope &fname)
   }
 
   // If we didn't successfully read any .sd files, return error
-  
+
   if (sweeps.size() == 0)
     return false;
 
@@ -502,7 +502,7 @@ CyberScan::read(const crope &fname)
   // read registration xform?
   if (TbObj::readXform (get_basename())) {
     // if we read a single file instead of a directory,
-    // sweep will have read the same .xf as we do; 
+    // sweep will have read the same .xf as we do;
     // don't want it doubly applied so nuke it from sweep.
     if (!bReadDir) {
       assert (sweeps.size() == 1);
@@ -525,8 +525,8 @@ CyberScan::is_modified (void)
 }
 
 
-bool 
-CyberScan::write(const crope &fname)
+bool
+CyberScan::write(const string &fname)
 {
    char sweepfn[PATH_MAX];
 
@@ -540,7 +540,7 @@ CyberScan::write(const crope &fname)
          set_name(fname);
       }
    }
-   
+
    if (portable_mkdir(name.c_str(), 0775) == 0)  {
 
       Progress progress (sweeps.size(), "Writing CyberScan");
@@ -554,7 +554,7 @@ CyberScan::write(const crope &fname)
    }
    else
       return false;
-  
+
    bDirty = false;
    return true;
 }
@@ -567,7 +567,7 @@ CyberScan::load_resolution (int iRes)
     return true;
 
   int nSweeps = sweeps.size();
-  if (g_verbose) cout << name << ": create mesh (~" 
+  if (g_verbose) cout << name << ": create mesh (~"
        << resolutions[iRes].abs_resolution << ") from "
        << nSweeps << " sweeps: " << flush;
 
@@ -624,7 +624,7 @@ CyberScan::release_resolution(int nPolys)
 
 /*
 void
-check(vector<int> &tstrips, int n) 
+check(vector<int> &tstrips, int n)
 {
   int ns = tstrips.size();
   for (int i=0; i<ns; i++) {
@@ -691,7 +691,7 @@ CyberSweep::insert_possible_resolutions(void)
 
 
 bool
-CyberSweep::read(const crope &fname)
+CyberSweep::read(const string &fname)
 {
   if (!sd.read(fname))
     return false;
@@ -765,7 +765,7 @@ CyberSweep::read(const crope &fname)
 
 
 bool
-CyberSweep::write(const crope &fname)
+CyberSweep::write(const string &fname)
 {
   return sd.write(fname);
 }
@@ -791,7 +791,7 @@ CyberSweep::load_resolution (int iRes)
     //levels[0]->bdry.assign (levels[0]->pnts.size(), 0);
     vector<char> tmp(levels[0]->pnts.size(), 0);
     levels[0]->bdry = tmp;
-    
+
 
     sd.make_tstrip(levels[0]->tstrips, levels[0]->bdry);
 
@@ -801,7 +801,7 @@ CyberSweep::load_resolution (int iRes)
 
     int step = 1 << iRes;
 
-    sd.subsampled_tstrip(step, 
+    sd.subsampled_tstrip(step,
 			 Tcl_GetVar (g_tclInterp,
 				     "subsamplePreserveHoles",
 				     TCL_GLOBAL_ONLY),
@@ -826,8 +826,8 @@ CyberSweep::load_resolution (int iRes)
     //cout << "normals... " << flush;
     getVertexNormals(level->pnts, level->tstrips,
 		     true, level->nrms, false);
-    
-    resolutions[iRes].abs_resolution = 
+
+    resolutions[iRes].abs_resolution =
       count_tris (levels[iRes]->tstrips);
   } else {
     resolutions[iRes].abs_resolution = 0;
@@ -838,13 +838,13 @@ CyberSweep::load_resolution (int iRes)
 }
 
 
-void 
+void
 CyberSweep::drawthis(void)
 {
   glDisable(GL_LIGHTING);
   glBegin(GL_LINES);
   for (int i=0; i<start.size(); i++) {
-    glColor3f(1,0,0); 
+    glColor3f(1,0,0);
     glVertex3fv(&start[i][0]);
     glColor3f(0,1,0);
     glVertex3fv(&end[i][0]);
@@ -854,7 +854,7 @@ CyberSweep::drawthis(void)
 
 /* kberg - 10 July 2001
  * adding per face normals - modeled partly after strips_to_tris
- * in TriMeshUtils.cc, except rather than storing the vertices, it 
+ * in TriMeshUtils.cc, except rather than storing the vertices, it
  * calculates a normal based upon those 3 vertices then adds it to
  * the faceNormals vector.
  */
@@ -862,12 +862,12 @@ void CyberSweep::simulateFaceNormals(vector<short> &faceNormals, int currentRes)
 {
   if (!levels[currentRes]->tstrips.size())
     return;
-  
+
   assert(levels[currentRes]->tstrips.back() == -1);
-  
+
   faceNormals.clear();
   faceNormals.reserve(levels[currentRes]->tstrips.size() * 3); // estimate
-  
+
   vector<int>::const_iterator vert;
   for (vert = levels[currentRes]->tstrips.begin(); vert != levels[currentRes]->tstrips.end(); vert++) {
     while (*vert == -1) { // handle 0-length strips
@@ -876,15 +876,15 @@ void CyberSweep::simulateFaceNormals(vector<short> &faceNormals, int currentRes)
     }
 
     if (vert == levels[currentRes]->tstrips.end()) break;
-    
+
     vert += 2; // looking backwards at the triangles
-    
+
     int dir = 0;
     while (*vert != -1) {
       Pnt3 &v0 = levels[currentRes]->pnts[vert[-2 + dir]];
       Pnt3 &v1 = levels[currentRes]->pnts[vert[-1 - dir]];
       Pnt3 &v2 = levels[currentRes]->pnts[vert[0]];
-      
+
       //now calculate the normal based on these 3 points
       Pnt3 norm = normal(v0, v1, v2);
       pushNormalAsShorts(faceNormals, norm);
@@ -908,12 +908,12 @@ CyberSweep::mesh (bool perVertex, bool stripped,
   MeshTransport* mt = new MeshTransport;
   mt->setVtx(&levels[i]->pnts, MeshTransport::share);
   mt->setBbox(localBbox());
-  
+
   /* kberg - 10 July 2001 - per face normals */
   if (perVertex)
     mt->setNrm(&levels[i]->nrms, MeshTransport::share);
   else {
-    /* used GenericScan::mesh(...) as an example of how to simulate this. 
+    /* used GenericScan::mesh(...) as an example of how to simulate this.
        for some reason, by going into this mode, only part of a statue
        is displayed when intensity is selected.  It should have something to do
        with how DisplayMesh::renderMeshSingle(...) handles color.
@@ -931,11 +931,11 @@ CyberSweep::mesh (bool perVertex, bool stripped,
 		    resolutions[i].abs_resolution);
     mt->setTris(tris, MeshTransport::steal);
   }
-  
+
   switch (color) {
   case colorNone:
     break;
-    
+
   case colorTrue:
     {
       vector<uchar>* colors = new vector<uchar>;
@@ -950,9 +950,8 @@ CyberSweep::mesh (bool perVertex, bool stripped,
       if (g_bNoIntensity) {
 	// BUGBUG: what to do here?
       } else {
-	uchar* end = levels[i]->intensity.end();
-	for (uchar* c = levels[i]->intensity.begin(); c < end; c++)
-	  pushColor (*colors, colorSize, *c);
+    for (uchar c: levels[i]->intensity)
+	  pushColor (*colors, colorSize, c);
       }
       mt->setColor (colors, MeshTransport::steal);
     }
@@ -963,9 +962,8 @@ CyberSweep::mesh (bool perVertex, bool stripped,
     {
       vector<uchar>* colors = new vector<uchar>;
       colors->reserve (colorSize * levels[i]->confidence.size());
-      uchar* end = levels[i]->confidence.end();
-      for (uchar* c = levels[i]->confidence.begin(); c < end; c++)
-	pushConf (*colors, colorSize, *c);
+      for (uchar c: levels[i]->confidence)
+	pushConf (*colors, colorSize, c);
       mt->setColor (colors, MeshTransport::steal);
     }
     break;
@@ -974,13 +972,12 @@ CyberSweep::mesh (bool perVertex, bool stripped,
     {
       vector<uchar>* colors = new vector<uchar>;
       colors->reserve (colorSize * levels[i]->bdry.size());
-      char* end = levels[i]->bdry.end();
-      for (char* c = levels[i]->bdry.begin(); c < end; c++)
-	pushConf (*colors, colorSize, (uchar)(*c ? 0 : 255));
+      for (char c: levels[i]->bdry)
+	pushConf (*colors, colorSize, (uchar)(c ? 0 : 255));
       mt->setColor (colors, MeshTransport::steal);
     }
     break;
-    
+
   default:
     //cerr << "Color: TODO" << endl;
     break;
@@ -1009,10 +1006,11 @@ CyberScan::get_ordered_sweeps (void)
 
     // insert a vector in v based on translation
     float t = sweep->sd.scanner_trans;
-    for (int iTrans = 0; iTrans < v.size(); iTrans++) {
+    int iTrans;
+    for (iTrans = 0; iTrans < v.size(); iTrans++) {
       float tc = v[iTrans][0]->sd.scanner_trans;
       if (t <= tc) {
-	if (t < tc) v.insert(&v[iTrans], vector<CyberSweep*>());
+	if (t < tc) v.insert(v.begin() + iTrans, vector<CyberSweep*>());
 	break;
       }
     }
@@ -1020,14 +1018,15 @@ CyberScan::get_ordered_sweeps (void)
     // get a reference to the shell
     vector<CyberSweep*>& vShell = v[iTrans];
 
-    // find a place to insert sweep (within shell) 
+    // find a place to insert sweep (within shell)
     // based on other screw
-    for (int iSweep = 0; iSweep < vShell.size(); iSweep++) {
+    int iSweep;
+    for (iSweep = 0; iSweep < vShell.size(); iSweep++) {
       if (sweep->sd.other_screw < vShell[iSweep]->sd.other_screw)
 	break;
     }
     // insert into shell
-    vShell.insert (&vShell[iSweep], sweep);
+    vShell.insert (vShell.begin() + iSweep, sweep);
   }
 
   return v;
@@ -1057,18 +1056,18 @@ CyberScan::dump_pts_laser_subsampled(std::string fname,
   // first, how many valid points are there?
   for (int i=0; i < sweeps.size(); i++) {
     n_valid_pts += sweeps[i]->sd.valid_pts();
-  }  
+  }
   // now, iterate
   SHOW(nPnts);
   float fact = float(nPnts) / float(n_valid_pts);
-  for (i=0; i < sweeps.size(); i++) {
+  for (int i=0; i < sweeps.size(); i++) {
     int n = sweeps[i]->sd.valid_pts();
     n_valid_pts -= n;
     if (i+1 == sweeps.size()) n = nPnts;
     else                      n *= fact;
     nPnts -= sweeps[i]->sd.dump_pts_laser_subsampled(out, n);
     fact = float(nPnts) / float(n_valid_pts);
-  }  
+  }
   SHOW(nPnts);
 }
 
@@ -1090,11 +1089,11 @@ CyberScan::get_raw_data(const Pnt3 &p, sd_raw_pnt &data)
   if (reglevels[lvl] == NULL) return false;
 
   // ok. assume p is in the scan coordinates, by the way
-  
+
   // find the index of the point closest to p in kdtree
   int ind;
   float thr = .1;
-  if (!kdtree[lvl]->search(reglevels[lvl]->pnts->begin(),
+  if (!kdtree[lvl]->search(reglevels[lvl]->pnts->data(),
 			   p, ind, thr)) {
     cerr << "Couldn't find the point " << p << endl;
     return false;
@@ -1102,7 +1101,8 @@ CyberScan::get_raw_data(const Pnt3 &p, sd_raw_pnt &data)
 
   // ok, found the point index
   // now, find which sweep it is and find the relative index there
-  for (int i=0; i<sweeps.size(); i++) {
+  int i;
+  for (i=0; i<sweeps.size(); i++) {
     int n = sweeps[i]->levels[lvl]->pnts.size();
     if (ind >= n) ind -= n;
     else          break;
@@ -1121,30 +1121,30 @@ CyberScan::get_raw_data(const Pnt3 &p, sd_raw_pnt &data)
   } else {
     pp = sweeps[i]->sd.raw_for_ith_valid(ind, data);
   }
-  
+
   if (dist(pp,p) > .1) {
     SHOW(p);
     SHOW(pp);
     SHOW(dist(p,pp));
   }
-  
+
   return true;
 }
 
 
 // returns confidence!
-float 
-CyberScan::closest_point_on_mesh(const Pnt3 &p, Pnt3 &cl_pnt, 
+float
+CyberScan::closest_point_on_mesh(const Pnt3 &p, Pnt3 &cl_pnt,
 				 OccSt &status_p)
 {
   // cheat...
   return closest_along_line_of_sight(p, cl_pnt, status_p);
 }
- 
+
 
 // returns confidence!
-float 
-CyberScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp, 
+float
+CyberScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp,
 				       OccSt &status_p)
 {
   // first need to move p into the local coordinates!!
@@ -1178,7 +1178,7 @@ CyberScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp,
   // return confidence
   return (status_p == INSIDE || status_p == OUTSIDE ? 1.0 : 0.0);
 }
- 
+
 
 OccSt
 CyberScan::carve_cube  (const Pnt3 &ctr, float side)
@@ -1199,11 +1199,11 @@ CyberScan::carve_cube  (const Pnt3 &ctr, float side)
     // initialize with all
     carveStack.push_back(carveStackEntry(lctr, r, sweeps));
   }
-  
+
   // now the back() of the stack should have the sweeps that
   // we're interested in
   vector<CyberSweep*> &sw = carveStack.back().sweeps;
-  
+
   // add a new entry for this cube
   carveStackEntry cse(lctr, r);
 
@@ -1242,14 +1242,14 @@ CyberScan::switchToResLevel (int iRes)
 }
 
 
-crope
+string
 CyberSweep::get_description (void) const
 {
   static char name[100];
   sprintf(name, "trans-%.2d-rot-%.2d",
 	  (int)sd.scanner_trans,
 	  (int)sd.other_screw);
-  return crope (name);
+  return string (name);
 }
 
 
@@ -1262,18 +1262,18 @@ CyberSweep::get_current_kdtree()
     return kdtree[iTree];
 
   levelData* level = levels[current_resolution_index()];
-  kdtree[iTree] = CreateKDindtree(level->pnts.begin(), 
-				  level->nrms.begin(),
+  kdtree[iTree] = CreateKDindtree(level->pnts.data(),
+				  level->nrms.data(),
 				  level->pnts.size());
 
   return kdtree[iTree];
 }
 
 
-void 
+void
 CyberSweep::subsample_points(float rate, vector<Pnt3> &p,
 			     vector<Pnt3> &n)
-{ 
+{
   levelData* level = levels[current_resolution_index()];
 
   int end = level->pnts.size();
@@ -1282,7 +1282,7 @@ CyberSweep::subsample_points(float rate, vector<Pnt3> &p,
   for (int i = 0; i < end; i++) {
     if (rnd() <= rate) {
       p.push_back(level->pnts[i]);    // save point
-      pushNormalAsPnt3(n, level->nrms.begin(), i);
+      pushNormalAsPnt3(n, level->nrms.data(), i);
     }
   }
 }
@@ -1325,7 +1325,7 @@ CyberSweep::filtered_copy(const VertexFilter &filter)
 
 
 bool
-CyberSweep::closest_point(const Pnt3 &p, const Pnt3 &n, 
+CyberSweep::closest_point(const Pnt3 &p, const Pnt3 &n,
 			  Pnt3 &cp, Pnt3 &cn,
 			  float thr, bool bdry_ok)
 {
@@ -1335,7 +1335,7 @@ CyberSweep::closest_point(const Pnt3 &p, const Pnt3 &n,
   int ind, ans;
 
   levelData* level = levels[current_resolution_index()];
-  ans = tree->search(&level->pnts[0], &level->nrms[0], 
+  ans = tree->search(&level->pnts[0], &level->nrms[0],
 		     p, n, ind, thr);
   if (ans) {
     if (bdry_ok == 0) {
@@ -1344,15 +1344,15 @@ CyberSweep::closest_point(const Pnt3 &p, const Pnt3 &n,
     }
     cp = level->pnts[ind];
     ind *= 3;
-    cn.set(level->nrms[ind  ]/32767.0, 
-	   level->nrms[ind+1]/32767.0, 
+    cn.set(level->nrms[ind  ]/32767.0,
+	   level->nrms[ind+1]/32767.0,
 	   level->nrms[ind+2]/32767.0);
   }
   return ans;
 }
 
 
-crope
+string
 CyberScan::getInfo (void)
 {
   long verts = 0;
@@ -1366,37 +1366,37 @@ CyberScan::getInfo (void)
   sprintf(infos, "CyberScan: verts %ld stripped tris %ld\n\n",
 	  verts, tris);
 
-  crope info (infos);
+  string info (infos);
 
   if (sweeps.size() == 1) {
-    info += crope ("Single sweep at ") + sweeps[0]->get_description();
-    info += crope ("\nFrom file: ") + sweeps[0]->get_name();
+    info += string ("Single sweep at ") + sweeps[0]->get_description();
+    info += string ("\nFrom file: ") + sweeps[0]->get_name();
   } else {
     float turnMin = FLT_MAX; float transMin = FLT_MAX;
     float turnMax = -FLT_MAX; float transMax = -FLT_MAX;
     int lastShell = -1000;
     int nShells = 0;
-    
+
     for (int i = 0; i < sweeps.size(); i++) {
       turnMin = MIN (turnMin, sweeps[i]->sd.other_screw);
       turnMax = MAX (turnMin, sweeps[i]->sd.other_screw);
       transMin = MIN (transMin, sweeps[i]->sd.scanner_trans);
       transMax = MAX (transMin, sweeps[i]->sd.scanner_trans);
-      
+
       if ((int)sweeps[i]->sd.scanner_trans != lastShell) {
 	lastShell = sweeps[i]->sd.scanner_trans;
 	++nShells;
       }
     }
-      
+
     sprintf (infos, "%ld sweeps ranging:\n"
 	     "Other-screw (nod/turn): %.2f to %.2f\n"
 	     "Translation: %.2f to %.2f in %d shells",
 	     sweeps.size(), turnMin, turnMax, transMin, transMax, nShells);
-    info += crope (infos);
+    info += string (infos);
   }
 
-  info += crope ("\n\n") + RigidScan::getInfo();
+  info += string ("\n\n") + RigidScan::getInfo();
 
   return info;
 }
@@ -1432,7 +1432,7 @@ CyberScan::worldCoordToSweepCoord(const Pnt3 &wc, int *sweepIndex, Pnt3 &sc)
    // system by multiplying by the inverse of the CyberScan's Xform.
 
    getXform().apply_inv(wc, csc);
-   
+
    // Next, iterate over all the sweeps, backprojecting the
    // transformed world coordinate to the sweep's coordinates.
    // If there are any valid backprojected points, we will return
@@ -1448,7 +1448,7 @@ CyberScan::worldCoordToSweepCoord(const Pnt3 &wc, int *sweepIndex, Pnt3 &sc)
 		sweeps[j]->sd.other_screw);    // we start using it in SDfile.
 
       //puts ("checking sweep");
- 
+
       if (cxf.back_project(swc, bpp, true)) {
 	cout <<"back project success" << j << "  " << bpp << "\n" << flush;
 	 sweepCoordToWorldCoord(j, bpp, fpp);
@@ -1529,27 +1529,27 @@ CyberSweep::get_piece(int firstFrame, int lastFrame)
 
 
 // return confidence!
-float 
-CyberSweep::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp, 
+float
+CyberSweep::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp,
 					OccSt &status_p)
 {
   Pnt3 bp;
   if (!sd.xf.back_project(p, bp)) {
-    status_p = NOT_IN_FRUSTUM; 
+    status_p = NOT_IN_FRUSTUM;
     return 0.0;
-  } 
+  }
   int row;
-  unsigned short y,z; 
+  unsigned short y,z;
   if (!sd.find_data(bp[0], bp[1], row, y, z)) {
     status_p = NOT_IN_FRUSTUM;
     return 0.0;
   }
-  sd.set_xf(row, false); 
+  sd.set_xf(row, false);
   sd.xf.apply_xform(y,z,cp);
   status_p = (z > bp[2]) ? INSIDE : OUTSIDE;
   return 1.0;
 }
- 
+
 
 OccSt
 CyberSweep::carve_sphere(const Pnt3 &ctr, float r)

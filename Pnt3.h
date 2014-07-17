@@ -7,57 +7,52 @@
 #ifndef _pnt3_h
 #define _pnt3_h
 
-#include<math.h>
-#include<assert.h>
-#include<iostream.h>
+#include<cmath>
+#include<cassert>
+#include<iostream>
 #ifdef WIN32
 #include<float.h>
-#endif
-#ifdef sgi
-#include<ieeefp.h>
-#endif
-
-#ifdef sun
-#define sqrtf(x) sqrt(x)
 #endif
 
 #define SHOW(X) cout << #X " = " << X << endl
 
+using namespace std;
+
 class Pnt3 {
 protected:
   float v[3];
-public: 
-  Pnt3(float a=0.0, float b=0.0, float c=0.0) 
+public:
+  Pnt3(float a=0.0, float b=0.0, float c=0.0)
     { v[0] = a, v[1] = b, v[2] = c;}
   Pnt3(const float *a)    { v[0] = a[0], v[1] = a[1], v[2] = a[2];}
   Pnt3(const double *a)   { v[0] = a[0], v[1] = a[1], v[2] = a[2];}
 
-  Pnt3 &set(float a=0.0, float b=0.0, float c=0.0) 
+  Pnt3 &set(float a=0.0, float b=0.0, float c=0.0)
     { v[0] = a, v[1] = b, v[2] = c; return *this; }
-  Pnt3 &set(const float *a) 
+  Pnt3 &set(const float *a)
     { v[0] = a[0], v[1] = a[1], v[2] = a[2]; return *this; }
   Pnt3 &set(const double *a)
     { v[0] = a[0], v[1] = a[1], v[2] = a[2]; return *this; }
-  
+
   // linear interpolation
   Pnt3 &lerp(float t, const Pnt3 &a, const Pnt3 &b)
     {
       float u = 1.0 - t;
-      v[0]=u*a[0]+t*b[0]; 
-      v[1]=u*a[1]+t*b[1]; 
+      v[0]=u*a[0]+t*b[0];
+      v[1]=u*a[1]+t*b[1];
       v[2]=u*a[2]+t*b[2];
       return *this;
     }
 
   Pnt3 &set_max(const Pnt3 &p)
-    { 
+    {
       if (p.v[0] > v[0]) v[0] = p.v[0];
       if (p.v[1] > v[1]) v[1] = p.v[1];
       if (p.v[2] > v[2]) v[2] = p.v[2];
       return *this;
     }
   Pnt3 &set_min(const Pnt3 &p)
-    { 
+    {
       if (p.v[0] < v[0]) v[0] = p.v[0];
       if (p.v[1] < v[1]) v[1] = p.v[1];
       if (p.v[2] < v[2]) v[2] = p.v[2];
@@ -67,7 +62,7 @@ public:
 #ifdef WIN32
   bool  isfinite(void) { return _finite(v[0]) && _finite(v[1]) && _finite(v[2]); }
 #else
-  bool  isfinite(void) { return finite(v[0]) && finite(v[1]) && finite(v[2]); }
+  bool  isfinite(void) { return ::isfinite(v[0]) && ::isfinite(v[1]) && ::isfinite(v[2]); }
 #endif
 
   Pnt3  operator-() const       { return Pnt3(-v[0],-v[1],-v[2]); }
@@ -97,13 +92,13 @@ public:
   friend float  dist2_2d(const Pnt3 &, const Pnt3 &);
   friend float  dist_manhattan(const Pnt3 &, const Pnt3 &);
   friend float  dist2_lineseg(const Pnt3 &, const Pnt3 &, const Pnt3 &);
-  friend float  dist2_tri(const Pnt3 &, 
+  friend float  dist2_tri(const Pnt3 &,
 			  const Pnt3 &, const Pnt3 &, const Pnt3 &);
 
-  friend bool   closer_on_lineseg(const Pnt3 &, Pnt3 &, 
-				  const Pnt3 &, 
+  friend bool   closer_on_lineseg(const Pnt3 &, Pnt3 &,
+				  const Pnt3 &,
 				  const Pnt3 &, float &);
-  friend bool   closer_on_tri(const Pnt3 &, Pnt3 &, const Pnt3 &, 
+  friend bool   closer_on_tri(const Pnt3 &, Pnt3 &, const Pnt3 &,
 			      const Pnt3 &, const Pnt3 &, float &);
 
   friend float  dot(const Pnt3 &a, const Pnt3 &b);
@@ -123,14 +118,14 @@ public:
   friend void   bary(const Pnt3& p,  const Pnt3& t1,
 		     const Pnt3& t2, const Pnt3& t3,
 		     float &b1, float &b2, float &b3);
-  friend void   bary_fast(const Pnt3& p, const Pnt3& n, 
+  friend void   bary_fast(const Pnt3& p, const Pnt3& n,
 			  const Pnt3 &t0, const Pnt3& v1, const Pnt3& v2,
 			  float &b1, float &b2, float &b3);
   friend void   bary(const Pnt3& p,  const Pnt3& dir,
-		     const Pnt3& t1, const Pnt3& t2, 
+		     const Pnt3& t1, const Pnt3& t2,
 		     const Pnt3& t3,
 		     float &b1, float &b2, float &b3);
-  friend int    above_plane(const Pnt3& p, const Pnt3& a, 
+  friend int    above_plane(const Pnt3& p, const Pnt3& a,
 			    const Pnt3& b, const Pnt3& c);
 
   float         smallest_circle(const Pnt3 &, const Pnt3 &, const Pnt3 &);
@@ -167,28 +162,28 @@ public:
 };
 
 
-inline Pnt3& 
+inline Pnt3&
 Pnt3::operator+=(const Pnt3 &a)
 {
   v[0] += a.v[0]; v[1] += a.v[1]; v[2] += a.v[2];
   return *this;
 }
 
-inline Pnt3& 
+inline Pnt3&
 Pnt3::operator-=(const Pnt3 &a)
 {
   v[0] -= a.v[0]; v[1] -= a.v[1]; v[2] -= a.v[2];
   return *this;
 }
 
-inline Pnt3& 
+inline Pnt3&
 Pnt3::operator*=(const float &a)
 {
   v[0] *= a; v[1] *= a; v[2] *= a;
   return *this;
 }
 
-inline Pnt3& 
+inline Pnt3&
 Pnt3::operator/=(const float &a)
 {
   float tmp = 1.0f / a;
@@ -211,45 +206,45 @@ Pnt3::operator!=(const Pnt3 &a)
 inline Pnt3
 operator+(const Pnt3 &a, const Pnt3 &b)
 {
-  Pnt3 tmp = a; 
+  Pnt3 tmp = a;
   return (tmp += b);
 }
 
 inline Pnt3
 operator-(const Pnt3 &a, const Pnt3 &b)
 {
-  Pnt3 tmp = a; 
+  Pnt3 tmp = a;
   return (tmp -= b);
 }
 
 inline Pnt3
 operator*(const Pnt3 &a, const float &b)
 {
-  Pnt3 tmp = a; 
+  Pnt3 tmp = a;
   return (tmp *= b);
 }
 
 inline Pnt3
 operator*(const float &a, const Pnt3 &b)
 {
-  Pnt3 tmp = b; 
+  Pnt3 tmp = b;
   return (tmp *= a);
 }
 
 inline Pnt3
 operator/(const Pnt3 &a, const float &b)
 {
-  Pnt3 tmp = a; 
+  Pnt3 tmp = a;
   return (tmp /= b);
 }
 
-inline ostream& 
+inline ostream&
 operator<<(ostream &out, const Pnt3 &a)
-{ 
+{
   return out << "["<< a.v[0] <<" "<< a.v[1] <<" "<< a.v[2] << "]";
 }
 
-inline istream& 
+inline istream&
 operator>>(istream &in, Pnt3 &a)
 {
   char c = 0;
@@ -265,15 +260,15 @@ operator>>(istream &in, Pnt3 &a)
   return in;
 }
 
-inline float 
+inline float
 Pnt3::norm() const
-{ 
+{
   return sqrtf(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 }
 
-inline float 
+inline float
 Pnt3::norm2() const
-{ 
+{
   return v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
 }
 
@@ -281,9 +276,9 @@ inline Pnt3 &
 Pnt3::normalize(void)
 {
   float a = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-  if (a != 0) { 
-    a = 1.0/sqrtf(a); 
-    v[0] *= a; v[1] *= a; v[2] *= a; 
+  if (a != 0) {
+    a = 1.0/sqrtf(a);
+    v[0] *= a; v[1] *= a; v[2] *= a;
   }
   return *this;
 }
@@ -292,9 +287,9 @@ inline Pnt3 &
 Pnt3::set_norm(float len)
 {
   float a = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-  if (a != 0) { 
-    a = len/sqrtf(a); 
-    v[0] *= a; v[1] *= a; v[2] *= a; 
+  if (a != 0) {
+    a = len/sqrtf(a);
+    v[0] *= a; v[1] *= a; v[2] *= a;
   }
   return *this;
 }
@@ -340,7 +335,7 @@ dist_manhattan(const Pnt3 &a, const Pnt3 &b)
 }
 
 // distance from x to linesegment from a to b
-inline float  
+inline float
 dist2_lineseg(const Pnt3 &x, const Pnt3 &a, const Pnt3 &b)
 {
   Pnt3 ba = b; ba -= a;
@@ -362,7 +357,7 @@ dist2_lineseg(const Pnt3 &x, const Pnt3 &a, const Pnt3 &b)
 
 
 inline float
-dist2_tri(const Pnt3 &x, 
+dist2_tri(const Pnt3 &x,
 	  const Pnt3 &t1, const Pnt3 &t2, const Pnt3 &t3)
 {
   // calculate the normal and distance from the plane
@@ -370,12 +365,12 @@ dist2_tri(const Pnt3 &x,
   Pnt3 v2(t3.v[0]-t1.v[0], t3.v[1]-t1.v[1], t3.v[2]-t1.v[2]);
   Pnt3 n = cross(v1,v2);
   float n_inv_mag2 = 1.0/n.norm2();
-  float tmp  = (x.v[0]-t1.v[0])*n.v[0] + 
-               (x.v[1]-t1.v[1])*n.v[1] + 
+  float tmp  = (x.v[0]-t1.v[0])*n.v[0] +
+               (x.v[1]-t1.v[1])*n.v[1] +
                (x.v[2]-t1.v[2])*n.v[2];
   float distp2 = tmp * tmp * n_inv_mag2;
 
-  // calculate the barycentric coordinates of the point 
+  // calculate the barycentric coordinates of the point
   // (projected onto tri plane) with respect to v123
   float b1,b2,b3;
   float f = tmp*n_inv_mag2;
@@ -394,7 +389,7 @@ dist2_tri(const Pnt3 &x,
   // (with endpoints) is closest
 
   if (b1 < 0.0) {
-    if (b2 < 0.0) { 
+    if (b2 < 0.0) {
       return dist2(x,t3);
     } else if (b3 < 0.0) {
       return dist2(x,t2);
@@ -408,7 +403,7 @@ dist2_tri(const Pnt3 &x,
 
 
 inline bool
-closer_on_lineseg(const Pnt3 &x, Pnt3 &cp, const Pnt3 &a, 
+closer_on_lineseg(const Pnt3 &x, Pnt3 &cp, const Pnt3 &a,
 		  const Pnt3 &b, float &d2)
 {
   Pnt3 ba(b.v[0]-a.v[0], b.v[1]-a.v[1], b.v[2]-a.v[2]);
@@ -434,7 +429,7 @@ closer_on_lineseg(const Pnt3 &x, Pnt3 &cp, const Pnt3 &a,
   // take the squared dist x-a, squared dot of x-a to unit b-a,
   // use Pythagoras' rule
   float nd = xa.norm2() - xa_ba*fact;
-  if (nd < d2) { 
+  if (nd < d2) {
     d2 = nd;
     cp.v[0] = a.v[0] + fact * ba.v[0];
     cp.v[1] = a.v[1] + fact * ba.v[1];
@@ -443,10 +438,10 @@ closer_on_lineseg(const Pnt3 &x, Pnt3 &cp, const Pnt3 &a,
   }
   return false;
 }
- 
+
 
 inline bool
-closer_on_tri(const Pnt3 &x, Pnt3 &cp, const Pnt3 &t1, 
+closer_on_tri(const Pnt3 &x, Pnt3 &cp, const Pnt3 &t1,
 	      const Pnt3 &t2, const Pnt3 &t3, float &d2)
 {
   // calculate the normal and distance from the plane
@@ -454,13 +449,13 @@ closer_on_tri(const Pnt3 &x, Pnt3 &cp, const Pnt3 &t1,
   Pnt3 v2(t3.v[0]-t1.v[0], t3.v[1]-t1.v[1], t3.v[2]-t1.v[2]);
   Pnt3 n = cross(v1,v2);
   float n_inv_mag2 = 1.0/n.norm2();
-  float tmp  = (x.v[0]-t1.v[0])*n.v[0] + 
-               (x.v[1]-t1.v[1])*n.v[1] + 
+  float tmp  = (x.v[0]-t1.v[0])*n.v[0] +
+               (x.v[1]-t1.v[1])*n.v[1] +
                (x.v[2]-t1.v[2])*n.v[2];
   float distp2 = tmp * tmp * n_inv_mag2;
   if (distp2 >= d2) return false;
 
-  // calculate the barycentric coordinates of the point 
+  // calculate the barycentric coordinates of the point
   // (projected onto tri plane) with respect to v123
   float b1,b2,b3;
   float f = tmp*n_inv_mag2;
@@ -481,7 +476,7 @@ closer_on_tri(const Pnt3 &x, Pnt3 &cp, const Pnt3 &t1,
   // (with endpoints) is closest
 
   if (b1 < 0.0) {
-    if (b2 < 0.0) { 
+    if (b2 < 0.0) {
       float nd = dist2(x,t3);
       if (nd < d2) { d2 = nd; cp = t3; return true; }
       else         { return false; }
@@ -500,16 +495,16 @@ closer_on_tri(const Pnt3 &x, Pnt3 &cp, const Pnt3 &t1,
 }
 
 
-inline float 
+inline float
 dot(const Pnt3 &a, const Pnt3 &b)
-{ 
+{
   return (a.v[0]*b.v[0] + a.v[1]*b.v[1] + a.v[2]*b.v[2]);
 }
 
 
-inline Pnt3 
+inline Pnt3
 cross(const Pnt3 &a, const Pnt3 &b)
-{ 
+{
   return Pnt3(a.v[1]*b.v[2] - a.v[2]*b.v[1],
 	      a.v[2]*b.v[0] - a.v[0]*b.v[2],
 	      a.v[0]*b.v[1] - a.v[1]*b.v[0]);
@@ -530,9 +525,9 @@ cross(const Pnt3 &a, const Pnt3 &b, const Pnt3 &c)
 }
 
 // get a normal from triangle ABC, points given in ccw order
-inline Pnt3 
+inline Pnt3
 normal(const Pnt3 &a, const Pnt3 &b, const Pnt3 &c)
-{ 
+{
   float a0 = a.v[0]-c.v[0];
   float a1 = a.v[1]-c.v[1];
   float a2 = a.v[2]-c.v[2];
@@ -552,10 +547,10 @@ normal(const Pnt3 &a, const Pnt3 &b, const Pnt3 &c)
 }
 
 // determinant of 3 points
-inline float  
+inline float
 det(const Pnt3 &a, const Pnt3 &b, const Pnt3 &c)
 {
-  return a[0]*(b[1]*c[2]-b[2]*c[1]) 
+  return a[0]*(b[1]*c[2]-b[2]*c[1])
     -    a[1]*(b[0]*c[2]-b[2]*c[0])
     +    a[2]*(b[0]*c[1]-b[1]*c[0]);
 }
@@ -565,7 +560,7 @@ det(const Pnt3 &a, const Pnt3 &b, const Pnt3 &c)
 // (modified from Graphics Gems, p.299)
 inline void
 line_plane_X(const Pnt3& p, const Pnt3& dir,
-	     const Pnt3& t1, const Pnt3& t2, const Pnt3& t3, 
+	     const Pnt3& t1, const Pnt3& t2, const Pnt3& t3,
 	     Pnt3 &x, float &dist)
 {
   // note: normal doesn't need to be unit vector
@@ -585,7 +580,7 @@ line_plane_X(const Pnt3& p, const Pnt3& dir,
   if (dist < 0.0) dist = -dist;
 }
 
-inline void   
+inline void
 line_plane_X(const Pnt3& p, const Pnt3& dir,
 	    const Pnt3& nrm, float d, Pnt3 &x, float &dist)
 {
@@ -603,8 +598,8 @@ line_plane_X(const Pnt3& p, const Pnt3& dir,
 
 // calculate barycentric coordinates of the point p
 // on triangle t1 t2 t3
-inline void 
-bary(const Pnt3& p, 
+inline void
+bary(const Pnt3& p,
      const Pnt3& t1, const Pnt3& t2, const Pnt3& t3,
      float &b1, float &b2, float &b3)
 {
@@ -654,10 +649,10 @@ bary(const Pnt3& p,
 
 // calculate barycentric coordinates of the point p
 // (already on the triangle plane) with normal vector n
-// and two edge vectors v1 and v2, 
+// and two edge vectors v1 and v2,
 // starting from a common vertex t0
-inline void 
-bary_fast(const Pnt3& p, const Pnt3& n, 
+inline void
+bary_fast(const Pnt3& p, const Pnt3& n,
 	  const Pnt3 &t0, const Pnt3& v1, const Pnt3& v2,
 	  float &b1, float &b2, float &b3)
 {
@@ -693,7 +688,7 @@ bary_fast(const Pnt3& p, const Pnt3& n,
 // calculate barycentric coordinates for the intersection of
 // a line starting from p, going to direction dir, and the plane
 // of the triangle t1 t2 t3
-inline void 
+inline void
 bary(const Pnt3& p, const Pnt3& dir,
      const Pnt3& t1, const Pnt3& t2, const Pnt3& t3,
      float &b1, float &b2, float &b3)
@@ -704,8 +699,8 @@ bary(const Pnt3& p, const Pnt3& dir,
 }
 
 // is p above the plane spanned by triangle abc (ccw order)?
-inline int    
-above_plane(const Pnt3& p, const Pnt3& a, 
+inline int
+above_plane(const Pnt3& p, const Pnt3& a,
 	    const Pnt3& b, const Pnt3& c)
 {
   Pnt3 nrm = cross(a,b,c);
@@ -729,7 +724,7 @@ Pnt3::smallest_circle(const Pnt3 &A, const Pnt3 &B, const Pnt3 &C)
   if (da > db && da > dc) {
     // da longest
     if (da >= db + dc) {
-      // over 90 deg angle, solution is the center of the 
+      // over 90 deg angle, solution is the center of the
       // longest edge
       v[0] = .5 * (A.v[0]+B.v[0]);
       v[1] = .5 * (A.v[1]+B.v[1]);
@@ -739,7 +734,7 @@ Pnt3::smallest_circle(const Pnt3 &A, const Pnt3 &B, const Pnt3 &C)
   } else if (dc > db) {
     // dc longest
     if (dc >= db + da) {
-      // over 90 deg angle, solution is the center of the 
+      // over 90 deg angle, solution is the center of the
       // longest edge
       v[0] = .5 * (A.v[0]+C.v[0]);
       v[1] = .5 * (A.v[1]+C.v[1]);
@@ -749,7 +744,7 @@ Pnt3::smallest_circle(const Pnt3 &A, const Pnt3 &B, const Pnt3 &C)
   } else {
     // db longest
     if (db >= da + dc) {
-      // over 90 deg angle, solution is the center of the 
+      // over 90 deg angle, solution is the center of the
       // longest edge
       v[0] = .5 * (B.v[0]+C.v[0]);
       v[1] = .5 * (B.v[1]+C.v[1]);
@@ -757,7 +752,7 @@ Pnt3::smallest_circle(const Pnt3 &A, const Pnt3 &B, const Pnt3 &C)
       return .5*sqrtf(db);
     }
   }
-    
+
   // solution is the circumcircle (see GGems 4 p.144)
   Pnt3 aperp = cross(a, cross(a,b));
   float fact = dot(b,c) / dot(aperp, c);
@@ -791,7 +786,7 @@ ball_within_bounds(const Pnt3 &b, float r,
 inline bool
 ball_within_bounds(const Pnt3 &b,
 		   float r,
-		   const Pnt3 &min, 
+		   const Pnt3 &min,
 		   const Pnt3 &max)
 {
   if ((b.v[0] - min.v[0] <= r) ||
@@ -812,46 +807,46 @@ bounds_overlap_ball(const Pnt3 &b, float r,
 {
   float sum = 0.0, tmp;
   if        ((tmp = bc.v[0]-br - b.v[0]) > 0.0) {
-    if (tmp>r) return false; sum += tmp*tmp; 
-  } else if ((tmp = b.v[0] - (bc.v[0]+br)) > 0.0) { 
-    if (tmp>r) return false; sum += tmp*tmp; 
+    if (tmp>r) return false; sum += tmp*tmp;
+  } else if ((tmp = b.v[0] - (bc.v[0]+br)) > 0.0) {
+    if (tmp>r) return false; sum += tmp*tmp;
   }
   if        ((tmp = bc.v[1]-br - b.v[1]) > 0.0) {
-    if (tmp>r) return false; sum += tmp*tmp; 
-  } else if ((tmp = b.v[1] - (bc.v[1]+br)) > 0.0) { 
-    if (tmp>r) return false; sum += tmp*tmp; 
+    if (tmp>r) return false; sum += tmp*tmp;
+  } else if ((tmp = b.v[1] - (bc.v[1]+br)) > 0.0) {
+    if (tmp>r) return false; sum += tmp*tmp;
   }
   if        ((tmp = bc.v[2]-br - b.v[2]) > 0.0) {
-    if (tmp>r) return false; sum += tmp*tmp; 
-  } else if ((tmp = b.v[2] - (bc.v[2]+br)) > 0.0) { 
-    if (tmp>r) return false; sum += tmp*tmp; 
+    if (tmp>r) return false; sum += tmp*tmp;
+  } else if ((tmp = b.v[2] - (bc.v[2]+br)) > 0.0) {
+    if (tmp>r) return false; sum += tmp*tmp;
   }
   return (sum < r*r);
 }
 
 
-inline bool 
+inline bool
 bounds_overlap_ball(const Pnt3 &b,
 		    float r,
-		    const Pnt3 &min, 
+		    const Pnt3 &min,
 		    const Pnt3 &max)
 {
   float sum = 0.0, tmp;
-  if        (b.v[0] < min.v[0]) { 
+  if        (b.v[0] < min.v[0]) {
     tmp = min.v[0] - b.v[0]; if (tmp>r) return false; sum+=tmp*tmp;
-  } else if (b.v[0] > max.v[0]) { 
+  } else if (b.v[0] > max.v[0]) {
     tmp = b.v[0] - max.v[0]; if (tmp>r) return false; sum+=tmp*tmp;
   }
-  if        (b.v[1] < min.v[1]) { 
+  if        (b.v[1] < min.v[1]) {
     tmp = min.v[1] - b.v[1]; sum+=tmp*tmp;
-  } else if (b.v[1] > max.v[1]) { 
+  } else if (b.v[1] > max.v[1]) {
     tmp = b.v[1] - max.v[1]; sum+=tmp*tmp;
   }
   r *= r;
   if (sum > r) return false;
-  if        (b.v[2] < min.v[2]) { 
+  if        (b.v[2] < min.v[2]) {
     tmp = min.v[2] - b.v[2]; sum+=tmp*tmp;
-  } else if (b.v[2] > max.v[2]) { 
+  } else if (b.v[2] > max.v[2]) {
     tmp = b.v[2] - max.v[2]; sum+=tmp*tmp;
   }
   return (sum < r);
@@ -887,7 +882,7 @@ spheres_intersect(const Pnt3 &c1, const Pnt3 &c2,
   }
   */
   // had to take square root...
-  return (R2 < 2.0*sqrtf(r1sqr)*r2);  
+  return (R2 < 2.0*sqrtf(r1sqr)*r2);
 }
 
 
@@ -1019,7 +1014,7 @@ Pnt3::setRotated(const Pnt3 &p, float r[3][3])
 
 class Vec3 : public Pnt3 {
 public:
-  Vec3(float a=0.0, float b=0.0, float c=0.0) 
+  Vec3(float a=0.0, float b=0.0, float c=0.0)
     { v[0] = a, v[1] = b, v[2] = c; normalize(); }
   Vec3(const Pnt3 &p)
     { v[0] = p[0]; v[1] = p[1]; v[2] = p[2]; normalize(); }
@@ -1054,7 +1049,7 @@ Vec3::xform(float r[3][3])
 
 #ifdef PNT3_MAIN
 
-#include <iostream.h>
+#include <iostream>
 #define SHOW(X) cout << #X " = " << X << endl
 
 void
@@ -1075,7 +1070,7 @@ main(void)
 
   Pnt3 c(1,0,0);
   SHOW(c);
-  
+
   SHOW(dist2_tri(a, a,b,c));
   SHOW(dist2_tri(b, a,b,c));
   SHOW(dist2_tri(c, a,b,c));

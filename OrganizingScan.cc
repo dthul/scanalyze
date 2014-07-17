@@ -11,7 +11,7 @@
 
 
 #include "OrganizingScan.h"
-#include <iostream.h>
+#include <iostream>
 
 
 
@@ -58,11 +58,11 @@ OrganizingScan::computeBBox (void)
 }
 
 
-crope
+string
 OrganizingScan::getInfo (void)
 {
   char info[1000];
 
   sprintf (info, "Organizing group containing ?? members.\n\n");
-  return crope (info) + RigidScan::getInfo();
+  return string (info) + RigidScan::getInfo();
 }

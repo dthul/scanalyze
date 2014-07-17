@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // RigidScan.cc
 //
 // Kari Pulli
@@ -12,9 +12,9 @@
 // (or minimally processed) data from various scanners and
 // the algorithms that are used to (at least)
 //    o  display the data for view planning, registration, etc.,
-//       possibly using a limited polygon budget; 
-//    o  determine a volumetric approximate model of the target; 
-//    o  fit an accurate surface description of the target using 
+//       possibly using a limited polygon budget;
+//    o  determine a volumetric approximate model of the target;
+//    o  fit an accurate surface description of the target using
 //       the range data;
 //    o  associate possible input color with scanned geometry.
 //
@@ -22,8 +22,8 @@
 // This can mean different things for different scanners.
 //    o  Cyrax: probably just a single scan.
 //    o  Cyberware custom statue scanner: it may include
-//       dozens of scan sweeps as long as the base of the 
-//       scanner was not moved. 
+//       dozens of scan sweeps as long as the base of the
+//       scanner was not moved.
 //    o  Modelmaker the data from a single Faro position.
 //    o  Generic scanner: Any other scanner from which we
 //       don't know much more than range maps.
@@ -35,7 +35,7 @@
 #include "TriMeshUtils.h"
 #include "plvScene.h"      // for meshes_written_stripped()
 #include "plvDraw.h"       // to know what color properties to write
-#include <fstream.h>       // for write_metadata
+#include <fstream>       // for write_metadata
 
 
 RigidScan::RigidScan()
@@ -46,11 +46,11 @@ bool
 RigidScan::render_self (ColorSource color)
 { return false; }
 
-int  
+int
 RigidScan::num_vertices(void)
 { return 0; }
 
-void 
+void
 RigidScan::subsample_points(float rate, vector<Pnt3> &p,
 			    vector<Pnt3> &n)
 { }
@@ -63,7 +63,7 @@ void
 RigidScan::computeBBox (void)
 { }
 
-RigidScan* 
+RigidScan*
 RigidScan::filtered_copy(const VertexFilter &filter)
 {
   return NULL;
@@ -81,7 +81,7 @@ RigidScan::filter_inplace (const VertexFilter &filter)
   return false;
 }
 
-crope 
+string
 RigidScan::getInfo(void)
 {
   float q[4], t[3];
@@ -105,70 +105,70 @@ RigidScan::getInfo(void)
 	  wb.min()[0], wb.max()[0], wb.min()[1], wb.max()[1],
 	  wb.min()[2], wb.max()[2]);
 
-  return crope (info);
+  return string (info);
 }
 
 OccSt
 RigidScan::carve_cube  (const Pnt3 &ctr, float side)
 { return INDETERMINATE; }
 
-OccSt 
+OccSt
 RigidScan::carve_sphere(const Pnt3 &ctr, float radius)
 { return INDETERMINATE; }
 
 bool
-RigidScan::closest_point(const Pnt3 &p, const Pnt3 &n, 
+RigidScan::closest_point(const Pnt3 &p, const Pnt3 &n,
 			 Pnt3 &cl_pnt, Pnt3 &cl_nrm,
 			 float thr, bool brdy_ok)
 { return 0; }
 
 #if 0
-float 
+float
 RigidScan::closest_point(const Pnt3 &p, Pnt3 &cl_pnt)
 { return 0.0f; }
 
-float 
+float
 RigidScan::closest_point(const Pnt3 &p, Pnt3 &cl_pnt, Pnt3 &cl_nrm)
 { return 0.0f; }
 #endif
 
-float 
-RigidScan::closest_point_on_mesh(const Pnt3 &p, Pnt3 &cl_pnt, 
+float
+RigidScan::closest_point_on_mesh(const Pnt3 &p, Pnt3 &cl_pnt,
 				 OccSt &status_p)
 { return 0.0f; }
 
-float 
-RigidScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp, 
+float
+RigidScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp,
 				       OccSt &status_p)
 { return 0.0f; }
 
-float 
+float
 RigidScan::closest_along_line(const Pnt3 &p, const Pnt3 &dir,
 			      Pnt3 &cp, OccSt &status_p)
 { return 0.0f; }
 
-float 
+float
 RigidScan::color_along_line_of_sight(const Pnt3 &p, float rgb[3])
 { return 0.0f; }
 
-float 
+float
 RigidScan::color_along_line_of_sight(const Pnt3 &p, uchar rgb[3])
 { return 0.0f; }
 
-bool 
-RigidScan::read(const crope &fname)
+bool
+RigidScan::read(const string &fname)
 { return false; }
 
 bool
 RigidScan::is_modified (void)
 { return false; }
 
-bool 
-RigidScan::write(const crope& fname)
+bool
+RigidScan::write(const string& fname)
 { return false; }
 
 bool
-RigidScan::write_resolution_mesh (int nPolys, const crope& fname,
+RigidScan::write_resolution_mesh (int nPolys, const string& fname,
 				  Xform<float> xfBy)
 {
   // This is a basic implementation that will work for any RigidScan,
@@ -181,12 +181,12 @@ RigidScan::write_resolution_mesh (int nPolys, const crope& fname,
   int nOldRes = resolutions[curr_res].abs_resolution;
   if (!select_by_count (nPolys))
     return false;
-  
+
   bool success = false;
   bool bStrips = theScene->meshes_written_stripped();
   // BUGBUG support other color modes than truecolor, intensity?
   MeshTransport* mt = mesh (true, bStrips,
-			    (theRenderParams && 
+			    (theRenderParams &&
 			    (theRenderParams->colorMode == intensityColor)) ?
 			    colorIntensity : colorTrue);
   if (mt) {
@@ -236,15 +236,15 @@ RigidScan::write_resolution_mesh (int nPolys, const crope& fname,
       nvtx = 0;
       ntris = 0;
       ncolors = 0;
-      for (i = 0; i < mt->vtx.size(); i++) {
-	Pnt3* newVtxStart = vtx.end();
+      for (int i = 0; i < mt->vtx.size(); i++) {
+	vector<Pnt3>::iterator newVtxStart = vtx.end();
 
 	vtx.insert (vtx.end(), mt->vtx[i]->begin(), mt->vtx[i]->end());
-	int* tend = tris.end();
+	vector<int>::iterator tend = tris.end();
 	tris.insert (tend, mt->tri_inds[i]->begin(), mt->tri_inds[i]->end());
 
-	const int* newtend = tris.end();
-	for (int* t = tend; t < newtend; t++) {
+	vector<int>::const_iterator newtend = tris.end();
+	for (vector<int>::iterator t = tend; t < newtend; t++) {
 	  if (*t != -1)
 	    *t += nvtx;
 	}
@@ -257,7 +257,7 @@ RigidScan::write_resolution_mesh (int nPolys, const crope& fname,
 	Xform<float> xfThis = xfBy * mt->xf[i];
 	if (!xfThis.isIdentity()) {
 	  cerr << "applying xform... " << flush;
-	  for (Pnt3* pi = newVtxStart; pi < vtx.end(); pi++) {
+	  for (vector<Pnt3>::iterator pi = newVtxStart; pi < vtx.end(); pi++) {
 	    xfThis (*pi);
 	  }
 	}
@@ -287,11 +287,11 @@ RigidScan::write_metadata (MetaData data)
   bool success = false;
 
   switch (data) {
-  case md_xform: 
+  case md_xform:
     success = TbObj::writeXform (get_basename());
     break;
   }
-  
+
   return success;
 }
 

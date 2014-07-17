@@ -35,11 +35,11 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 */
 
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#ifdef linux
+#ifdef __linux
 #    define __STL_THROW(x) throw x
 #    include <stdexcept>
 using std::length_error;

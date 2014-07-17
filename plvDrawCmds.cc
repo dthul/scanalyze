@@ -75,7 +75,7 @@ SetResultFromColorF (Tcl_Interp* interp, float* color)
 
 
 int
-PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[])
 {
   if (g_bNoUI)
@@ -88,10 +88,10 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
       i++;
       if (!strcmp(argv[i], "realflat")) {
 	theRenderParams->shadeModel = realPerFace;
-      } 
+      }
       else if (!strcmp(argv[i], "fakeflat")) {
 	theRenderParams->shadeModel = fakePerFace;
-      } 
+      }
       else if (!strcmp(argv[i], "smooth")){
 	theRenderParams->shadeModel = perVertex;
       }
@@ -105,7 +105,7 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
       if (!strcmp(argv[i], "fill")) {
 	theRenderParams->polyMode = GL_FILL;
 	theRenderParams->hiddenLine = FALSE;
-      } 
+      }
       else if (!strcmp(argv[i], "line")){
 	theRenderParams->polyMode = GL_LINE;
 	theRenderParams->hiddenLine = FALSE;
@@ -152,7 +152,7 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
       SetBoolFromArgIndex (++i, bDispList);
       for (int k = 0; k < theScene->meshSets.size(); k++) {
 	theScene->meshSets[k]->useDisplayList (bDispList);
-      } 
+      }
     }
     else if (!strcmp(argv[i], "-flipnorm")) {
       SetBoolFromArgIndex (++i, theRenderParams->flipnorm);
@@ -206,7 +206,7 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
       theRenderParams->dofJitterY = atof (argv[i + 2]);
       theRenderParams->dofCenter = atof (argv[i + 3]);
 
-      i += 4;      
+      i += 4;
     }
     else if (!strcmp(argv[i], "-shadows")) {
       SetBoolFromArgIndex (++i, theRenderParams->shadows);
@@ -222,32 +222,32 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
       i++;
       int aasamps = atoi(argv[i]); i++;
       switch (aasamps) {
-	
+
       case 2:
 	theRenderParams->numAntiAliasSamps = 2;
 	theRenderParams->jitterArray = (jitter_point *)j2;
 	break;
-	
+
       case 3:
 	theRenderParams->numAntiAliasSamps = 3;
 	theRenderParams->jitterArray = (jitter_point *)j3;
 	break;
-	
+
       case 4:
 	theRenderParams->numAntiAliasSamps = 4;
 	theRenderParams->jitterArray = (jitter_point *)j4;
 	break;
-	
+
       case 8:
 	theRenderParams->numAntiAliasSamps = 8;
 	theRenderParams->jitterArray = (jitter_point *)j8;
 	break;
-	
+
       case 15:
 	theRenderParams->numAntiAliasSamps = 15;
 	theRenderParams->jitterArray = (jitter_point *)j15;
 	break;
-	
+
       case 24:
 	theRenderParams->numAntiAliasSamps = 24;
 	theRenderParams->jitterArray = (jitter_point *)j24;
@@ -269,22 +269,22 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
       return TCL_ERROR;
     }
   }
-  
+
   return TCL_OK;
 }
 
 
 int
-PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[])
 {
   uchar *cbuf;
   GLint lastBuffer;
-   
+
   if (argc != 3) {
     interp->result = "Usage: plv_fillphoto <togl-widget> <photo-widget>";
     return TCL_ERROR;
-  }    
+  }
 
 #if TK_MAJOR_VERSION >= 8
   Tk_PhotoHandle handle = Tk_FindPhoto(interp, argv[2]);
@@ -295,7 +295,7 @@ PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
     interp->result = "Could not find photo widget.";
     return TCL_ERROR;
   }
-   
+
   prepareDrawInWin(argv[1]);
 
   cbuf = (uchar *)malloc(theWidth*theHeight*4);
@@ -308,7 +308,7 @@ PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
   Tk_PhotoSetSize(handle, theWidth, theHeight);
 
   Tk_PhotoImageBlock block;
-    
+
   block.pixelPtr = cbuf;
   block.pitch = theWidth*4;
 
@@ -319,7 +319,7 @@ PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
   block.width = theWidth;
   block.height = theHeight;
 
-  Tk_PhotoPutBlock(handle, &block, 0, 0, theWidth, theHeight);
+  Tk_PhotoPutBlock(handle, &block, 0, 0, theWidth, theHeight, TK_PHOTO_COMPOSITE_SET);
 
   free(cbuf);
 
@@ -328,31 +328,31 @@ PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvDrawCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvDrawCmd(ClientData clientData, Tcl_Interp *interp,
 	   int argc, char *argv[])
 {
   prepareDrawInWin(argv[1]);
   drawInTogl (toglCurrent);
-    
+
   return TCL_OK;
 }
 
 
 int
-PlvClearWinCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvClearWinCmd(ClientData clientData, Tcl_Interp *interp,
 	       int argc, char *argv[])
 {
   prepareDrawInWin(argv[1]);
 
   glClear(GL_COLOR_BUFFER_BIT);
   Togl_SwapBuffers (toglCurrent);
-    
+
   return TCL_OK;
 }
 
 
 int
-PlvMaterialCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvMaterialCmd(ClientData clientData, Tcl_Interp *interp,
 	       int argc, char *argv[])
 {
   if (g_bNoUI)
@@ -375,13 +375,13 @@ PlvMaterialCmd(ClientData clientData, Tcl_Interp *interp,
     }
 
     printf("Command: %s [-option value]\n", argv[0]);
-    printf("  -diffuse <float> <float> <float> (%f %f %f)\n", 
+    printf("  -diffuse <float> <float> <float> (%f %f %f)\n",
 	   theRenderParams->diffuse[0] / 255.,
-	   theRenderParams->diffuse[1] / 255., 
+	   theRenderParams->diffuse[1] / 255.,
 	   theRenderParams->diffuse[2] / 255.);
-    printf("  -specular <float> <float> <float> (%f %f %f)\n", 
+    printf("  -specular <float> <float> <float> (%f %f %f)\n",
 	   theRenderParams->specular[0] / 255.,
-	   theRenderParams->specular[1] / 255., 
+	   theRenderParams->specular[1] / 255.,
 	   theRenderParams->specular[2] / 255.);
     printf("  -shininess <float> (%f)\n", theRenderParams->shininess);
     printf("  -confscale <float> (%f)\n", theRenderParams->confScale);
@@ -523,12 +523,12 @@ PlvMaterialCmd(ClientData clientData, Tcl_Interp *interp,
       }
     }
   }
-  
+
   return TCL_OK;
 }
 
 int
-PlvLoadProjectiveTexture(ClientData clientData, Tcl_Interp *interp, 
+PlvLoadProjectiveTexture(ClientData clientData, Tcl_Interp *interp,
 			  int argc, char *argv[])
 {
   if (g_bNoUI)
@@ -555,7 +555,7 @@ PlvLoadProjectiveTexture(ClientData clientData, Tcl_Interp *interp,
     return TCL_OK;
 
 
-  // Try to load the texture 
+  // Try to load the texture
   bool actuallyLoad=true, use_mipmaps=true;
   for (int arg = 2; arg < argc; arg++) {
   	if (argv[arg][0] == 'g')
@@ -567,7 +567,7 @@ PlvLoadProjectiveTexture(ClientData clientData, Tcl_Interp *interp,
   Ref<ProjectiveTexture> thetexture =
   	ProjectiveTexture::loadImage(argv[1], NULL, NULL, NULL, NULL,
 				     actuallyLoad, use_mipmaps);
-  
+
   if (!thetexture)
     return TCL_OK;
 
@@ -581,7 +581,7 @@ PlvLoadProjectiveTexture(ClientData clientData, Tcl_Interp *interp,
   return TCL_OK;
 }
 
-int 
+int
 prepareDrawInWin(char *name)
 {
   toglCurrent = toglHash.FindTogl (name);
@@ -632,7 +632,7 @@ drawInTogl(struct Togl *togl)
 {
   // don't redraw if redraw is disabled
   if (atoi (Tcl_GetVar (g_tclInterp, "noRedraw", TCL_GLOBAL_ONLY)) <= 0) {
-    
+
     // ok, we have permission to draw
     drawInToglBuffer (togl, GL_FRONT, true);
   }
@@ -645,7 +645,7 @@ drawInToglBuffer (struct Togl *togl, int buffer, bool bCacheable)
 
   // Take ms time at start of render
   unsigned long startTime = Get_Milliseconds();
-  
+
   // update global size info
   theWidth = Togl_Width (togl);
   theHeight = Togl_Height (togl);
@@ -675,7 +675,7 @@ drawInToglBuffer (struct Togl *togl, int buffer, bool bCacheable)
     }
   }
 
-  if (buffer == GL_FRONT)    
+  if (buffer == GL_FRONT)
     Togl_SwapBuffers (togl);
   else
     glFinish();
@@ -683,14 +683,14 @@ drawInToglBuffer (struct Togl *togl, int buffer, bool bCacheable)
   // Take time at end of render and save
   unsigned long endTime = Get_Milliseconds();
   lastRenderTime(endTime-startTime);
-  
+
   //puts ("Leaving drawinTOglBuffer");
   //Tcl_Eval (g_tclInterp, "redrawStatus end");
 }
 
 
 int
-PlvSetSlowPolyCountCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvSetSlowPolyCountCmd(ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   if (argc != 2) {
@@ -704,7 +704,7 @@ PlvSetSlowPolyCountCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvInvalidateToglCacheCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvInvalidateToglCacheCmd(ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   DisplayCache::InvalidateToglCache (toglCurrent);
@@ -732,18 +732,18 @@ drawOverlay (struct Togl* togl)
 #else
   // overlay planes not supported - use a work around
 
-  // make the togl current (should be the main frame) since 
+  // make the togl current (should be the main frame) since
   Togl_MakeCurrent(togl);
   //glDrawBuffer (GL_BACK);
 
   // save all the bits just so I don't turn off something
   // that someone else expects to be on
   glPushAttrib(GL_ALL_ATTRIB_BITS);
-  
+
   glDisable (GL_DEPTH_TEST);
   glDisable (GL_LIGHTING);
   glDisable (GL_BLEND);
-  
+
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
@@ -751,40 +751,40 @@ drawOverlay (struct Togl* togl)
   glViewport(0,0,theWidth, theHeight);
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
-  
+
   glLoadIdentity();
   gluOrtho2D(0, theWidth, 0, theHeight);
   glRasterPos2i(0,0);
-  
-  glDrawPixels(theRenderParams->savedImageWidth, 
+
+  glDrawPixels(theRenderParams->savedImageWidth,
 	       theRenderParams->savedImageHeight, GL_RGBA, GL_UNSIGNED_BYTE,
 	       theRenderParams->savedImage);
-  
+
   glPopMatrix();
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 
   glFinish();
-  
+
 #endif
-  
+
   // selection tools
   drawSelection (togl);
 
   // mouseover hint
   drawScanHilites();
-  
+
 #ifndef no_overlay_support
   Togl_UseLayer (togl, TOGL_NORMAL);
-#else  
+#else
   glPopAttrib();
-  //Togl_SwapBuffers (togl); 
+  //Togl_SwapBuffers (togl);
 #endif
 }
 
 
 int
-PlvRenderThicknessCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvRenderThicknessCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   Togl_MakeCurrent (toglCurrent);
@@ -824,7 +824,7 @@ long lastRenderTime(long milliseconds)
   static long lastDrawTime=0;
 
   long tmpSaveTime = lastDrawTime;
-  
+
   if (milliseconds != -1)
     lastDrawTime = milliseconds;
 
@@ -832,10 +832,10 @@ long lastRenderTime(long milliseconds)
 }
 
 int
-PlvLastRenderTime(ClientData clientData, Tcl_Interp *interp, 
+PlvLastRenderTime(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
- 
+
 
   sprintf(interp->result,"%ld",lastRenderTime());
 

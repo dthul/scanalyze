@@ -47,7 +47,7 @@ GetMeshFromCmd (Tcl_Interp* interp, int argc, char* argv[],
 
 
 int
-PlvMeshResolutionCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvMeshResolutionCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
   DisplayableMesh* dm;
@@ -102,12 +102,12 @@ PlvMeshDecimateCmd(ClientData clientData, Tcl_Interp *interp,
 
   if (nPolys)
     return TCL_OK;
-  else 
+  else
     return TCL_ERROR;
 }
 
 int
-PlvMeshResListCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvMeshResListCmd(ClientData clientData, Tcl_Interp *interp,
 	       int argc, char *argv[])
 {
   char result[PATH_MAX], tempstr[PATH_MAX];
@@ -151,7 +151,7 @@ PlvSetMeshResPreloadCmd(ClientData clientData, Tcl_Interp *interp,
 
   if (theSet->set_load_desired (nRes, bPreload))
     return TCL_OK;
-  
+
   interp->result = "Specified resolution does not exist";
   return TCL_ERROR;
 }
@@ -184,15 +184,15 @@ PlvCurrentResCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvMeshInfoCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvMeshInfoCmd(ClientData clientData, Tcl_Interp *interp,
 	       int argc, char *argv[])
 {
   RigidScan* meshSet = GetMeshFromCmd (interp, argc, argv, 2);
   if (meshSet == NULL)
     return TCL_ERROR;
-  
+
   if (argc > 2 && 0 == strcmp (argv[2], "graphical"))
-    Tcl_SetResult(interp, (char *)meshSet->getInfo().c_str(), 
+    Tcl_SetResult(interp, (char *)meshSet->getInfo().c_str(),
 		  TCL_VOLATILE);
   else
     cout << meshSet->getInfo() << endl;
@@ -215,7 +215,7 @@ PlvMeshDeleteResCmd(ClientData clientData, Tcl_Interp *interp,
   int resLevel = atoi(argv[2]);
   if (!scan->delete_resolution (resLevel))
     return TCL_ERROR;
-  
+
   //cout << "new #resolutions: " << scan->num_resolutions() << endl;
   return TCL_OK;
 }
@@ -233,7 +233,7 @@ PlvMeshUnloadResCmd(ClientData clientData, Tcl_Interp *interp,
   }
 
   int resLevel = atoi(argv[2]);
-  
+
   if (!scan->release_resolution (resLevel)) {
     cerr << "scan " << dm->getName()
 	 << " failed to release resolution" << endl;
@@ -249,7 +249,7 @@ PlvMeshUnloadResCmd(ClientData clientData, Tcl_Interp *interp,
 static void DeleteHelper (DisplayableMesh *mesh);
 
 int
-PlvMeshSetDeleteCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvMeshSetDeleteCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   DisplayableMesh* dispMesh;
@@ -264,15 +264,15 @@ PlvMeshSetDeleteCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 
-static void 
+static void
 DeleteHelper (DisplayableMesh *mesh) {
   RigidScan *scan = mesh->getMeshData();
   GroupScan *group = dynamic_cast<GroupScan*>(scan);
 
   if (group) {
     vector<DisplayableMesh*> children = ungroupScans(mesh);
-    
-    for (DisplayableMesh** it = children.begin(); it < children.end(); it++) {
+
+    for (vector<DisplayableMesh*>::iterator it = children.begin(); it < children.end(); it++) {
       DeleteHelper(*it);
     }
 
@@ -281,7 +281,7 @@ DeleteHelper (DisplayableMesh *mesh) {
   }
 }
 
-  
+
 
 
 int
@@ -292,7 +292,7 @@ PlvTransMeshCmd (ClientData clientData, Tcl_Interp *interp,
     printf ("%s: mesh x y z\n", argv[0]);
     return TCL_OK;
   }
-  
+
   DisplayableMesh* dispMesh = FindMeshDisplayInfo (argv[1]);
   if (dispMesh == NULL) {
     printf ("Nonexistent mesh %s\n", argv[1]);
@@ -401,9 +401,9 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
   }
 
   vector<DisplayableMesh*> members;
-  
+
   if (!strcmp (argv[1], "create")) {
-      
+
     for (int i = 3; i < argc-1; i++) {
       DisplayableMesh* dm = FindMeshDisplayInfo (argv[i]);
       if (!dm) {
@@ -415,7 +415,7 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
     }
     bool dirty = (bool) atoi(argv[argc-1]);
     DisplayableMesh* group = groupScans (members, argv[2], dirty);
-    
+
     if (!group) {
       interp->result = "The group could not be created.";
       return TCL_ERROR;
@@ -430,11 +430,11 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
 
     GroupScan* group = dynamic_cast<GroupScan*> (mesh->getMeshData());
 
-    crope names;
+    string names;
     if (group) {
       if (group->get_children_for_display (members)) {
 	for (int i = 0; i < members.size(); i++) {
-	  names += crope (" ") + members[i]->getName();
+	  names += string (" ") + members[i]->getName();
 	}
       }
     }
@@ -453,9 +453,9 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
       return TCL_ERROR;
     }
 
-    crope names (members[0]->getName());
+    string names (members[0]->getName());
     for (int i = 1; i < members.size(); i++) {
-      names += crope (" ") + members[i]->getName();
+      names += string (" ") + members[i]->getName();
     }
     Tcl_SetResult (interp, (char*)names.c_str(), TCL_VOLATILE);
 
@@ -501,19 +501,19 @@ PlvHiliteScanCmd(ClientData clientData, Tcl_Interp *interp,
   g_hilitedScans.clear();
   g_hilitedScans.reserve (argc - 1);
 
-  for (i = 1; i < argc; i++) {
+  for (int i = 1; i < argc; i++) {
     DisplayableMesh* dispMesh = FindMeshDisplayInfo (argv[i]);
     if (!dispMesh) {
       cerr << argv[0] << " can't find " << argv[i] << endl;
       interp->result = "Bad scan in PlvHiliteScanCmd";
       return TCL_ERROR;
     }
-    
+
     g_hilitedScans.push_back (dispMesh);
   }
 
   // and hilite current selection in meshcontrols window
-  for (i = 0; i < g_hilitedScans.size(); i++)
+  for (int i = 0; i < g_hilitedScans.size(); i++)
     Tcl_VarEval (interp, "hiliteScanEntry ",
 		 g_hilitedScans[i]->getName(),
 		 " 1", NULL);
@@ -529,7 +529,7 @@ PlvHiliteScanCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-SczXformScanCmd (ClientData clientData, Tcl_Interp *interp, 
+SczXformScanCmd (ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   RigidScan* scan = GetMeshFromCmd (interp, argc, argv, 2);
@@ -615,7 +615,7 @@ int SczGetScanXformCmd(ClientData clientData, Tcl_Interp *interp,
 	     q[0], q[1], q[2], q[3],
 	     t[0], t[1], t[2]);
   } else if (!strcmp (argv[2], "axis")) {
-    float phi, ax, ay, az, t[3];    
+    float phi, ax, ay, az, t[3];
     xf.get_rot (phi, ax, ay, az);
     xf.getTranslation (t);
 
@@ -653,7 +653,7 @@ PlvSmoothMesh(ClientData clientData, Tcl_Interp *interp,
 
   GenericScan* gscan=(GenericScan *)scan;
   gscan->dequantizationSmoothing(iterations,maxMotion);
-  
+
   return TCL_OK;
 
 }
@@ -680,11 +680,11 @@ int PolygonArea(vector<ScreenPnt> &pts)
 
   for (i=0; i<pts.size(); i++) {
     j = (i + 1) % pts.size();
-    
+
     area += pts[i].x * pts[j].y;
     area -= pts[j].x * pts[i].y;
   }
-  
+
   return area / 2;
 }
 
@@ -719,7 +719,7 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
     interp->result = "Please enter a command, inputMesh or outputMesh name";
     return TCL_ERROR;
   }
-    
+
   if (writeCBox) {
     clipBoxCoord[0] = '\0';
     if (theSel.pts.size() < 3) {
@@ -735,11 +735,11 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
     glGetIntegerv(GL_VIEWPORT, viewport);
     glGetDoublev(GL_MODELVIEW_MATRIX, mvmatrix);
     glGetDoublev(GL_PROJECTION_MATRIX, projmatrix);
-       
+
     for (int i=0; i<theSel.pts.size(); i++) {
       Unprojector unp;
       GLdouble objx, objy, objz, objFarX, objFarY, objFarZ;
-   
+
       gluUnProject(theSel.pts[i].x, theSel.pts[i].y, 0,
 		   mvmatrix, projmatrix, viewport, &objx, &objy, &objz);
       gluUnProject(theSel.pts[i].x, theSel.pts[i].y, 1,
@@ -756,15 +756,15 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
     // print the list of information
     // get orientation of face vertices
     bool ccw = (PolygonArea(theSel.pts) > 0 ? true : false);
-    
+
     int j;
-    for (i=0; i<theSel.pts.size(); i++) {
+    for (int i=0; i<theSel.pts.size(); i++) {
       char tempVertBuf[256];
       j = (i + 1) % theSel.pts.size();
-      
+
       Pnt3 crs;
       Pnt3 up(obj[j][0] - obj[i][0], obj[j][1] - obj[i][1], obj[j][2] - obj[i][2]);
-      
+
       if (!ccw)
 	crs = cross(objNormForward[i], up);
       else
@@ -773,11 +773,11 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
       crs.normalize();
 
       // make the point list and concat it with the current clip region string
-      sprintf(tempVertBuf, "%f %f %f %f %f %f ", (double)obj[i][0], (double)obj[i][1], 
+      sprintf(tempVertBuf, "%f %f %f %f %f %f ", (double)obj[i][0], (double)obj[i][1],
 	      (double)obj[i][2], (double)crs[0], (double)crs[1], (double)crs[2]);
 
       strcat(clipBoxCoord, tempVertBuf);
-    }    
+    }
   }
 
   // get the mesh to send to output
@@ -788,7 +788,7 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
     Tcl_SetResult (interp, buf, TCL_VOLATILE);
     return TCL_ERROR;
   }
-  
+
   // get the rigid scan from the mesh
   RigidScan* meshSet = dispMesh->getMeshData();
   if (meshSet == NULL) {
@@ -797,20 +797,20 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  // get a temporary name and convert it to a crope with extension ply
-  crope inTName = tmpnam(NULL);
+  // get a temporary name and convert it to a string with extension ply
+  string inTName = tmpnam(NULL);
   inTName += ".ply";
-    
+
   // write the highest resolution to the temporary file
   vector<ResolutionCtrl::res_info> resList;
   meshSet->existing_resolutions (resList);
- 
+
   int finest = 0;
   for (int i=1; i<resList.size(); i++) {
     if (resList[finest].abs_resolution < resList[i].abs_resolution)
       finest = i;
   }
-   
+
   // if we're clipping the object against some box, put the object in it's world space orientation
   // rather than just using it's default object space orientation.
   if (writeCBox)
@@ -819,9 +819,9 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
     meshSet->write_resolution_mesh(resList[finest].abs_resolution, inTName);
 
   // get another temporary name
-  crope outTName = tmpnam(NULL);
+  string outTName = tmpnam(NULL);
   outTName += ".ply";
-  
+
   // execute the command
   char cmdBuffer[512];
   if (writeCBox)
@@ -844,18 +844,18 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
   // read in the output file
   RigidScan *newScan = CreateScanFromFile(outTName.c_str());
   if (newScan != NULL) {
-    crope omName = outputMesh;
+    string omName = outputMesh;
     omName += ".ply";
 
     newScan->set_name(omName);
-    
+
     DisplayableMesh *dm = theScene->addMeshSet(newScan);
 
     sprintf(cmdBuffer, "clipMeshCreateHelper %s %s", inputMesh, outputMesh);
     Tcl_Eval(interp, cmdBuffer);
   } else {
     interp->result = "A filtered scan could not be created";
-    
+
     // delete the temporary files
     sprintf(cmdBuffer, "rm -f %s", inTName.c_str());
     system(cmdBuffer);

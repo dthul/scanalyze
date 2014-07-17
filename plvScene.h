@@ -4,7 +4,7 @@
 
 #include "Bbox.h"
 #include "Pnt3.h"
-#include "vector.h"
+#include "vector"
 #include "ColorUtils.h"
 #include "Trackball.h"
 #include "plvGlobals.h"
@@ -18,7 +18,7 @@ class VertexFilter;
 
 class Scene {
  private:  // private data
-    
+
   Bbox      bbox;        // Bounding box around vertices in scene
   Trackball homePos;     // copy of orientation info for set/goHome
   int       resOverride; // master scene resolution, high/low/default
@@ -26,7 +26,7 @@ class Scene {
   int       slowPolyCount; // min. # of polys that deserve a status bar
                            // while rendering
 
-  DisplayableMesh** findSceneMesh (DisplayableMesh* mesh);
+  vector<DisplayableMesh*>::iterator findSceneMesh (DisplayableMesh* mesh);
 
  public:   // public data
 
@@ -100,7 +100,7 @@ DisplayableMesh *FindMeshDisplayInfo(const char *name);// hashed -- fast
 //need to find non-roots.
 DisplayableMesh *FindMeshDisplayInfo(RigidScan* scan); // linsrch -- slow
 DisplayableMesh *GetMeshForRigidScan (RigidScan *scan); // walks over hashtable
- 
+
 int AddMeshSetToHash(DisplayableMesh *mesh);
 const char *GetTbObjName(TbObj *tb);
 int MeshSetHashDelete(char *name);

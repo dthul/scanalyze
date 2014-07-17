@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // CyberCalib.h
 //
 // Daniel Wood
@@ -14,14 +14,14 @@
 #ifndef CyberCalib_h_
 #define CyberCalib_h_
 
-#include <map.h>
-#include <rope.h>
+#include <map>
+#include <string>
 #include "Xform.h"
 
 struct CyberCalib
 {
                                 // *** first the input values
-  
+
                                 // turn axis.  axis and point on it.
     double axturn[3];
     double axturn0[3];
@@ -46,7 +46,7 @@ struct CyberCalib
     double arm_down2[3];
     double arm_down3[3];
     double arm_down4[3];
-    
+
                                 // screw parameters
     double dnssp;               // dist. for nod screw start pivot to axis
     double dnsep;               // dist. for nod screw end   pivot to axis
@@ -74,13 +74,13 @@ struct CyberCalib
 
     CyberCalib();
 private:
-    typedef map<crope, vector<double> > RopeDV; // rope to double vector
-    
+    typedef map<string, vector<double> > RopeDV; // rope to double vector
+
     void setDefault();          // set input values to their compiled-in defaults
     bool setMap( RopeDV &s2d ); // set input values to their compiled-in defaults
     void setDerived();          // set (compute) the derived values from the compiled-in values
 
     bool readNumbers( istream &in, RopeDV &m );
 };
-    
+
 #endif

@@ -42,7 +42,7 @@ SyntheticScan::mesh(bool perVertex, bool stripped,
   vector<short>* nrm = new vector<short>;
   if (perVertex) {
     nrm->reserve(24);
-    for (i = 0; i < 8; i++) {
+    for (int i = 0; i < 8; i++) {
       pushNormalAsShorts (*nrm, bbox.corner(i).normalize());
     }
   } else {
@@ -65,7 +65,7 @@ SyntheticScan::mesh(bool perVertex, bool stripped,
   };
 
   vector<int>* tri_inds = new vector<int>;
-  for (i = 0; i < 12; i++) {
+  for (int i = 0; i < 12; i++) {
     int t1 = faceInd[i][0];
     int t2 = faceInd[i][1];
     int t3 = faceInd[i][2];
@@ -150,8 +150,8 @@ SyntheticScan::carve_cube  (const Pnt3 &ctr, float side)
 }
 
 
-float 
-SyntheticScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp, 
+float
+SyntheticScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp,
 					   OccSt &status_p)
 {
 #if SYNTH_CUBE

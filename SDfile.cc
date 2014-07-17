@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // SDfile.cc
 //
 // Kari Pulli
@@ -26,7 +26,24 @@ int gzread (FILE* file, void* buf, int size)
 #else
 #	include <zlib.h>
 #endif
-using std::__median;
+__median(const unsigned short& __a, const unsigned short& __b, const unsigned short& __c)
+{
+  // concept requirements
+  __glibcxx_function_requires(_LessThanComparableConcept<_Tp>)
+  if (__a < __b)
+if (__b < __c)
+  return __b;
+else if (__a < __c)
+  return __c;
+else
+  return __a;
+  else if (__a < __c)
+return __a;
+  else if (__b < __c)
+return __c;
+  else
+return __b;
+}
 
 
 #if 1
@@ -99,7 +116,7 @@ SDfile::prepare_axis_proj(void)
 
   axis_proj_done = true;
 
-  axis_proj_min = axis_proj_max = 
+  axis_proj_min = axis_proj_max =
     xf.axis_project(first_good[0], z_data[0]);
 
   for (int i=0; i<n_frames; i++) {
@@ -118,7 +135,7 @@ SDfile::prepare_axis_proj(void)
     else if (pr > axis_proj_max) axis_proj_max = pr;
 
   }
-}    
+}
 
 
 
@@ -127,15 +144,15 @@ SDfile::prepare_axis_proj(void)
 // 1 *---*---*...*---*
 //    \ / \ / \...\ / \
 // 0   *---*---*...*---*
-// If the situation looks like 
+// If the situation looks like
 // 1   *---*...*---*---*
 //    / \ / \...\ / \ /
 // 0 *---*---*...*---*
 // the flag upper_row_starts should be set false.
-// This routine creates ccw triangles, but the strip can be 
+// This routine creates ccw triangles, but the strip can be
 // flipped by setting a flag.
 static void
-create_strip(vector<int>        &tstrips,	
+create_strip(vector<int>        &tstrips,
 	     const vector<int>  &p_inds_0,
 	     const vector<int>  &p_inds_1,
 	     bool               upper_row_starts = true,
@@ -177,7 +194,7 @@ create_strip(vector<int>        &tstrips,
       int j = p1[i+1];
       tstrips.push_back(j);
       // still going along a strip?
-      str_on = (j != -1);	
+      str_on = (j != -1);
     } else {
       // should we start a strip?
       if (p1[i  ] != -1 &&
@@ -195,7 +212,7 @@ create_strip(vector<int>        &tstrips,
       int j = p0[i+1];
       tstrips.push_back(j);
       // still going along a strip?
-      str_on = (j != -1);	
+      str_on = (j != -1);
     } else {
       // bad place to start a strip, but a single tri?
       if (p0[i  ] != -1 &&
@@ -227,10 +244,10 @@ create_strip(vector<int>        &tstrips,
   // close strip?
   if (str_on) tstrips.push_back(-1);
 }
-		   
+
 
 inline void
-mark_all_empty(const vector<int> &curr, 
+mark_all_empty(const vector<int> &curr,
 	       vector<char>      &bdry)
 {
   vector<int>::const_iterator it = curr.begin();
@@ -241,9 +258,9 @@ mark_all_empty(const vector<int> &curr,
 
 inline void
 mark_maybe_empty(const vector<int> &curr,
-		 const vector<int> &prev, 
+		 const vector<int> &prev,
 		 const vector<int> &next,
-		 vector<char> &bdry) 
+		 vector<char> &bdry)
 {
   int n = curr.size();
   if (curr[0] != -1)   bdry[curr[0]] = 1;
@@ -287,7 +304,7 @@ SDfile::make_tstrip_horizontal(vector<int>  &tstrips,
       j = first_good[0]+i;
       if (j%2) c_1[j/2] = p_idx++;
       else     c_0[j/2] = p_idx++;
-    }      
+    }
   }
   // first row: part of boundary
   mark_all_empty(c_0, bdry);
@@ -298,7 +315,7 @@ SDfile::make_tstrip_horizontal(vector<int>  &tstrips,
   // first frame, within the two fields
   create_strip(tstrips, c_0, c_1, false, flip);
   for (i=1; i<n_frames; i++) {
-    
+
     end = first_bad[i] - first_good[i];
 
     if (end == 0) {
@@ -319,7 +336,7 @@ SDfile::make_tstrip_horizontal(vector<int>  &tstrips,
 	k = first_good[i]+j;
 	if (k%2) c_1[k/2] = p_idx++;
 	else     c_0[k/2] = p_idx++;
-      }      
+      }
     }
 
     // between the first field and the previous frame's
@@ -329,7 +346,7 @@ SDfile::make_tstrip_horizontal(vector<int>  &tstrips,
       // check boundary status of p_inds[1]
       mark_maybe_empty(p_1, p_0, c_0, bdry);
     }
-    
+
     // between the fields of this frame
     create_strip(tstrips, c_0, c_1, false, flip);
     // check boundary status of c_inds[0]
@@ -339,7 +356,7 @@ SDfile::make_tstrip_horizontal(vector<int>  &tstrips,
       mark_all_empty(c_0, bdry);
     }
   }
-  
+
   // last row: all valids are part of boundary
   mark_all_empty(c_1, bdry);
 }
@@ -347,10 +364,10 @@ SDfile::make_tstrip_horizontal(vector<int>  &tstrips,
 
 static int
 get_index(int col, int idx, int n,
-	  const vector<int> &indices, 
+	  const vector<int> &indices,
 	  int good, int bad)
 {
-  
+
   if (col < good || col >= bad || idx < 0 || idx >= n)
     return -1;
   return indices[idx];
@@ -391,7 +408,7 @@ SDfile::make_tstrip_vertical(vector<int>  &tstrips,
 
   // initialize the point indices
   for (i=0; i<n; i++) {
-    c_0[i] = get_index(0, row_start[i], n_pts, indices, 
+    c_0[i] = get_index(0, row_start[i], n_pts, indices,
 		       first_good[i], first_bad[i]);
     c_1[i] = get_index(1, row_start[i]+1, n_pts, indices,
 		       first_good[i], first_bad[i]);
@@ -435,13 +452,13 @@ SDfile::make_tstrip_vertical(vector<int>  &tstrips,
     create_strip(tstrips, c_0, p_1, false, flip);
     // check boundary status of p_inds[1]
     mark_maybe_empty(p_1, p_0, c_0, bdry);
-    
+
     // between the fields of this frame
     create_strip(tstrips, c_1, c_0, true, flip);
     // check boundary status of c_inds[0]
     mark_maybe_empty(c_0, p_1, c_1, bdry);
   }
-  
+
   // last row: all valids are part of boundary
   mark_all_empty(c_1, bdry);
 }
@@ -451,7 +468,7 @@ SDfile::make_tstrip_vertical(vector<int>  &tstrips,
 
 
 void
-SDfile::fill_index_array(int step, 
+SDfile::fill_index_array(int step,
 			 int row,
 			 SubSampMode subSampMode,
 			 vector<int> &p,
@@ -463,7 +480,7 @@ SDfile::fill_index_array(int step,
   int half_step = step/2;
   int i,j,k;
   int zAccum;
- 
+
   i = row * half_step;
 
   set_xf(i, false);
@@ -494,7 +511,7 @@ SDfile::fill_index_array(int step,
 	      if (*zz == 0) goto loop_exit;
 	    }
 	  }
-	    
+
 	  // keep the point
 	  p[k/step] = pnts.size();
 	  pnts.push_back(xf.apply_xform(k, z[j]));
@@ -519,7 +536,7 @@ SDfile::fill_index_array(int step,
 	    // samples are ok
 	    int mincol = k - half_step;
 	    int maxcol = k + half_step;
-	    int nPossibleContrib = 
+	    int nPossibleContrib =
 	      (maxcol - mincol) * (lastrow - firstrow);
 	    int nContrib = 0;
 	    for (int irow = firstrow; irow < lastrow; irow++) {
@@ -553,7 +570,7 @@ SDfile::fill_index_array(int step,
 	      zAccum /= nContrib;
 	    }
 	  }
-	    
+
 	  // keep the point
 	  p[k/step] = pnts.size();
 	  if (subSampMode == filterAvg)
@@ -613,7 +630,7 @@ SDfile::SDfile(void)
 
 
 SDfile::~SDfile(void)
-{ 
+{
   if (row_start)
     delete[] row_start;
   if (first_good)
@@ -628,7 +645,7 @@ SDfile::~SDfile(void)
 
 
 bool
-SDfile::read(const crope &fname)
+SDfile::read(const string &fname)
 {
   if(g_verbose) cout << "SDfile::read(" << fname << ")... ";
   //
@@ -679,7 +696,7 @@ SDfile::read(const crope &fname)
     gzclose(sdfile);
     return false;
   }
-  
+
   if(g_verbose) cout << "v" << version << "... " << flush;
 
   scanner_vert = 0;
@@ -726,7 +743,7 @@ SDfile::read(const crope &fname)
     //
 
     for (int i=0; i<n_frames; ++i) {
-      if (READ_USHORT(first_good[i]) || 
+      if (READ_USHORT(first_good[i]) ||
 	  READ_USHORT(first_bad[i]) ) {
 	cerr << "Can't read sd file row indices" << endl;
 	return false;
@@ -738,7 +755,7 @@ SDfile::read(const crope &fname)
     //
 
     if (gzread(sdfile, z_data, sizeof(unsigned short) * n_pts) !=
-		sizeof(unsigned short) * n_pts) { 
+		sizeof(unsigned short) * n_pts) {
       cerr << "Can't read sd file range data values" << endl;
       gzclose(sdfile);
       return false;
@@ -783,7 +800,7 @@ SDfile::read(const crope &fname)
     int cnt = 0;
     for (int i=0; i<n_frames; ++i) {
 
-      if (READ_USHORT(first_good[i]) || 
+      if (READ_USHORT(first_good[i]) ||
 	  READ_USHORT(first_bad[i]) ) {
 	cerr << "Can't read sd file row indices" << endl;
 	return false;
@@ -813,7 +830,7 @@ SDfile::read(const crope &fname)
   // but that hoses things that were already registered before
   // scanner_vert was taken into account, so we won't yet.
   xf.setup(scanner_config, scanner_trans, other_screw);
-  
+
   // initialize the row_start array
   row_start  = new unsigned int[n_frames];
   row_start[0] = 0;
@@ -827,12 +844,12 @@ SDfile::read(const crope &fname)
 
 
 bool
-SDfile::write(const crope &fname)
+SDfile::write(const string &fname)
 {
   FILE *sdfile;
   unsigned int magic_num =  0x444d5007;
   unsigned int header_size = 52;
-  
+
   if (!(sdfile = fopen(fname.c_str(), "wb")))
     return false;
 
@@ -861,7 +878,7 @@ SDfile::write(const crope &fname)
   //
   // Write the block of start/stop indices
   //
-  
+
   for (int i=0; i<n_frames; ++i) {
     if (WRITE_USHORT(first_good[i]) ||
 	WRITE_USHORT(first_bad[i])) {
@@ -899,11 +916,11 @@ SDfile::write(const crope &fname)
   //
   // Write the block of intensity data values
   //
-  
+
   if (g_bNoIntensity) {
     cerr << "No intensity data in memory, writing zeros..." << endl;
     char c = 0;
-    for (i=0; i<n_pts; i++) {
+    for (int i=0; i<n_pts; i++) {
       fwrite(&c, sizeof(unsigned char), 1, sdfile);
     }
   } else {
@@ -974,9 +991,9 @@ void
 SDfile::make_tstrip(vector<int>  &tstrips,
 		    vector<char> &bdry)
 {
-  if (fabs(frame_pitch) > .07) 
+  if (fabs(frame_pitch) > .07)
     make_tstrip_horizontal(tstrips, bdry);
-  else 
+  else
     make_tstrip_vertical(tstrips, bdry);
 }
 
@@ -994,7 +1011,7 @@ SDfile::subsampled_tstrip(int            step,
   int n_s = pts_per_frame / step;
   int end = 2*n_frames/step;
 
-  SubSampMode subSampMode = !strcmp (behavior, "holes") 
+  SubSampMode subSampMode = !strcmp (behavior, "holes")
     ? holesGrow
     : !strcmp (behavior, "conf") ? conf
     : !strcmp (behavior, "filter") ? filterAvg
@@ -1002,13 +1019,13 @@ SDfile::subsampled_tstrip(int            step,
 
   if (n_s > 1 && end > 1) {
     // do horizontal stripping
-    
+
     vector<int> p_inds[2], old_inds(n_s);
-    p_inds[0].reserve(n_s); 
+    p_inds[0].reserve(n_s);
     p_inds[0].insert(p_inds[0].begin(), n_s, -1);
-    p_inds[1].reserve(n_s); 
+    p_inds[1].reserve(n_s);
     p_inds[1].insert(p_inds[1].begin(), n_s, -1);
-    
+
     vector<char> tmp_bdry(end*n_s); // a temporary bdry vector
     // first row
     fill_index_array(step, 0, subSampMode, p_inds[0],
@@ -1035,13 +1052,13 @@ SDfile::subsampled_tstrip(int            step,
     }
     mark_all_empty(p_inds[!j], tmp_bdry);
     // copy the boundary info
-    copy(tmp_bdry.begin(), &tmp_bdry[pnts.size()],
+    copy(tmp_bdry.begin(), tmp_bdry.begin() + pnts.size(),
 	 back_insert_iterator<vector<char> > (bdry));
   }
 }
 
 
-void 
+void
 SDfile::set_xf(int row, bool both)
 {
   if (both) {
@@ -1068,7 +1085,7 @@ SDfile::get_pnts_and_intensities(vector<Pnt3>  &pnts,
       if (z_data[cnt] == 0)
 	continue; // missing data marked by zero
       pnts.push_back(xf.apply_xform(j, z_data[cnt]));
-      if (!g_bNoIntensity) 
+      if (!g_bNoIntensity)
 	intensity.push_back (intensity_data[cnt]);
     }
   }
@@ -1081,11 +1098,11 @@ SDfile::get_pnts_and_intensities(vector<Pnt3>  &pnts,
 // col even: frame 0; col odd: frame 1
 // returns false if there is no such point
 bool
-SDfile::get_point(int row, int col, Pnt3 &p, 
+SDfile::get_point(int row, int col, Pnt3 &p,
 		  bool transformed)
 {
   // row within range?
-  if (row < 0 || row >= n_frames) 
+  if (row < 0 || row >= n_frames)
     return false;
   // column within range?
   if (first_good[row] > col || first_bad[row] <= col)
@@ -1111,7 +1128,7 @@ Xform<float>
 SDfile::vrip_reorientation_frame(void)
 {
   set_xf(n_frames/2);
-  
+
   // get the laser direction
   short mid_column = 480/2;
   short front = 60;
@@ -1145,16 +1162,16 @@ SDfile::vrip_reorientation_frame(void)
 // given a screw length and a position on the scanline
 // find the closest data point in the sweep
 // return false if that data point is invalid
-// 
-// a preliminary version, should be optimized and 
+//
+// a preliminary version, should be optimized and
 // the logic should be improved...
 bool
-SDfile::find_data(float screw, float y_in, 
+SDfile::find_data(float screw, float y_in,
 		  int            &row,
-		  unsigned short &y, 
+		  unsigned short &y,
 		  unsigned short &z)
 {
-  if (y_in < 0.0) { 
+  if (y_in < 0.0) {
     //SHOW(y_in);
     return false;
   }
@@ -1181,7 +1198,7 @@ SDfile::find_data(float screw, float y_in,
     row = int(rowf);
     field_even = (frac <= .25);
   }
-  if (row < 0 || row >= n_frames) 
+  if (row < 0 || row >= n_frames)
     return false;
   // if even field, snap to closest even integer,
   // similarly for odd
@@ -1198,7 +1215,7 @@ SDfile::find_data(float screw, float y_in,
     return false;
   }
   z = z_data[row_start[row]+y-first_good[row]];
-  return (z != 0);  
+  return (z != 0);
 }
 
 
@@ -1225,7 +1242,7 @@ SDfile::filtered_copy(const VertexFilter &filter,
   newsd.row_start  = new unsigned int[n_frames];
   newsd.first_good = new unsigned short[n_frames];
   newsd.first_bad  = new unsigned short[n_frames];
-  
+
   // initialize these to null
   newsd.intensity_data = NULL;
   newsd.z_data = NULL;
@@ -1258,7 +1275,7 @@ SDfile::filtered_copy(const VertexFilter &filter,
 	if (empty_row) { FirstGood = j; empty_row = false; }
 	LastGood = j;
 	_z_data[cnt]    = z_data[k];
-	if (!g_bNoIntensity) 
+	if (!g_bNoIntensity)
 	  _bw_data[cnt] = intensity_data[k];
 	cnt++;
       } else if (!empty_row) {
@@ -1309,7 +1326,7 @@ SDfile::get_piece(int firstFrame, int lastFrame,
   newsd.first_good = new unsigned short[newsd.n_frames];
   newsd.first_bad  = new unsigned short[newsd.n_frames];
 
-  newsd.scan_screw = scan_screw + 
+  newsd.scan_screw = scan_screw +
     (firstFrame + (int(newsd.n_frames) - int(n_frames))*0.5)*frame_pitch;
 
   int offset = row_start[firstFrame];
@@ -1319,19 +1336,19 @@ SDfile::get_piece(int firstFrame, int lastFrame,
     newsd.first_bad[i-firstFrame]  = first_bad[i];
   }
 
-  newsd.n_pts = newsd.row_start[newsd.n_frames-1] + 
-    newsd.first_bad[newsd.n_frames-1] - 
+  newsd.n_pts = newsd.row_start[newsd.n_frames-1] +
+    newsd.first_bad[newsd.n_frames-1] -
     newsd.first_good[newsd.n_frames-1];
 
   if (newsd.n_pts) {
     // copy the z and intensity data to the new copy
     newsd.z_data = new unsigned short[newsd.n_pts];
-    memcpy(newsd.z_data, z_data + row_start[firstFrame], 
+    memcpy(newsd.z_data, z_data + row_start[firstFrame],
 	   sizeof(unsigned short) * newsd.n_pts);
     if (!g_bNoIntensity) {
       newsd.intensity_data = new unsigned char[newsd.n_pts];
       memcpy(newsd.intensity_data,
-	     intensity_data+row_start[firstFrame], 
+	     intensity_data+row_start[firstFrame],
 	     newsd.n_pts);
     }
   }
@@ -1364,10 +1381,10 @@ SDfile::sphere_status(const Pnt3 &ctr, float r)
   float screw, swin[2];
   short ywin[2], zwin[2];
   prepare_axis_proj();
-  int ans = xf.sphere_status(ctr, r, screw, 
+  int ans = xf.sphere_status(ctr, r, screw,
 			     axis_proj_min, axis_proj_max,
 			     ywin, zwin, swin);
-  
+
   status_cnt++;
 
   if (ans == 0) {
@@ -1378,13 +1395,13 @@ SDfile::sphere_status(const Pnt3 &ctr, float r)
     return 1; // BOUNDARY;
   }
 
-  cout << ywin[0] << " " 
-       << ywin[1] << " " 
-       << zwin[0] << " " 
-       << zwin[1] << " " 
-       << swin[0] << " " 
+  cout << ywin[0] << " "
+       << ywin[1] << " "
+       << zwin[0] << " "
+       << zwin[1] << " "
+       << swin[0] << " "
        << swin[1] << " " << r << endl;
-  
+
   int start_row = (swin[0] - scan_screw) / frame_pitch + .5*n_frames-.25;
   int end_row   = (swin[1] - scan_screw) / frame_pitch + .5*n_frames-.25;
 
@@ -1454,7 +1471,7 @@ SDfile::dump_pts_laser_subsampled(ofstream &out, int nPnts)
 
       // valid data, filter it
       if (z_data[k]) {
-	
+
 	if (rnd() < float(still_need)/float(valids_left)) {
 	  cnt++;
 	  still_need--;
@@ -1509,7 +1526,7 @@ SDfile::raw_for_ith(int   j, sd_raw_pnt &data)
 
   // find the column
   int col = j - row_start[row] + first_good[row];
-  
+
   data.y = col;
   data.z = z_data[j];
   data.config = scanner_config;

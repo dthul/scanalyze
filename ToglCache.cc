@@ -3,7 +3,8 @@
 
 
 #include <assert.h>
-#include <iostream.h>
+#include <iostream>
+#include <unordered_map>
 #include "togl.h"
 #include "ToglCache.h"
 #include "plvGlobals.h"
@@ -231,7 +232,6 @@ DisplayCache::DC_ToglDisplay (struct Togl* togl)
 }
 
 
-#include <hash_map.h>
 struct eqtoglptr
 {
   bool operator()(unsigned long t1, unsigned long t2) const
@@ -240,7 +240,7 @@ struct eqtoglptr
   }
 };
 
-typedef hash_map<unsigned long, DisplayCache*, hash<unsigned long>,
+typedef unordered_map<unsigned long, DisplayCache*, hash<unsigned long>,
   eqtoglptr> DCToglHash;
 
 static DCToglHash dcHash;

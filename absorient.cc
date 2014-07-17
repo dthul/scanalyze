@@ -2,7 +2,7 @@
 // absorient.cc
 // Kari Pulli
 // 06/06/97
-// 
+//
 // Two methods for solving the rotation and translation for
 // registering two sets of 3D points.
 //
@@ -12,16 +12,16 @@
 // be close to the solution.
 //
 // Chen & Medioni's method takes as input a list of points
-// and a list of planes, one plane for each point. The 
+// and a list of planes, one plane for each point. The
 // algorithm tries to move the sets so that the points get
 // close to their corresponding planes. It is assumed that
-// only small rotations are needed, i.e., the sets are 
+// only small rotations are needed, i.e., the sets are
 // in approximate registration.
 //############################################################
 
 #include <math.h>
 #include <limits.h>
-#include <iostream.h>
+#include <iostream>
 #include "Pnt3.h"
 #include "Xform.h"
 #include "tnt.h"
@@ -45,7 +45,7 @@
 
 
 // transform a quaternion to a rotation matrix
-static void 
+static void
 quaternion2matrix(double *q, double m[3][3])
 {
   double q00 = q[0]*q[0];
@@ -100,24 +100,24 @@ characteristicPol(double Q[4][4], double c[4])
   c[0] = -Q[0][0] - Q[1][1] - Q[2][2] - Q[3][3];
 
   // b
-  c[1] = - q01_2 - q02_2 - q03_2 + q0011 - q12_2 - 
-    q13_2 + q0022 + q1122 - q23_2 + q0033 + q1133 + 
+  c[1] = - q01_2 - q02_2 - q03_2 + q0011 - q12_2 -
+    q13_2 + q0022 + q1122 - q23_2 + q0033 + q1133 +
     q2233;
 
   // c
-  c[2] = (q02_2 + q03_2 + q23_2)*Q[1][1] - 2*q0102*Q[1][2] + 
+  c[2] = (q02_2 + q03_2 + q23_2)*Q[1][1] - 2*q0102*Q[1][2] +
     (q12_2 + q13_2 + q23_2)*Q[0][0] +
-    (q01_2 + q03_2 - q0011 + q13_2 - q1133)*Q[2][2] - 
-    2*Q[0][3]*q0223 - 2*(q0103 + q1223)*Q[1][3] + 
+    (q01_2 + q03_2 - q0011 + q13_2 - q1133)*Q[2][2] -
+    2*Q[0][3]*q0223 - 2*(q0103 + q1223)*Q[1][3] +
     (q01_2 + q02_2 - q0011 + q12_2 - q0022)*Q[3][3];
-    
+
   // d
   c[3] = 2*(-Q[0][2]*Q[0][3]*Q[1][2] + q0103*Q[2][2] -
 	    Q[0][1]*q0223 + Q[0][0]*q1223)*Q[1][3] +
-    q02_2*q13_2 - q03_2*q1122 - q13_2*q0022 + 
-    2*Q[0][3]*Q[1][1]*q0223 - 2*q0103*q1223 + q01_2*q23_2 - 
+    q02_2*q13_2 - q03_2*q1122 - q13_2*q0022 +
+    2*Q[0][3]*Q[1][1]*q0223 - 2*q0103*q1223 + q01_2*q23_2 -
     q0011*q23_2 - q02_2*q1133 + q03_2*q12_2 +
-    2*q0102*Q[1][2]*Q[3][3] - q12_2*q0033 - q01_2*q2233 + 
+    2*q0102*Q[1][2]*Q[3][3] - q12_2*q0033 - q01_2*q2233 +
     q0011*q2233;
 }
 
@@ -176,14 +176,14 @@ maxEigenVector(double Q[4][4], double ev[4])
   }
   best = 0; best[0] = 1;
   LU_solve(N, ipiv, best);
-  double len = 
-    best[0]*best[0] + best[1]*best[1] + 
+  double len =
+    best[0]*best[0] + best[1]*best[1] +
     best[2]*best[2] + best[3]*best[3];
   for (int i=1; i<4; i++) {
     curr = 0; curr[i] = 1;
     LU_solve(N, ipiv, curr);
-    double tlen = 
-      curr[0]*curr[0] + curr[1]*curr[1] + 
+    double tlen =
+      curr[0]*curr[0] + curr[1]*curr[1] +
       curr[2]*curr[2] + curr[3]*curr[3];
     if (tlen > len) { len = tlen; best = curr; }
   }
@@ -204,7 +204,7 @@ horn_align(Pnt3 *p,      // the model points  (source)
 	   double q[7])  // the reg. vector 0..3 rot, 4..6 trans
 {
   if (n<3) {
-    cerr << "horn_align() was given " << n << " pairs," 
+    cerr << "horn_align() was given " << n << " pairs,"
 	 << " while at least 3 are required" << endl;
     return;
   }
@@ -262,36 +262,36 @@ horn_align(Pnt3 *p,      // the model points  (source)
   for (i=0; i<3; i++)
     for (j=0; j<3; j++)
       Q[i+1][j+1] = S[i][j]+S[j][i]-(i==j ? trace : 0);
-  
+
   maxEigenVector(Q, q);
 
   // calculate the rotation matrix
   double m[3][3]; // rot matrix
   quaternion2matrix(q, m);
   // calculate the translation vector, put it into q[4..6]
-  q[4] = x_mean[0] - m[0][0]*p_mean[0] - 
+  q[4] = x_mean[0] - m[0][0]*p_mean[0] -
     m[0][1]*p_mean[1] - m[0][2]*p_mean[2];
-  q[5] = x_mean[1] - m[1][0]*p_mean[0] - 
+  q[5] = x_mean[1] - m[1][0]*p_mean[0] -
     m[1][1]*p_mean[1] - m[1][2]*p_mean[2];
-  q[6] = x_mean[2] - m[2][0]*p_mean[0] - 
+  q[6] = x_mean[2] - m[2][0]*p_mean[0] -
     m[2][1]*p_mean[1] - m[2][2]*p_mean[2];
 }
 
 
 /**************************************************/
-static int 
+static int
 qudrtc(double b, double c, double rts[4])
-/* 
-     solve the quadratic equation - 
+/*
+     solve the quadratic equation -
 
-         x**2+b*x+c = 0 
+         x**2+b*x+c = 0
 
 */
 {
   int nquad;
   double rtdis;
   double dis = b*b-4.0*c;
-  
+
   if (dis >= 0.0) {
     nquad = 2;
     rtdis = sqrt(dis);
@@ -308,22 +308,22 @@ qudrtc(double b, double c, double rts[4])
 } /* qudrtc */
 /**************************************************/
 
-static double 
+static double
 cubic(double p, double q, double r)
-/* 
-     find the lowest real root of the cubic - 
-       x**3 + p*x**2 + q*x + r = 0 
+/*
+     find the lowest real root of the cubic -
+       x**3 + p*x**2 + q*x + r = 0
 
-   input parameters - 
-     p,q,r - coeffs of cubic equation. 
+   input parameters -
+     p,q,r - coeffs of cubic equation.
 
-   output- 
-     cubic - a real root. 
+   output-
+     cubic - a real root.
 
-   method - 
-     see D.E. Littlewood, "A University Algebra" pp.173 - 6 
+   method -
+     see D.E. Littlewood, "A University Algebra" pp.173 - 6
 
-     Charles Prineas   April 1981 
+     Charles Prineas   April 1981
 
 */
 {
@@ -334,9 +334,9 @@ cubic(double p, double q, double r)
   double m,mcube,n;
   double muo3,s,scube,t,cosk,sinsqk;
   double root;
-  
+
   double doubmax = sqrt(DBL_MAX);
-  
+
   m = 0.0;
   //nrts =0;
   if        ((p > doubmax) || (p <  -doubmax)) {
@@ -352,7 +352,7 @@ cubic(double p, double q, double r)
     if (po3sq > doubmax) root =  -p;
     else {
       v = r + po3*(po3sq + po3sq - q);
-      if ((v > doubmax) || (v < -doubmax)) 
+      if ((v > doubmax) || (v < -doubmax))
 	root = -p;
       else {
 	vsq = v*v;
@@ -376,7 +376,7 @@ cubic(double p, double q, double r)
 	wsq = uo3cu4 + vsq;
 	if (wsq >= 0.0) {
 	  //
-	  // cubic has one real root 
+	  // cubic has one real root
 	  //
 	  //nrts = 1;
 	  if (v <= 0.0) mcube = ( -v + sqrt(wsq))*.5;
@@ -388,7 +388,7 @@ cubic(double p, double q, double r)
 	} else {
 	  //nrts = 3;
 	  //
-	  // cubic has three real roots 
+	  // cubic has three real roots
 	  //
 	  if (uo3 < 0.0) {
 	    muo3 = -uo3;
@@ -405,7 +405,7 @@ cubic(double p, double q, double r)
 	    }
 	  } else
 	    //
-	    // cubic has multiple root -  
+	    // cubic has multiple root -
 	    //
 	    root = cbrt(v) - po3;
 	}
@@ -417,24 +417,24 @@ cubic(double p, double q, double r)
 /***************************************/
 
 
-static int 
+static int
 ferrari(double a, double b, double c, double d,	double rts[4])
-/* 
-     solve the quartic equation - 
+/*
+     solve the quartic equation -
 
-   x**4 + a*x**3 + b*x**2 + c*x + d = 0 
+   x**4 + a*x**3 + b*x**2 + c*x + d = 0
 
-     input - 
-   a,b,c,e - coeffs of equation. 
+     input -
+   a,b,c,e - coeffs of equation.
 
-     output - 
-   nquar - number of real roots. 
-   rts - array of root values. 
+     output -
+   nquar - number of real roots.
+   rts - array of root values.
 
      method :  Ferrari - Lagrange
      Theory of Equations, H.W. Turnbull p. 140 (1947)
 
-     calls  cubic, qudrtc 
+     calls  cubic, qudrtc
 */
 {
   int nquar,n1,n2;
@@ -526,9 +526,9 @@ get_transform(double correction[6],
 	      double m[3][3], double t[3])
 {
   // produces a premult matrix: p' = M . p + t
-  double sa = sin(correction[0]); 
+  double sa = sin(correction[0]);
   double ca = sqrt(1-sa*sa);
-  double sb = sin(correction[1]); 
+  double sb = sin(correction[1]);
   double cb = sqrt(1-sb*sb);
   double sr = sin(correction[2]);
   double cr = sqrt(1-sr*sr);
@@ -598,7 +598,7 @@ cholesky_solve(double A[6][6], double b[6], double x[6])
   return true;
 }
 
-// Calculate the rotation and translation that moves points in 
+// Calculate the rotation and translation that moves points in
 // array ctr toward their pairs.
 void
 chen_medioni(Pnt3 *ctr,     // control points (source)
@@ -607,13 +607,13 @@ chen_medioni(Pnt3 *ctr,     // control points (source)
 	     int n,         // how many pairs
 	     double q[7])   // registration quaternion
 {
-  // The least-squares solutions for the translation and 
+  // The least-squares solutions for the translation and
   // rotation are found independently.
   // Therefore it is much better to first move the control points
   // around origin, and fix the result in the end.
   // cm = Sum{ctr[i]}/n
   // R(p-cm) + t + cm == Rp + { t + cm - Rcm }
-  
+
   Pnt3 cm;
   for (int i=0; i<n; i++) cm += ctr[i];
   cm /= float(n);
@@ -621,7 +621,7 @@ chen_medioni(Pnt3 *ctr,     // control points (source)
   double HtH[6][6];
   double HtP[6], Hi[6];
 
-  for (i=0; i<6; i++) {
+  for (int i=0; i<6; i++) {
     HtH[i][0] =
     HtH[i][1] =
     HtH[i][2] =
@@ -634,7 +634,7 @@ chen_medioni(Pnt3 *ctr,     // control points (source)
   double Pi;
   Pnt3 PxS;
   double sum = 0;
-  for (i=0; i<n; i++) {
+  for (int i=0; i<n; i++) {
     Pi = dot(srf[i]-ctr[i], nrm[i]);
     PxS = cross(ctr[i]-cm, nrm[i]);
     Hi[0] = PxS[0];
@@ -673,9 +673,9 @@ chen_medioni(Pnt3 *ctr,     // control points (source)
     sum += Pi*Pi;
   }
 
-  cout << "Sqrt of average squared error before transform " 
+  cout << "Sqrt of average squared error before transform "
        << sqrtf(sum/n) << endl;
-  
+
   // solve Ax=b using Cholesky decomposition
   double d[6];
   Xform<double> xf;
@@ -683,7 +683,7 @@ chen_medioni(Pnt3 *ctr,     // control points (source)
     double m[3][3];
     double t[3];
     get_transform(d, m, t);
-    
+
     // fix the translation, see comments above
     float *c = &cm[0];
     t[0] += c[0] - (m[0][0]*c[0]+m[0][1]*c[1]+m[0][2]*c[2]);

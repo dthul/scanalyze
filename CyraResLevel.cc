@@ -1,12 +1,12 @@
 //############################################################
-// 
+//
 // CyraResLevel.cc
 //
 // Lucas Pereira
 // Thu Jul 16 15:20:47 1998
 //
 // Part of CyraScan.cc,
-//    Store range scan information from a Cyra Cyrax Beta 
+//    Store range scan information from a Cyra Cyrax Beta
 //    time-of-flight laser range scanner.
 //
 //############################################################
@@ -14,9 +14,9 @@
 #include "CyraResLevel.h"
 #include <tcl.h>
 #include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
-#include <stack.h>
+#include <iostream>
+#include <fstream>
+#include <stack>
 #include <stdlib.h>
 #include "defines.h"
 #include "TriMeshUtils.h"
@@ -51,16 +51,16 @@ bool CyraFillHoles = DEFAULT_CYRA_FILL_HOLES;
 // Helper functions...
 //////////////////////////////////////////////////////////////////////
 
-void 
+void
 CyraSample::zero(void) {
   vtx[0] = vtx[1] = vtx[2] = 0;
   nrm[0] = nrm[1] = nrm[2] = 0;
   intensity = 0;
   confidence = 0;
 }
-  
+
 // interp 2 samples
-void 
+void
 CyraSample::interp(CyraSample &a, CyraSample &b) {
   for (int i = 0; i < 3; i++) {
     vtx[i] = 0.5 * (a.vtx[i] + b.vtx[i]);
@@ -71,19 +71,19 @@ CyraSample::interp(CyraSample &a, CyraSample &b) {
 }
 
 // interp 3 samples, weighted 1/4, 1/2, 1/4
-void 
+void
 CyraSample::interp(CyraSample &a, CyraSample &b, CyraSample &c) {
   for (int i = 0; i < 3; i++) {
     vtx[i] = 0.25 * (a.vtx[i] + b.vtx[i]+b.vtx[i] + c.vtx[i]);
     nrm[i] = 0.25 * (a.nrm[i] + b.nrm[i]+b.nrm[i] + c.nrm[i]);
   }
   intensity = 0.25 * (a.intensity + b.intensity+b.intensity + c.intensity);
-  confidence = 0.25 * (a.confidence + b.confidence+b.confidence + 
+  confidence = 0.25 * (a.confidence + b.confidence+b.confidence +
 		       c.confidence);
 }
- 
+
 // Interpolate arbitrary number of samples, weighted evenly...
-void 
+void
 CyraSample::interp(int nsamps, CyraSample *samps[]) {
   assert(nsamps > 0);
   this->zero();
@@ -107,8 +107,8 @@ CyraSample::interp(int nsamps, CyraSample *samps[]) {
 }
 
 
- 
-bool 
+
+bool
 CyraSample::isValid(void) {
   return((vtx[2] > 0) ? TRUE : FALSE);
 }
@@ -119,7 +119,7 @@ CyraSample::isValid(void) {
 //////////////////////////////////////////////////////////////////////
 
 
- 
+
 CyraResLevel::CyraResLevel(void) {
   // Clear arrays
   width = 0;
@@ -147,42 +147,42 @@ CyraResLevel::~CyraResLevel(void) {
 // PUSH_TRI --  basically a macro used by the mesh-generation function
 // to look up the 3 vertices in vert_inds, and do tstrips if necessary
 inline void PUSH_TRI(int &ov2, int &ov3, vector<int> &tri_inds,
-		      const bool stripped,  
+		      const bool stripped,
 		      const vector<int> &vert_inds,
 		      const int v1, const int v2, const int v3)
-{ 
+{
   // will next tri be odd or even? (even tris get flipped)
-  static bool oddtri = true; 
+  static bool oddtri = true;
 
-  if (stripped) { 
-    if (oddtri && (ov2 == v2 && ov3 == v1)) { 
+  if (stripped) {
+    if (oddtri && (ov2 == v2 && ov3 == v1)) {
       // odd-numbered triangle
-      tri_inds.push_back(vert_inds[v3]); 
+      tri_inds.push_back(vert_inds[v3]);
       oddtri = false;
-    } else if (!oddtri && (ov2 == v1 && ov3 == v3)) { 
-      // even-numbered triangle -- listed backwards 
-      tri_inds.push_back(vert_inds[v2]); 
+    } else if (!oddtri && (ov2 == v1 && ov3 == v3)) {
+      // even-numbered triangle -- listed backwards
+      tri_inds.push_back(vert_inds[v2]);
       oddtri = true;
-    } else { 
-      tri_inds.push_back(-1); 
-      tri_inds.push_back(vert_inds[v1]); 
-      tri_inds.push_back(vert_inds[v2]); 
-      tri_inds.push_back(vert_inds[v3]); 
+    } else {
+      tri_inds.push_back(-1);
+      tri_inds.push_back(vert_inds[v1]);
+      tri_inds.push_back(vert_inds[v2]);
+      tri_inds.push_back(vert_inds[v3]);
       oddtri = false;
-    } 
-    ov2 = v2; 
-    ov3 = v3; 
-  } else {  
-    tri_inds.push_back(vert_inds[v1]); 
-    tri_inds.push_back(vert_inds[v2]); 
-    tri_inds.push_back(vert_inds[v3]); 
-  } 
+    }
+    ov2 = v2;
+    ov3 = v3;
+  } else {
+    tri_inds.push_back(vert_inds[v1]);
+    tri_inds.push_back(vert_inds[v2]);
+    tri_inds.push_back(vert_inds[v3]);
+  }
 }
 
 
 
 
-		     
+
 // Add the geometry for this reslevel to the list
 MeshTransport*
 CyraResLevel::mesh(bool perVertex, bool stripped,
@@ -199,7 +199,7 @@ CyraResLevel::mesh(bool perVertex, bool stripped,
   vert_inds.reserve(points.size());
   // Set the vert_inds array
   for (int i = 0; i < points.size(); i++) {
-    vert_inds.push_back((points[i].confidence > 0) ? 
+    vert_inds.push_back((points[i].confidence > 0) ?
 			vertoffset++ : -1);
   }
 
@@ -213,7 +213,7 @@ CyraResLevel::mesh(bool perVertex, bool stripped,
     FOR_EACH_VERT(nrm->insert (nrm->end(), v->nrm, v->nrm + 3));
   } else {
     FOR_EACH_TRI(pushNormalAsShorts
-		 (*nrm, ((Pnt3)cross(points[tv3].vtx-points[tv2].vtx, 
+		 (*nrm, ((Pnt3)cross(points[tv3].vtx-points[tv2].vtx,
 				     points[tv1].vtx-points[tv2].vtx))
 		  .normalize()));
   }
@@ -224,7 +224,7 @@ CyraResLevel::mesh(bool perVertex, bool stripped,
   int ov2 = -1; int ov3 = -1;
 
   // call the FOR_EACH_TRI macro, which defines tv1, tv2, tv3.
-  FOR_EACH_TRI(PUSH_TRI(ov2, ov3, *tri_inds, stripped, 
+  FOR_EACH_TRI(PUSH_TRI(ov2, ov3, *tri_inds, stripped,
 			vert_inds, tv1, tv2, tv3));
 
   // Terminate the last tstrip
@@ -253,7 +253,7 @@ CyraResLevel::mesh(bool perVertex, bool stripped,
 
 
 // Fill in the colors array.
-bool 
+bool
 CyraResLevel::colorMesh(vector<uchar>   &colors,
 			bool             perVertex,
 			ColorSource      source,
@@ -266,7 +266,7 @@ CyraResLevel::colorMesh(vector<uchar>   &colors,
       cerr << "adding per-vertex conf color..." << endl;
       // per-vertex confidence
       FOR_EACH_VERT(pushColor(colors, colorsize, (float)
-			      (v->confidence / 
+			      (v->confidence /
 			       CYRA_DEFAULT_CONFIDENCE)));
     } else {
       cerr << "adding per-face conf color..." << endl;
@@ -274,7 +274,7 @@ CyraResLevel::colorMesh(vector<uchar>   &colors,
       FOR_EACH_TRI(pushColor(colors, colorsize, (float)
 			     (MIN(points[tv1].confidence,
 				       MIN(points[tv2].confidence,
-					   points[tv3].confidence)) / 
+					   points[tv3].confidence)) /
 				   CYRA_DEFAULT_CONFIDENCE)));
     }
     break;
@@ -315,9 +315,8 @@ CyraResLevel::colorMesh(vector<uchar>   &colors,
     {
       create_kdtree();  // BUGBUG, this is a little heavyhanded approach
       colors.reserve (colorsize * cachedBoundary.size());
-      bool* end = cachedBoundary.end();
-      for (bool* c = cachedBoundary.begin(); c < end; c++)
-	pushConf (colors, colorsize, (uchar)(*c ? 0 : 255));
+      for (bool c: cachedBoundary)
+	pushConf (colors, colorsize, (uchar)(c ? 0 : 255));
     }
     break;
 
@@ -331,7 +330,7 @@ CyraResLevel::colorMesh(vector<uchar>   &colors,
 
 
 bool
-CyraResLevel::ReadPts(const crope &inname) 
+CyraResLevel::ReadPts(const string &inname)
 {
   // open the input .pts file
   const char* filename = inname.c_str();
@@ -360,7 +359,7 @@ CyraResLevel::ReadPts(const crope &inname)
   //	   x2 y2 z2 c2 nx2 ny2 nz2	0 1 0
   //	   x3 y3 z3 c3 nx3 ny3 nz3	0 0 1
   //	   ...                  	1 0 0 0
-  //	                       		0 1 0 0 
+  //	                       		0 1 0 0
   //	                         	0 0 1 0
   //	                       		0 0 0 1
   //					x1 y1 z1 c1
@@ -368,10 +367,10 @@ CyraResLevel::ReadPts(const crope &inname)
   //					...
   char buf[2000];
   int n1, n2, n3;
-  // Read first line after 0 0 0 
+  // Read first line after 0 0 0
   fgets(buf, 2000, inFile);
-  int nitems = sscanf(buf, "%g %g %g %d %d %d %d\n", 
-		      &(samp.vtx[0]), &(samp.vtx[1]), &(samp.vtx[2]), 
+  int nitems = sscanf(buf, "%g %g %g %d %d %d %d\n",
+		      &(samp.vtx[0]), &(samp.vtx[1]), &(samp.vtx[2]),
 		      &(samp.intensity),
 		      &n1, &n2, &n3);
   if (nitems == 7) {
@@ -401,22 +400,22 @@ CyraResLevel::ReadPts(const crope &inname)
       // Whether isOldPtsFormat or not, just ignore the normals that
       // are in the .pts file, for now...  Since the normals Cyra generates
       // are generally bogus anyways.
-      int nread = sscanf(buf, "%f %f %f %d\n", 
-			 &(samp.vtx[0]), &(samp.vtx[1]), &(samp.vtx[2]), 
+      int nread = sscanf(buf, "%f %f %f %d\n",
+			 &(samp.vtx[0]), &(samp.vtx[1]), &(samp.vtx[2]),
 			 &(samp.intensity));
       fgets(buf, 2000, inFile);
       if (nread != 4) {
 	int lineno = ((isOldPtsFormat)?4:11) + x*height + y;
-	cerr << "Error: Trouble reading Cyra input line " << lineno 
+	cerr << "Error: Trouble reading Cyra input line " << lineno
 	     << "." << endl;
 	return false;
       }
-     
+
       samp.nrm[0] = 0; samp.nrm[1] = 0; samp.nrm[2] = 32767;
       // Convert to millimeters
       samp.vtx *= 1000.0;
 
-      // Compute confidence 
+      // Compute confidence
       if (samp.vtx[0] == 0. && samp.vtx[1] == 0. &&
 	  samp.vtx[2] == 0. && samp.intensity == 0) {
 	// then point is missing data
@@ -425,23 +424,23 @@ CyraResLevel::ReadPts(const crope &inname)
 	samp.confidence = CYRA_DEFAULT_CONFIDENCE;
 	// count number of valid points
 	numpoints++;
- 
+
 	// unweight specular highlights -- linearly
 	// make the weight falloff to 0 between intensities
 	// -800 and 2048
 	if (samp.intensity > -800) {
-	  float unweightfactor = (2048.0 - samp.intensity) / 
+	  float unweightfactor = (2048.0 - samp.intensity) /
 	    (2048.0 - (-800));
 	  samp.confidence *= unweightfactor;
 	}
 	// also make the weight falloff between -1600 and -2048
 	if (samp.intensity < -1600) {
-	  float unweightfactor = (2048.0 + samp.intensity) / 
+	  float unweightfactor = (2048.0 + samp.intensity) /
 	    (2048.0 - 1600.0);
 	  samp.confidence *= unweightfactor;
 	}
       }
-    
+
       // Now put the vertex into the array
       points.push_back(samp);
     }
@@ -491,7 +490,7 @@ CyraResLevel::ReadPts(const crope &inname)
   ////////////// Filter out spikes?  ///////////
   if (CyraFilterSpikes) {
     cerr << "Filtering out high-intensity spikes....";
-    for (x=0; x < width-1; x++) {
+    for (int x=0; x < width-1; x++) {
       for (int y=0; y < height-1; y++) {
 	CyraSample *v1 = &(point(x,y));
 
@@ -524,14 +523,14 @@ CyraResLevel::ReadPts(const crope &inname)
 	if (neighborWt != 0) {
 	  neighborZ /= neighborWt;
 	  neighborI /= neighborWt;
-      
+
 	  if (neighborsDeeper <=2 && neighborsCloser >= 5 &&
 		    myI > neighborI + 20) {
 	    // This point seems to be farther away, and brighter, than
 	    // most of it's neighbors... We think it's the funny artifact...
 
-	    //cerr << "before dd: " << (myZ-neighborZ) << " " << (myI-neighborI) 
-	    //     << " depths: " << myZ << " , " << neighborZ << " ; intens: " 
+	    //cerr << "before dd: " << (myZ-neighborZ) << " " << (myI-neighborI)
+	    //     << " depths: " << myZ << " , " << neighborZ << " ; intens: "
 	    //     << myI << " , " << neighborI << endl;
 	    float posScale = neighborZ / myZ;
 	    v1->vtx[0] *= posScale;
@@ -548,10 +547,10 @@ CyraResLevel::ReadPts(const crope &inname)
   ////////////// Fill holes? ///////////
   if (CyraFillHoles) {
     cerr << "Filling Tiny Holes....";
-    for (x=0; x < width-1; x++) {
+    for (int x=0; x < width-1; x++) {
       for (int y=0; y < height-1; y++) {
 	CyraSample *v1 = &(point(x,y));
-	
+
 	float myZ  = v1->vtx[2];
 	float neighborsZ = 0;
 	float neighborsWt = 0;
@@ -572,12 +571,12 @@ CyraResLevel::ReadPts(const crope &inname)
 	  }
 	}
 	neighborsZ /= neighborsWt;
-	
+
 	// Find the neighbor closest to the mean...
 	// over 3x3 neighborhood...
 	float closestZ = point(xstart, ystart).vtx[2];
 	float closestDZ2 = (neighborsZ-closestZ)*(neighborsZ-closestZ);
-	for (nex = xstart; nex <= xend; nex++) {
+	for (int nex = xstart; nex <= xend; nex++) {
 	  for (int ney = ystart; ney <= yend; ney++) {
 	    CyraSample *ne = &point(nex, ney);
 	    float neDZ2 = (neighborsZ-ne->vtx[2])*(neighborsZ-ne->vtx[2]);
@@ -592,7 +591,7 @@ CyraResLevel::ReadPts(const crope &inname)
 	// (this way, if we have one outlier, we'll still grab from the
 	// z depth of the main cluster...)
 	neighborsZ = closestZ;
-	
+
 	// Make sure the neighbors are clustered closely together...
 	// say, within 150mm of each other...?
 	int neighborsClose = 0;
@@ -602,11 +601,11 @@ CyraResLevel::ReadPts(const crope &inname)
 	float neighborI = 0;
 	float neighborConf = 0;
 
-	for (nex = xstart; nex <= xend; nex++) {
+	for (int nex = xstart; nex <= xend; nex++) {
 	  for (int ney = ystart; ney <= yend; ney++) {
 	    CyraSample *ne = &point(nex, ney);
 	    if ((nex != x || ney != y) &&
-		(ne->vtx[2] < neighborsZ + CyraTessDepth && 
+		(ne->vtx[2] < neighborsZ + CyraTessDepth &&
 		 ne->vtx[2] > neighborsZ - CyraTessDepth)) {
 	      neighborsClose++;
 	      neighborX += ne->vtx[0];
@@ -619,11 +618,11 @@ CyraResLevel::ReadPts(const crope &inname)
 	}
 
 	//cerr <<" "<<neighborsClose<< ", nz " <<neighborsZ<< " , myz " <<myZ<< endl;
-	
+
 	// Only fill holes of data off by more than 150mm...
 	// e.g. make sure this point is far from the neighborhood,
-	if (neighborsWt < 7 || neighborsClose < 7 || 
-	    (neighborsZ < myZ + CyraTessDepth && 
+	if (neighborsWt < 7 || neighborsClose < 7 ||
+	    (neighborsZ < myZ + CyraTessDepth &&
 	     neighborsZ > myZ - CyraTessDepth)) continue;
 
 	// otherwise, modify the puppy....
@@ -637,14 +636,14 @@ CyraResLevel::ReadPts(const crope &inname)
     cerr << "Done! (filling holes)\n";
   }
 
-  
+
   ////////////// Generate the Tesselation ///////////
   cerr << "Generating tesselation...";
-  for (x=0; x < width-1; x++) {
+  for (int x=0; x < width-1; x++) {
     for (int y=0; y < height-1; y++) {
       // get pointers to the four vertices surrounding this
       // square:
-      // 2 4 
+      // 2 4
       // 1 3
       CyraSample *v1 = &(point(x,y));
       CyraSample *v2 = &(point(x,y+1));
@@ -655,7 +654,7 @@ CyraResLevel::ReadPts(const crope &inname)
       // Set mask bit to be true if a vertex:
       //   a) exists (has confidence)
       //   b) is not an occlusion edge
-      unsigned int mask = 
+      unsigned int mask =
 	((v4->confidence && !grazing(v3->vtx, v4->vtx, v2->vtx))? 8 : 0) +
 	((v3->confidence && !grazing(v1->vtx, v3->vtx, v4->vtx))? 4 : 0) +
 	((v2->confidence && !grazing(v4->vtx, v2->vtx, v1->vtx))? 2 : 0) +
@@ -663,12 +662,12 @@ CyraResLevel::ReadPts(const crope &inname)
 
       switch (mask) {
       case 15:
-	// verts: 1 2 3 4 
+	// verts: 1 2 3 4
 	tess = TESS14;
 	numtris += 2;
 	break;
       case 14:
-	// verts: 2 3 4 
+	// verts: 2 3 4
 	tess = TESS4;
 	numtris++;
 	break;
@@ -709,7 +708,7 @@ CyraResLevel::ReadPts(const crope &inname)
 
 
 bool
-CyraResLevel::WritePts(const crope &outname) 
+CyraResLevel::WritePts(const string &outname)
 {
   CyraSample samp;
 
@@ -751,14 +750,14 @@ CyraResLevel::WritePts(const crope &outname)
 
   // Write out the points, since this is the only data actually in
   // a .pts file....
-  for (x=lox; x <= hix; x++) {
+  for (int x=lox; x <= hix; x++) {
     for (int y=loy; y <= hiy; y++) {
       samp = point(x,y);
       if (samp.confidence == 0) {
 	fprintf(outFile, "0 0 0 0 0 0 0\n");
       } else {
 	// divide by 1000, since .pts files are always in meters
-	fprintf(outFile, "%.5f %.5f %.5f %d 0 0 1\n", 
+	fprintf(outFile, "%.5f %.5f %.5f %d 0 0 1\n",
 		samp.vtx[0]/1000.0, samp.vtx[1]/1000.0, samp.vtx[2]/1000.0,
 		samp.intensity);
       }
@@ -777,7 +776,7 @@ CyraResLevel::CalcNormals(void)
   Pnt3 hedge, vedge, norm;
   Pnt3 v1, v2, v3, v4;
   CyraTess tess;
-  
+
   for (int x=0; x < width; x++) {
     for (int y=0; y < height; y++) {
       if (point(x,y).confidence > 0) {
@@ -854,7 +853,7 @@ CyraResLevel::CalcNormals(void)
 
 	  tess = tri(x,y-1);
 	  switch (tess) {
-	  case TESS1:	
+	  case TESS1:
 	    hedge += 0.5*(v3-v1);
 	    vedge += 0.5*(v2-v1);
 	    break;
@@ -885,7 +884,7 @@ CyraResLevel::CalcNormals(void)
 
 	  tess = tri(x,y);
 	  switch (tess) {
-	  case TESS1:	
+	  case TESS1:
 	  case TESS14:
 	    hedge += 1.0*(v3-v1);
 	    vedge += 1.0*(v2-v1);
@@ -926,7 +925,7 @@ bool
 CyraResLevel::grazing(Pnt3 v1, Pnt3 v2, Pnt3 v3)
 {
 #if 0
-  // First compute (negative) norm, which should point pretty 
+  // First compute (negative) norm, which should point pretty
   // much away from the origin.  Compare this to the vector
   // from the origin....
   Pnt3 edge1 = v3 - v2;
@@ -981,24 +980,24 @@ CyraResLevel::grazing(Pnt3 v1, Pnt3 v2, Pnt3 v3)
 
 
   //#endif  // USE_Z_AS_DEPTH
-#endif  // 0  
+#endif  // 0
 }
 
 
 
-int 
+int
 CyraResLevel::num_vertices(void)
 {
   return numpoints;
 }
 
-int 
+int
 CyraResLevel::num_tris(void)
 {
   return numtris;
 }
 
-void 
+void
 CyraResLevel::growBBox(Bbox &bbox)
 {
   FOR_EACH_VERT(bbox.add(v->vtx));
@@ -1034,7 +1033,7 @@ CyraResLevel::flipNormals(void)
   CyraTess tess;
   // Note:  only goes to width-1, but want to do middle col, too, so
   // the width-1+1 cancel out...
-  for (xx=0; xx < (width)/2; xx++) {
+  for (int xx=0; xx < (width)/2; xx++) {
     for (int yy=0; yy < height-1; yy++) {
       tess = tri(xx,yy);
       // Set scanline xx to be mirror of width-xx-2
@@ -1076,14 +1075,14 @@ CyraResLevel::flipNormals(void)
   FOR_EACH_VERT(flip3shorts (v->nrm));
 }
 
-bool 
-CyraResLevel::filtered_copy(CyraResLevel &original, 
+bool
+CyraResLevel::filtered_copy(CyraResLevel &original,
 			    const VertexFilter& filter)
 {
   width  = original.width;
   height = original.height;
-  numpoints = 0; 
-  numtris   = 0;   
+  numpoints = 0;
+  numtris   = 0;
   points.clear();
   tris.clear();
   origin = original.origin;
@@ -1143,7 +1142,7 @@ CyraResLevel::filtered_copy(CyraResLevel &original,
 	else tess = TESS0;
 	break;
       default:
-	cerr << "Unhandled tesselation flag " << original.tri(xx,yy) 
+	cerr << "Unhandled tesselation flag " << original.tri(xx,yy)
 	     << " in clipping..." << endl;
       }
       // Push Tri flag, increment numtris
@@ -1158,11 +1157,11 @@ CyraResLevel::filtered_copy(CyraResLevel &original,
 }
 
 
-bool 
+bool
 CyraResLevel::filter_inplace(const VertexFilter& filter)
 {
-  numpoints = 0; 
-  numtris   = 0;   
+  numpoints = 0;
+  numtris   = 0;
 
   CyraSample zero;
   zero.vtx.set(0,0,0);
@@ -1212,7 +1211,7 @@ CyraResLevel::filter_inplace(const VertexFilter& filter)
 	else tess = TESS0;
 	break;
       default:
-	cerr << "Unhandled tesselation flag " << tri(xx,yy) 
+	cerr << "Unhandled tesselation flag " << tri(xx,yy)
 	     << " in clipping..." << endl;
       }
       // Push Tri flag, increment numtris
@@ -1249,20 +1248,20 @@ CyraResLevel::create_kdtree(void)
   FOR_EACH_VERT(cachedBoundary.push_back
 		((bool) (vx == 0 || vx == width-1 ||
 			 vy == 0 || vy == height-1 ||
-			 (tri(vx-1,vy-1) != TESS14 && 
-			  tri(vx-1,vy-1) != TESS23 && 
+			 (tri(vx-1,vy-1) != TESS14 &&
+			  tri(vx-1,vy-1) != TESS23 &&
 			  tri(vx-1,vy-1) != TESS4) ||
-			 (tri(vx-1,vy) != TESS14 && 
-			  tri(vx-1,vy) != TESS23 && 
+			 (tri(vx-1,vy) != TESS14 &&
+			  tri(vx-1,vy) != TESS23 &&
 			  tri(vx-1,vy) != TESS3) ||
-			 (tri(vx,vy-1) != TESS14 && 
-			  tri(vx,vy-1) != TESS23 && 
+			 (tri(vx,vy-1) != TESS14 &&
+			  tri(vx,vy-1) != TESS23 &&
 			  tri(vx,vy-1) != TESS2) ||
-			 (tri(vx,vy) != TESS14 && 
-			  tri(vx,vy) != TESS23 && 
+			 (tri(vx,vy) != TESS14 &&
+			  tri(vx,vy) != TESS23 &&
 			  tri(vx,vy) != TESS1))));
 
-  kdtree = CreateKDindtree (cachedPoints.begin(), cachedNorms.begin(),
+  kdtree = CreateKDindtree (cachedPoints.data(), cachedNorms.data(),
 			    cachedPoints.size());
 
   isDirty_cache = false;
@@ -1276,10 +1275,10 @@ CyraResLevel::subsample_points(float rate, vector<Pnt3> &p, vector<Pnt3> &n)
   int totalNum = (int)(rate * nv);
 
   if (totalNum > nv) return;
-  
+
   p.clear(); p.reserve(totalNum);
   n.clear(); n.reserve(totalNum);
-  
+
   int num = totalNum;
   int end = nv;
   for (int i = 0; i < end; i++) {
@@ -1294,16 +1293,16 @@ CyraResLevel::subsample_points(float rate, vector<Pnt3> &p, vector<Pnt3> &n)
   if (p.size() != totalNum) {
     printf("Selected wrong number of points in the CyraResLevel subsample proc.\n");
   }
-}  
+}
 
-bool 
-CyraResLevel::closest_point(const Pnt3 &p, const Pnt3 &n, 
+bool
+CyraResLevel::closest_point(const Pnt3 &p, const Pnt3 &n,
 			Pnt3 &cp, Pnt3 &cn,
 			float thr, bool bdry_ok)
 {
   create_kdtree();
   int ind, ans;
-  ans = kdtree->search(&cachedPoints[0], 
+  ans = kdtree->search(&cachedPoints[0],
 		       &cachedNorms[0], p, n, ind, thr);
   if (ans) {
     if (!bdry_ok) {
@@ -1312,8 +1311,8 @@ CyraResLevel::closest_point(const Pnt3 &p, const Pnt3 &n,
     }
     cp = cachedPoints[ind];
     short *sp = &cachedNorms[ind*3];
-    cn.set(sp[0]/32767.0, 
-	   sp[1]/32767.0, 
+    cn.set(sp[0]/32767.0,
+	   sp[1]/32767.0,
 	   sp[2]/32767.0);
   }
   return ans;

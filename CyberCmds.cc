@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // CyberCmds.cc
 //
 // Matt Ginzton, Kari Pulli
@@ -12,8 +12,8 @@
 //############################################################
 
 
-#include <vector.h>
-#include <fstream.h>
+#include <vector>
+#include <fstream>
 
 #include "Xform.h"
 #include "Pnt3.h"
@@ -31,13 +31,13 @@
 #include "FileNameUtils.h"
 
 
-int 
-PlvWriteSDForVripCmd(ClientData clientData, 
+int
+PlvWriteSDForVripCmd(ClientData clientData,
 		     Tcl_Interp *interp,
 		     int argc, char* argv[])
 {
    if (argc < 5) {
-      interp->result = 
+      interp->result =
 	"Usage: PlvWriteSDForVripCmd <res level, 0=max> <dir> "
 	"<sweeps|subsweeps> <delete-sweeps>";
       return TCL_ERROR;
@@ -68,19 +68,19 @@ PlvWriteSDForVripCmd(ClientData clientData,
   //xfRotate.rotZ (M_PI);      // right-side-up just for viewing pleasure
   //xfRotate.rotX (-M_PI/2.0); // and for vrip, -90 degrees around X axis
   //Xform<float> xfIR = xfRotate; xfIR.fast_invert();
-  
+
   char name[PATH_MAX];
-  crope result;
+  string result;
   bool success = true;
 
   // vrip can't read tstrips
-  char* oldStripVal = Tcl_GetVar (interp, "meshWriteStrips", 
+  char* oldStripVal = Tcl_GetVar (interp, "meshWriteStrips",
 				  TCL_GLOBAL_ONLY);
-  Tcl_SetVar (interp, "meshWriteStrips", "never", 
+  Tcl_SetVar (interp, "meshWriteStrips", "never",
 	      TCL_GLOBAL_ONLY);
 
   Progress* prog = new Progress (theScene->meshSets.size() * 1000,
-				 "Output plyfiles for vrip", 
+				 "Output plyfiles for vrip",
 				 true);
 
   char confFN[PATH_MAX];
@@ -91,13 +91,13 @@ PlvWriteSDForVripCmd(ClientData clientData,
   // int overlap = MIN(64, pow(2,iRes+3)+0.5);
   int overlap = int(pow(2,iRes+2)+0.5);
 
-  DisplayableMesh** dm = theScene->meshSets.begin();
+  vector<DisplayableMesh*>::iterator dm = theScene->meshSets.begin();
   for (; dm < theScene->meshSets.end(); dm++) {
     if (!(*dm)->getVisible())
       continue;
 
     // JED - Check if mesh loaded, if not load
-    
+
     RigidScan* sd = (*dm)->getMeshData();
     CyberScan* cs = dynamic_cast<CyberScan*> (sd);
     if (!cs)
@@ -109,7 +109,7 @@ PlvWriteSDForVripCmd(ClientData clientData,
     int sweepNum = 0;
 
     vector<CyberSweep*> sweeps = cs->get_sweep_list();
-    for (CyberSweep** pSweep = sweeps.begin();
+    for (vector<CyberSweep*>::iterator pSweep = sweeps.begin();
 	 pSweep < sweeps.end(); pSweep++, sweepNum++) {
 
       CyberSweep* sweep = *pSweep;
@@ -127,11 +127,11 @@ PlvWriteSDForVripCmd(ClientData clientData,
 	if (slash)
 	  sweepnum = slash + 1;
 	sprintf(name, "%s/%s-sweep-%s-%s-sub-%d.ply", dir,
-		sd->get_basename().c_str(), sweepnum, 
+		sd->get_basename().c_str(), sweepnum,
 		sweep->get_description().c_str(), k);
 	for (slash = name + strlen(dir) + 1; *slash; slash++)
 	  if (*slash == '/') *slash = '_';
-	
+
 	if (access (name, R_OK)) {
 	  cout << "Writing " << name << " ... " << flush;
 	} else if (bConfOnly) {
@@ -151,19 +151,19 @@ PlvWriteSDForVripCmd(ClientData clientData,
 	    int frameStart = k*framesPerSweep;
 	    int frameFinish = MIN(sweep->num_frames()-1,
 				  (k+1)*framesPerSweep+overlap+1);
-	    newScan = 
+	    newScan =
 	      (CyberScan *)cs->get_piece(sweepNum, frameStart, frameFinish);
-	    
+
 	    if (newScan == NULL)
 	      continue;
-	    
+
 	    newScan->existing_resolutions (ri);
 	    thisIRes = MIN (iRes, ri.size() - 1);
 	    newScan->load_resolution (thisIRes);
-	    
+
 	    vector<CyberSweep*> newSweeps = newScan->get_sweep_list();
 	    newSweep = newSweeps[0];
-	    
+
 	    ri.clear();
 	    newSweep->existing_resolutions(ri);
 	    res = ri[thisIRes].abs_resolution;
@@ -173,7 +173,7 @@ PlvWriteSDForVripCmd(ClientData clientData,
 	    sd->existing_resolutions (ri);
 	    thisIRes = MIN (iRes, ri.size() - 1);
 	    cs->load_resolution (thisIRes);
-	    
+
 	    newSweep = sweep;
 	    newSweep->existing_resolutions(ri);
 	    res = ri[thisIRes].abs_resolution;
@@ -190,16 +190,16 @@ PlvWriteSDForVripCmd(ClientData clientData,
 	  if (!bConfOnly) {
 	    // write plyfile
 	    if (!newSweep->write_resolution_mesh (res, name, xfRotate)) {
-	      cerr << "Scan " << sd->get_name() 
+	      cerr << "Scan " << sd->get_name()
 		   << " failed to write self!"  << endl;
 	      return TCL_ERROR;
 	    }
-	    
+
 	    /* Started to write something that would save bboxes for
 	       pvrip, but realized that the world bboxes would not be
 	       tight.  We can add tight world bboxes later.  For now,
 	       pvrip computes its own just fine. */
-	    
+
 	    cout << "done." << endl;
 	  }
 
@@ -213,17 +213,17 @@ PlvWriteSDForVripCmd(ClientData clientData,
 	  xf = xf * xfRotate;
 	  xf.toQuaternion (q);
 	  xf.getTranslation (t);
-	  sprintf (bmesh, "bmesh %s %g %g %g %g %g %g %g", 
+	  sprintf (bmesh, "bmesh %s %g %g %g %g %g %g %g",
 		   1+strrchr(name,'/'),
 		   t[0], t[1], t[2], -q[1], -q[2], -q[3], q[0]);
-	  
+
 	  // write xf
 	  strcpy (name + strlen(name) - 3, "xf");
 	  cout << "Writing " << name << " ... " << flush;
 	  ofstream xffile (name);
 	  xffile << xf;
 	  if (xffile.fail()) {
-	    cerr << "Scan " << sd->get_name() 
+	    cerr << "Scan " << sd->get_name()
 		 << " failed to write xform!" << endl;
 	    success = false;
 	    break;
@@ -232,13 +232,13 @@ PlvWriteSDForVripCmd(ClientData clientData,
 
 	  conffile << bmesh << endl;
 	}
-	
-	if (useSubSweeps) 
+
+	if (useSubSweeps)
 	  delete newScan;
 
 	if (!g_bNoUI && !prog->updateInc (1000 / sweeps.size())) {
 	  success = false;
-	  cerr << endl << "CyberScan -> vrip output: cancelled!" 
+	  cerr << endl << "CyberScan -> vrip output: cancelled!"
 	       << endl << endl;
 	  break;
 	}
@@ -258,14 +258,14 @@ PlvWriteSDForVripCmd(ClientData clientData,
     }
 
     // JED - Unload mesh from memory if it started unloaded
-    
+
     if (BailDetector::bail())
       break;
   }
-  
+
   // cleanup
   delete prog;
-  Tcl_SetVar (interp, "meshWriteStrips", oldStripVal, 
+  Tcl_SetVar (interp, "meshWriteStrips", oldStripVal,
 	      TCL_GLOBAL_ONLY);
 
   if (!success)
@@ -276,14 +276,14 @@ PlvWriteSDForVripCmd(ClientData clientData,
 
 
 
-int 
-PlvCyberScanSelfAlignCmd(ClientData clientData, 
+int
+PlvCyberScanSelfAlignCmd(ClientData clientData,
 			 Tcl_Interp *interp,
 			 int argc, char* argv[])
 {
   // check input
   if (argc < 2) {
-    interp->result = 
+    interp->result =
       "No scan passed to PlvCyberScanSelfAlignCmd";
     return TCL_ERROR;
   }
@@ -297,12 +297,12 @@ PlvCyberScanSelfAlignCmd(ClientData clientData,
 
   CyberScan* scan = dynamic_cast<CyberScan*>(dm->getMeshData());
   if (!scan) {
-    interp->result = 
+    interp->result =
       "PlvCyberScanSelfAlignCmd: that's not a CyberScan!";
     return TCL_ERROR;
   }
 
-  vector< vector<CyberSweep*> > shells = 
+  vector< vector<CyberSweep*> > shells =
     scan->get_ordered_sweeps();
 
   AutoICP<RigidScan*> self_align;
@@ -329,7 +329,7 @@ PlvCyberScanSelfAlignCmd(ClientData clientData,
 	  int jo = ofs + j;
 	  if (jo < 0 || jo >= shellPrev.size())
 	    continue;
-	  
+
 	  self_align.add_pair (shell[j], shellPrev[jo]);
 	}
       }
@@ -358,14 +358,14 @@ PlvCyberScanSelfAlignCmd(ClientData clientData,
 }
 
 
-int 
-ScnDumpLaserPntsCmd(ClientData clientData, 
+int
+ScnDumpLaserPntsCmd(ClientData clientData,
 		    Tcl_Interp *interp,
 		    int argc, char* argv[])
 {
   // check input
   if (argc < 4) {
-    interp->result = 
+    interp->result =
       "Usage: ScnDumpLaserPntsCmd scan_name filename nPts";
     return TCL_ERROR;
   }
@@ -379,7 +379,7 @@ ScnDumpLaserPntsCmd(ClientData clientData,
 
   CyberScan* scan = dynamic_cast<CyberScan*>(dm->getMeshData());
   if (!scan) {
-    interp->result = 
+    interp->result =
       "ScnDumpLaserPntsCmd: that's not a CyberScan!";
     return TCL_ERROR;
   }
@@ -390,8 +390,8 @@ ScnDumpLaserPntsCmd(ClientData clientData,
 }
 
 
-int 
-PlvDiceCyberDataCmd(ClientData clientData, 
+int
+PlvDiceCyberDataCmd(ClientData clientData,
 		    Tcl_Interp *interp,
 		    int argc, char* argv[])
 {
@@ -403,12 +403,12 @@ PlvDiceCyberDataCmd(ClientData clientData,
     DisplayableMesh *displayMesh = theScene->meshSets[i];
     if (!displayMesh->getVisible())
       continue;
-      
+
     RigidScan *sd = displayMesh->getMeshData();
     CyberScan* cs = dynamic_cast<CyberScan*> (sd);
     if (!cs)
       continue;
-      
+
     vector<CyberSweep*> sweeps = cs->get_sweep_list();
     for (int j=0; j < sweeps.size(); j++) {
       CyberSweep *sweep = sweeps[j];
@@ -417,46 +417,46 @@ PlvDiceCyberDataCmd(ClientData clientData,
 	int frameStart = k*framesPerSweep;
 	int frameFinish = MIN(sweep->num_frames()-1,
 			      (k+1)*framesPerSweep+33);
-      
+
 	// newmesh mode... makes a new mesh and adds it to Mesh Controls
 	// filtered_copy will return NULL if not supported; will return
 	// valid pointer to scan with no resolutions if the clip excludes
 	// all data.
 
 	cout << frameStart << "  "  << frameFinish << endl;
-	
+
 	DisplayableMesh *oldDisp = displayMesh;
 	RigidScan *meshFrom = sd;
 	RigidScan *meshTo = cs->get_piece(j, frameStart, frameFinish);
-	
+
 	if (meshTo) {
 	  if (meshTo->num_resolutions() > 0) {
 	    char tmpstr[PATH_MAX];
-	    crope name;
+	    string name;
 	    sprintf(tmpstr, "%d", j);
 	    name = meshFrom->get_basename() + "_" + tmpstr;
 	    sprintf(tmpstr, "%d", k);
 	    name = name + "_" + tmpstr + "." + meshFrom->get_nameending();
 	    meshTo->set_name(name);
-	    
+
 	    DisplayableMesh* newDisp = theScene->addMeshSet (meshTo, false);
 	    Tcl_VarEval (interp, "clipMeshCreateHelper ",
 			 oldDisp->getName(), " ", newDisp->getName(), NULL);
 	  } else {
 	    // scan supports clipping, but had no data
-	    Tcl_VarEval (interp, "changeVis ", 
+	    Tcl_VarEval (interp, "changeVis ",
 			 oldDisp->getName(), " 0", NULL);
 	  }
 	}
-      }      
+      }
     }
   }
-  return TCL_OK;  
+  return TCL_OK;
 }
 
 
 int
-PlvWorkingVolumeCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvWorkingVolumeCmd(ClientData clientData, Tcl_Interp *interp,
                     int argc, char *argv[])
 {
   CyberWorkingVolume *cwv = GetCyberWorkingVolume();
@@ -483,7 +483,7 @@ PlvWorkingVolumeCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 int
-PlvWorldCoordToSweepCoord(ClientData clientData, Tcl_Interp *interp, 
+PlvWorldCoordToSweepCoord(ClientData clientData, Tcl_Interp *interp,
                     int argc, char *argv[])
 {
   if (argc!=5) {
@@ -498,7 +498,7 @@ PlvWorldCoordToSweepCoord(ClientData clientData, Tcl_Interp *interp,
   Pnt3 scanPt;
   int sweepInd;
   Pnt3 newWpt;
-  
+
   // Get scan reference
   RigidScan *rs = FindMeshDisplayInfo(scanname)->getMeshData();
   CyberScan* cs = dynamic_cast<CyberScan*> (rs);
@@ -506,11 +506,11 @@ PlvWorldCoordToSweepCoord(ClientData clientData, Tcl_Interp *interp,
     Tcl_SetResult(interp,"Specified mesh is not a CyberScan",TCL_STATIC);
     return TCL_ERROR;
   }
-  
+
   // Call dk's function
   bool res = cs->worldCoordToSweepCoord(worldPt,&sweepInd, scanPt);
   // cout << "World::\n" << worldPt << "\nScan:\n" << scanPt << "\n";
-  
+
   // Return results
   if (res) {
     sprintf(interp->result,"%d %f %f %f",sweepInd, (float)scanPt[0],
@@ -518,16 +518,16 @@ PlvWorldCoordToSweepCoord(ClientData clientData, Tcl_Interp *interp,
   } else {
     Tcl_SetResult(interp,"Did not find a sweep containing the Pt.",TCL_STATIC);
   }
-  
+
   cs->sweepCoordToWorldCoord(sweepInd, scanPt, newWpt);
   // cout << "World::\n" << newWpt << "\nScan:\n" << scanPt << "\n" << flush;
 
   return TCL_OK;
-  
+
 }
 
 int
-PlvSweepCoordToWorldCoord(ClientData clientData, Tcl_Interp *interp, 
+PlvSweepCoordToWorldCoord(ClientData clientData, Tcl_Interp *interp,
                     int argc, char *argv[])
 {
 

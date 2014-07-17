@@ -16,13 +16,13 @@ class DisplayableMesh;
 
 RigidScan* CreateScanFromGeometry (const vector<Pnt3>& vtx,
 				   const vector<int>& tris,
-				   const crope& name = crope());
+				   const string& name = string());
 
-RigidScan* CreateScanFromFile (const crope& filename);
+RigidScan* CreateScanFromFile (const string& filename);
 
 RigidScan* CreateScanFromThinAir (float size, int type = 0);
 
-RigidScan* CreateScanFromBbox (const crope& filename,
+RigidScan* CreateScanFromBbox (const string& filename,
 			       const Pnt3& min, const Pnt3& max);
 
 RigidScan* CreateScanGroup (const vector<DisplayableMesh*>& members, 

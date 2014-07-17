@@ -19,7 +19,7 @@
 #include "vec.h"
 #include <stdlib.h>
 #include <assert.h>
-#include <iostream.h>
+#include <iostream>
 #include <strstream.h>
 
 

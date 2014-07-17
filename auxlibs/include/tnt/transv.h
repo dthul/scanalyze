@@ -13,7 +13,7 @@
 #ifndef TRANSV_H
 #define TRANSV_H
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "vec.h"
 

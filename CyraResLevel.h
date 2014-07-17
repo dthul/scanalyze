@@ -123,8 +123,8 @@ public:
 			      int          colorSize);
 
  
-  bool ReadPts(const crope &fname);	// Read a .pts file
-  bool WritePts(const crope &fname);	// Write a .pts file
+  bool ReadPts(const string &fname);	// Read a .pts file
+  bool WritePts(const string &fname);	// Write a .pts file
   bool grazing(Pnt3 v1, Pnt3 v2, Pnt3 v3);  // detects grazing tris
 
   int num_vertices(void);

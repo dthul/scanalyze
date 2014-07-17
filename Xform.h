@@ -10,9 +10,9 @@
 #include <assert.h>
 #include <math.h>
 #include <float.h>
-#include <iostream.h>
-#include <iomanip.h>
-#include <algo.h>
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
 #include "Pnt3.h"
 
 
@@ -24,10 +24,10 @@ template <class T>
 class Xform;
 
 template <class T>
-Xform<T> operator*(const Xform<T> &a, const Xform<T> &b); 
+Xform<T> operator*(const Xform<T> &a, const Xform<T> &b);
 
 template <class T>
-Xform<T> delta(Xform<T> a, const Xform<T> &b); 
+Xform<T> delta(Xform<T> a, const Xform<T> &b);
 
 template <class T>
 Xform<T> linear_interp(const Xform<T> &a,
@@ -54,7 +54,7 @@ istream& operator>>(istream & in, Xform<T> &xf);
 
 
 // logically Xform is applied to a point: p' = M*p
-// however, the transpose of the M is stored 
+// however, the transpose of the M is stored
 // to keep it compatible with OpenGL
 
 template <class T> // use only with float or double
@@ -73,15 +73,15 @@ public:
 
   Xform<T> &fromQuaternion(const double q[4], // q == {w,x,y,z}
 			   double tx = 0.0,
-			   double ty = 0.0, 
+			   double ty = 0.0,
 			   double tz = 0.0);
   Xform<T> &fromQuaternion(const float q[4],  // q == {w,x,y,z}
 			   float tx = 0.0,
-			   float ty = 0.0, 
+			   float ty = 0.0,
 			   float tz = 0.0);
   void toQuaternion(double q[4]) const;
   void toQuaternion(float q[4]) const;
-  Xform<T> &addQuaternion(T q0, T q1, T q2, T q3, 
+  Xform<T> &addQuaternion(T q0, T q1, T q2, T q3,
 			  T tx = 0.0, T ty = 0.0, T tz = 0.0);
   Xform<T> &addQuaternion(const float  *q, int n = 4);  // n == 4,7
   Xform<T> &addQuaternion(const double *q, int n = 4);  // n == 4,7
@@ -89,7 +89,7 @@ public:
   void fromEuler(const T ea[3], int order);
   void toEuler(T ea[3], int order);
 
-  Xform<T> &fromFrame(const Pnt3 &x, 
+  Xform<T> &fromFrame(const Pnt3 &x,
 		      const Pnt3 &y,
 		      const Pnt3 &z,
 		      const Pnt3 &org);
@@ -130,8 +130,8 @@ public:
   void apply(const float i[3],  float o[3]) const;  // o = M*i
   void apply_inv(const double i[3], double o[3]) const; // o = M^-1*i
   void apply_inv(const float i[3],  float o[3]) const;  // o = M^-1*i
-  void operator()(double i[3]) const;   // i <- M*i 
-  void operator()(float  i[3]) const;   // i <- M*i 
+  void operator()(double i[3]) const;   // i <- M*i
+  void operator()(float  i[3]) const;   // i <- M*i
 
   // apply to normal vector (no translation, only rotation)
   void apply_nrm(const double i[3], double o[3]) const; // o = M*i
@@ -157,9 +157,9 @@ public:
 
 #ifndef __GNUC__
   friend Xform<T> operator*(const Xform<T> &a,     // a*b
-			    const Xform<T> &b); 
+			    const Xform<T> &b);
   friend Xform<T> delta(Xform<T> a,                // d * a = b
-			const Xform<T> &b); 
+			const Xform<T> &b);
   friend Xform<T> linear_interp(const Xform<T> &a, // r=t*a+(1-t)*b
 				const Xform<T> &b,
 				double          t);
@@ -168,16 +168,16 @@ public:
 				  const Xform<T> &u0v1,
 				  const Xform<T> &u1v1,
 				  double u, double v);
-  friend Xform<T> relative_xform(const Xform<T> &a, 
+  friend Xform<T> relative_xform(const Xform<T> &a,
 				 Xform<T> b); // c = b^-1 * a
 
   friend ostream& operator<<(ostream &out, const Xform<T> &xf);
   friend istream& operator>>(istream & in,       Xform<T> &xf);
 #else
   friend Xform<T> operator*<>(const Xform<T> &a,     // a*b
-			      const Xform<T> &b); 
+			      const Xform<T> &b);
   friend Xform<T> delta<>(Xform<T> a,                // d * a = b
-			  const Xform<T> &b); 
+			  const Xform<T> &b);
   friend Xform<T> linear_interp<>(const Xform<T> &a, // r=t*a+(1-t)*b
 				  const Xform<T> &b,
 				  double          t);
@@ -186,7 +186,7 @@ public:
 				    const Xform<T> &u0v1,
 				    const Xform<T> &u1v1,
 				    double u, double v);
-  friend Xform<T> relative_xform<>(const Xform<T> &a, 
+  friend Xform<T> relative_xform<>(const Xform<T> &a,
 				   Xform<T> b); // c = b^-1 * a
 
   friend ostream& operator<< <> (ostream &out, const Xform<T> &xf);
@@ -197,7 +197,7 @@ public:
 
 
 template <class T> inline
-Xform<T>::Xform(void) 
+Xform<T>::Xform(void)
 {
   m[1][0] = m[2][0] = m[3][0] = m[0][1] = m[2][1] = m[3][1] = 0.0;
   m[0][2] = m[1][2] = m[3][2] = m[0][3] = m[1][3] = m[2][3] = 0.0;
@@ -205,7 +205,7 @@ Xform<T>::Xform(void)
 }
 
 template <class T> inline
-Xform<T>::Xform(const double *a) 
+Xform<T>::Xform(const double *a)
 {
   m[0][0] = a[0]; m[0][1] = a[1]; m[0][2] = a[2]; m[0][3] = a[3];
   m[1][0] = a[4]; m[1][1] = a[5]; m[1][2] = a[6]; m[1][3] = a[7];
@@ -214,7 +214,7 @@ Xform<T>::Xform(const double *a)
 }
 
 template <class T> inline
-Xform<T>::Xform(const float *a) 
+Xform<T>::Xform(const float *a)
 {
   m[0][0] = a[0]; m[0][1] = a[1]; m[0][2] = a[2]; m[0][3] = a[3];
   m[1][0] = a[4]; m[1][1] = a[5]; m[1][2] = a[6]; m[1][3] = a[7];
@@ -233,7 +233,7 @@ Xform<T>::Xform(const T r[3][3], const T t[3])
 
 
 template <class T> inline Xform<T> &
-Xform<T>::operator=(const double *a) 
+Xform<T>::operator=(const double *a)
 {
   m[0][0] = a[0]; m[0][1] = a[1]; m[0][2] = a[2]; m[0][3] = a[3];
   m[1][0] = a[4]; m[1][1] = a[5]; m[1][2] = a[6]; m[1][3] = a[7];
@@ -243,7 +243,7 @@ Xform<T>::operator=(const double *a)
 }
 
 template <class T> inline Xform<T> &
-Xform<T>::operator=(const float *a) 
+Xform<T>::operator=(const float *a)
 {
   m[0][0] = a[0]; m[0][1] = a[1]; m[0][2] = a[2]; m[0][3] = a[3];
   m[1][0] = a[4]; m[1][1] = a[5]; m[1][2] = a[6]; m[1][3] = a[7];
@@ -253,7 +253,7 @@ Xform<T>::operator=(const float *a)
 }
 
 template <class T> inline Xform<T> &
-Xform<T>::operator=(const Xform<T> &xf) 
+Xform<T>::operator=(const Xform<T> &xf)
 {
   return operator=((const T *) xf);
 }
@@ -271,11 +271,11 @@ Xform<T>::fromQuaternion(const double q[4],
   T wx = q[0]*xs,  wy = q[0]*ys,  wz = q[0]*zs;
   T xx = q[1]*xs,  xy = q[1]*ys,  xz = q[1]*zs;
   T yy = q[2]*ys,  yz = q[2]*zs,  zz = q[3]*zs;
-  
+
   m[0][0] = 1.0 - (yy+zz);  m[0][1] = xy + wz;  m[0][2] = xz - wy;
   m[1][0] = xy - wz;  m[1][1] = 1.0 - (xx+zz);  m[1][2] = yz + wx;
   m[2][0] = xz + wy;  m[2][1] = yz - wx;  m[2][2] = 1.0 - (xx+yy);
-  
+
   m[3][0] = tx;  m[3][1] = ty;  m[3][2] = tz;
   m[0][3] = m[1][3] = m[2][3] = 0.0;
   m[3][3] = 1.0;
@@ -294,7 +294,7 @@ Xform<T>::fromQuaternion(const float q[4],
   T wx = q[0]*xs,  wy = q[0]*ys,  wz = q[0]*zs;
   T xx = q[1]*xs,  xy = q[1]*ys,  xz = q[1]*zs;
   T yy = q[2]*ys,  yz = q[2]*zs,  zz = q[3]*zs;
-  
+
   m[0][0] = 1.0 - (yy+zz);  m[0][1] = xy + wz;  m[0][2] = xz - wy;
   m[1][0] = xy - wz;  m[1][1] = 1.0 - (xx+zz);  m[1][2] = yz + wx;
   m[2][0] = xz + wy;  m[2][1] = yz - wx;  m[2][2] = 1.0 - (xx+yy);
@@ -306,18 +306,18 @@ Xform<T>::fromQuaternion(const float q[4],
   return *this;
 }
 
-// From Graphics Gems IV p. 213 
+// From Graphics Gems IV p. 213
 // note transposed matrix and quaternion order w,x,y,z
 // see also Graphics Gems II pp. 351 - 354
 // Ignore translation and projective parts.
-// This algorithm avoids near-zero divides by looking for a 
-// large component - first w, then x, y, or z.  
+// This algorithm avoids near-zero divides by looking for a
+// large component - first w, then x, y, or z.
 // When the trace is greater than zero, |w| is greater than 1/2,
 // which is as small as a largest component can be.
-// Otherwise, the largest diagonal entry corresponds to the 
-// largest of |x|, |y|, or |z|, one of which must be larger 
+// Otherwise, the largest diagonal entry corresponds to the
+// largest of |x|, |y|, or |z|, one of which must be larger
 // than |w|, and at least 1/2.
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::toQuaternion(double q[4]) const
 {
   T tr = m[0][0] + m[1][1]+ m[2][2];
@@ -343,11 +343,11 @@ Xform<T>::toQuaternion(double q[4]) const
   }
   if (m[3][3] != 1.0) {
     T tmp = 1.0/sqrt(m[3][3]);
-    q[0]*=tmp; q[1]*=tmp; q[2]*=tmp; q[3]*=tmp; 
+    q[0]*=tmp; q[1]*=tmp; q[2]*=tmp; q[3]*=tmp;
   }
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::toQuaternion(float q[4]) const
 {
   T tr = m[0][0] + m[1][1]+ m[2][2];
@@ -373,7 +373,7 @@ Xform<T>::toQuaternion(float q[4]) const
   }
   if (m[3][3] != 1.0) {
     T tmp = 1.0/sqrt(m[3][3]);
-    q[0]*=tmp; q[1]*=tmp; q[2]*=tmp; q[3]*=tmp; 
+    q[0]*=tmp; q[1]*=tmp; q[2]*=tmp; q[3]*=tmp;
   }
 }
 
@@ -433,16 +433,16 @@ Xform<T>::addQuaternion(const double *q, int n)
 #define EulAxJ(ord)  ((int)(EulNext[EulAxI(ord)+(EulPar(ord)==EulParOdd)]))
 #define EulAxK(ord)  ((int)(EulNext[EulAxI(ord)+(EulPar(ord)!=EulParOdd)]))
 #define EulAxH(ord)  ((EulRep(ord)==EulRepNo)?EulAxK(ord):EulAxI(ord))
-// EulGetOrd unpacks all useful information about order 
-// simultaneously. 
+// EulGetOrd unpacks all useful information about order
+// simultaneously.
 #define EulGetOrd(ord,i,j,k,n,s,f) {\
   unsigned o=ord;f=o&1;o>>=1;s=o&1;o>>=1;\
   n=o&1;o>>=1;i=EulSafe[o&3];j=EulNext[i+n];\
   k=EulNext[i+1-n];}
-// EulOrd creates an order value between 0 and 23 from 4-tuple 
+// EulOrd creates an order value between 0 and 23 from 4-tuple
 // choices.
 #define EulOrd(i,p,r,f)	   (((((((i)<<1)+(p))<<1)+(r))<<1)+(f))
-// Static axes 
+// Static axes
 #define EulOrdXYZs    EulOrd(0,EulParEven,EulRepNo,EulFrmS)
 #define EulOrdXYXs    EulOrd(0,EulParEven,EulRepYes,EulFrmS)
 #define EulOrdXZYs    EulOrd(0,EulParOdd,EulRepNo,EulFrmS)
@@ -469,7 +469,7 @@ Xform<T>::addQuaternion(const double *q, int n)
 #define EulOrdXYZr    EulOrd(2,EulParOdd,EulRepNo,EulFrmR)
 #define EulOrdZYZr    EulOrd(2,EulParOdd,EulRepYes,EulFrmR)
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::fromEuler(const T _ea[3], int order)
 {
   T ti, tj, th, ci, cj, ch, si, sj, sh, cc, cs, sc, ss;
@@ -495,7 +495,7 @@ Xform<T>::fromEuler(const T _ea[3], int order)
   m[3][0]=m[3][1]=m[3][2]=m[0][3]=m[1][3]=m[2][3]=0.0; m[3][3]=1.0;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::toEuler(T ea[3], int order)
 {
   int i,j,k,n,s,f;
@@ -529,7 +529,7 @@ Xform<T>::toEuler(T ea[3], int order)
 
 
 template <class T> inline Xform<T> &
-Xform<T>::fromFrame(const Pnt3 &x, 
+Xform<T>::fromFrame(const Pnt3 &x,
 		    const Pnt3 &y,
 		    const Pnt3 &z,
 		    const Pnt3 &org)
@@ -564,7 +564,7 @@ Xform<T>::isIdentity (void) const
 }
 
 
-template <class T> inline Xform<T> & 
+template <class T> inline Xform<T> &
 Xform<T>::identity(void)
 {
   m[1][0] = m[2][0] = m[3][0] = m[0][1] = m[2][1] = m[3][1] = 0.0;
@@ -574,7 +574,7 @@ Xform<T>::identity(void)
 }
 
 
-template <class T> inline Xform<T> & 
+template <class T> inline Xform<T> &
 Xform<T>::fast_invert(void)
 {
   T tmp;
@@ -593,7 +593,7 @@ Xform<T>::fast_invert(void)
 }
 
 
-template <class T> inline Xform<T> & 
+template <class T> inline Xform<T> &
 Xform<T>::invert(void)
 {
    // Compute inverse matrix in place using Gauss-Jordan elimination
@@ -603,7 +603,7 @@ Xform<T>::invert(void)
    int pivot_used[4] = {0, 0, 0, 0};
    int maxc, maxr, i, r, c;
    double max, temp, pivot_inv;
-   
+
    for (i=0; i<4; i++) {
 
       // Determine largest magnitude pivot element
@@ -667,7 +667,7 @@ Xform<T>::invert(void)
    }
 
    // Fix things up by swapping columns back in reverse order
-   
+
    for (i=3; i>=0; i--) {
       if (swap_row[i] != swap_col[i])
          for (r=0; r<4; r++)
@@ -678,63 +678,63 @@ Xform<T>::invert(void)
 }
 
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::translate(const double t[3]) // M <- T*M
 {
   for (int i=0; i<4; i++) m[i][0] += t[0]*m[i][3];
-  for (i=0; i<4; i++)     m[i][1] += t[1]*m[i][3];
-  for (i=0; i<4; i++)     m[i][2] += t[2]*m[i][3];
+  for (int i=0; i<4; i++)     m[i][1] += t[1]*m[i][3];
+  for (int i=0; i<4; i++)     m[i][2] += t[2]*m[i][3];
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::translate(const float t[3]) // M <- T*M
 {
   for (int i=0; i<4; i++) m[i][0] += t[0]*m[i][3];
-  for (i=0; i<4; i++)     m[i][1] += t[1]*m[i][3];
-  for (i=0; i<4; i++)     m[i][2] += t[2]*m[i][3];
+  for (int i=0; i<4; i++)     m[i][1] += t[1]*m[i][3];
+  for (int i=0; i<4; i++)     m[i][2] += t[2]*m[i][3];
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::translate(T x, T y, T z) // M <- T*M
 {
   for (int i=0; i<4; i++) m[i][0] += x*m[i][3];
-  for (i=0; i<4; i++)     m[i][1] += y*m[i][3];
-  for (i=0; i<4; i++)     m[i][2] += z*m[i][3];
+  for (int i=0; i<4; i++)     m[i][1] += y*m[i][3];
+  for (int i=0; i<4; i++)     m[i][2] += z*m[i][3];
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::getTranslation(double t[3]) const
 {
   t[0] = m[3][0];  t[1] = m[3][1];  t[2] = m[3][2];
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::getTranslation(float t[3]) const
 {
   t[0] = m[3][0];  t[1] = m[3][1];  t[2] = m[3][2];
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::removeTranslation(void)
 {
   m[3][0] = m[3][1] = m[3][2] = 0.0;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::removeTranslation(double t[3])
 {
   t[0] = m[3][0];  t[1] = m[3][1];  t[2] = m[3][2];
   m[3][0] = m[3][1] = m[3][2] = 0.0;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::removeTranslation(float t[3])
 {
   t[0] = m[3][0];  t[1] = m[3][1];  t[2] = m[3][2];
   m[3][0] = m[3][1] = m[3][2] = 0.0;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::scale(const double s[3]) // M <- S*M
 {
   m[0][0] *= s[0]; m[1][0] *= s[0]; m[2][0] *= s[0]; m[3][0] *= s[0];
@@ -742,7 +742,7 @@ Xform<T>::scale(const double s[3]) // M <- S*M
   m[0][2] *= s[2]; m[1][2] *= s[2]; m[2][2] *= s[2]; m[3][2] *= s[2];
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::scale(const float s[3]) // M <- S*M
 {
   m[0][0] *= s[0]; m[1][0] *= s[0]; m[2][0] *= s[0]; m[3][0] *= s[0];
@@ -750,7 +750,7 @@ Xform<T>::scale(const float s[3]) // M <- S*M
   m[0][2] *= s[2]; m[1][2] *= s[2]; m[2][2] *= s[2]; m[3][2] *= s[2];
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::scale(T x, T y, T z) // M <- S*M
 {
   m[0][0] *= x; m[1][0] *= x; m[2][0] *= x; m[3][0] *= x;
@@ -758,7 +758,7 @@ Xform<T>::scale(T x, T y, T z) // M <- S*M
   m[0][2] *= z; m[1][2] *= z; m[2][2] *= z; m[3][2] *= z;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::get_e(int i, T e[3]) const
 {
   e[0] = m[i][0];  e[1] = m[i][1];  e[2] = m[i][2];
@@ -771,8 +771,8 @@ Xform<T>::rotX(T a) // M <- R*M
   double ca = cos(a);
   double row1[4];
   for (int i=0; i<4; i++) row1[i] = m[i][1]; // temp. copy
-  for (i=0; i<4; i++)     m[i][1] = ca*row1[i] - sa*m[i][2];
-  for (i=0; i<4; i++)     m[i][2] = sa*row1[i] + ca*m[i][2];
+  for (int i=0; i<4; i++)     m[i][1] = ca*row1[i] - sa*m[i][2];
+  for (int i=0; i<4; i++)     m[i][2] = sa*row1[i] + ca*m[i][2];
   return *this;
 }
 
@@ -783,25 +783,25 @@ Xform<T>::rotY(T a) // M <- R*M
   double ca = cos(a);
   double row0[4];
   for (int i=0; i<4; i++) row0[i] =  m[i][0]; // temp. copy
-  for (i=0; i<4; i++)     m[i][0] =  ca*row0[i] + sa*m[i][2];
-  for (i=0; i<4; i++)     m[i][2] = -sa*row0[i] + ca*m[i][2];
+  for (int i=0; i<4; i++)     m[i][0] =  ca*row0[i] + sa*m[i][2];
+  for (int i=0; i<4; i++)     m[i][2] = -sa*row0[i] + ca*m[i][2];
   return *this;
 }
 
-template <class T> inline Xform<T> & 
+template <class T> inline Xform<T> &
 Xform<T>::rotZ(T a) // M <- R*M
 {
   double sa = sin(a);
   double ca = cos(a);
   double row0[4];
   for (int i=0; i<4; i++) row0[i] = m[i][0]; // temp. copy
-  for (i=0; i<4; i++)     m[i][0] = ca*row0[i] - sa*m[i][1];
-  for (i=0; i<4; i++)     m[i][1] = sa*row0[i] + ca*m[i][1];
+  for (int i=0; i<4; i++)     m[i][0] = ca*row0[i] - sa*m[i][1];
+  for (int i=0; i<4; i++)     m[i][1] = sa*row0[i] + ca*m[i][1];
   return *this;
 }
 
 // rotate around (0,0,0)
-template <class T> inline Xform<T> & 
+template <class T> inline Xform<T> &
 Xform<T>::rot(T angle, T ax, T ay, T az) // M <- R*M
 {
   T q[4];
@@ -818,7 +818,7 @@ Xform<T>::rot(T angle, T ax, T ay, T az) // M <- R*M
 }
 
 // rotate around (ox,oy,oz)
-template <class T> inline Xform<T> & 
+template <class T> inline Xform<T> &
 Xform<T>::rot(T angle, T ax, T ay, T az,
 	      T ox, T oy, T oz) // M <- R*M
 {
@@ -843,7 +843,7 @@ Xform<T>::rot(T angle, T ax, T ay, T az,
   return *this;
 }
 
-template <class T> inline Xform<T> & 
+template <class T> inline Xform<T> &
 Xform<T>::rotQ(T q0, T q1, T q2, T q3)   // M <- R*M
 {
   T q[4];
@@ -879,27 +879,27 @@ Xform<T>::get_rot(T &angle, T &ax, T &ay, T &az)
   }
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::apply(const double i[3], double o[3]) const // o = M*i
 {
-  T invw = 
+  T invw =
     1.0 / (m[0][3]*i[0]+m[1][3]*i[1]+m[2][3]*i[2]+m[3][3]);
   o[0] = (m[0][0]*i[0]+m[1][0]*i[1]+m[2][0]*i[2]+m[3][0])*invw;
   o[1] = (m[0][1]*i[0]+m[1][1]*i[1]+m[2][1]*i[2]+m[3][1])*invw;
   o[2] = (m[0][2]*i[0]+m[1][2]*i[1]+m[2][2]*i[2]+m[3][2])*invw;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::apply(const float i[3], float o[3]) const // o = M*i
 {
-  T invw = 
+  T invw =
     1.0 / (m[0][3]*i[0]+m[1][3]*i[1]+m[2][3]*i[2]+m[3][3]);
   o[0] = (m[0][0]*i[0]+m[1][0]*i[1]+m[2][0]*i[2]+m[3][0])*invw;
   o[1] = (m[0][1]*i[0]+m[1][1]*i[1]+m[2][1]*i[2]+m[3][1])*invw;
   o[2] = (m[0][2]*i[0]+m[1][2]*i[1]+m[2][2]*i[2]+m[3][2])*invw;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::apply_inv(const double i[3], double o[3]) const // o = M^-1*i
 {
   T tx = i[0] - m[3][0];
@@ -910,7 +910,7 @@ Xform<T>::apply_inv(const double i[3], double o[3]) const // o = M^-1*i
   o[2] = m[2][0]*tx + m[2][1]*ty + m[2][2]*tz;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::apply_inv(const float i[3],  float o[3]) const // o = M^-1*i
 {
   T tx = i[0] - m[3][0];
@@ -921,44 +921,44 @@ Xform<T>::apply_inv(const float i[3],  float o[3]) const // o = M^-1*i
   o[2] = m[2][0]*tx + m[2][1]*ty + m[2][2]*tz;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::operator()(double i[3]) const
 {
   T o[3];
   o[0] = i[0]; o[1] = i[1]; o[2] = i[2];
-  T invw = 
+  T invw =
     1.0 / (m[0][3]*o[0]+m[1][3]*o[1]+m[2][3]*o[2]+m[3][3]);
   i[0] = (m[0][0]*o[0]+m[1][0]*o[1]+m[2][0]*o[2]+m[3][0])*invw;
   i[1] = (m[0][1]*o[0]+m[1][1]*o[1]+m[2][1]*o[2]+m[3][1])*invw;
   i[2] = (m[0][2]*o[0]+m[1][2]*o[1]+m[2][2]*o[2]+m[3][2])*invw;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::operator()(float i[3]) const
 {
   T o[3];
   o[0] = i[0]; o[1] = i[1]; o[2] = i[2];
-  T invw = 
+  T invw =
     1.0 / (m[0][3]*o[0]+m[1][3]*o[1]+m[2][3]*o[2]+m[3][3]);
   i[0] = (m[0][0]*o[0]+m[1][0]*o[1]+m[2][0]*o[2]+m[3][0])*invw;
   i[1] = (m[0][1]*o[0]+m[1][1]*o[1]+m[2][1]*o[2]+m[3][1])*invw;
   i[2] = (m[0][2]*o[0]+m[1][2]*o[1]+m[2][2]*o[2]+m[3][2])*invw;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::apply_nrm(const double i[3], double o[3]) const // o = M*i
 {
-  double invw = 
+  double invw =
     1.0 / (m[0][3]*i[0]+m[1][3]*i[1]+m[2][3]*i[2]+m[3][3]);
   o[0] = (m[0][0]*i[0]+m[1][0]*i[1]+m[2][0]*i[2])*invw;
   o[1] = (m[0][1]*i[0]+m[1][1]*i[1]+m[2][1]*i[2])*invw;
   o[2] = (m[0][2]*i[0]+m[1][2]*i[1]+m[2][2]*i[2])*invw;
 }
 
-template <class T> inline void 
+template <class T> inline void
 Xform<T>::apply_nrm(const float i[3], float o[3]) const // o = M*i
 {
-  double invw = 
+  double invw =
     1.0 / (m[0][3]*i[0]+m[1][3]*i[1]+m[2][3]*i[2]+m[3][3]);
   o[0] = (m[0][0]*i[0]+m[1][0]*i[1]+m[2][0]*i[2])*invw;
   o[1] = (m[0][1]*i[0]+m[1][1]*i[1]+m[2][1]*i[2])*invw;
@@ -977,7 +977,7 @@ Xform<T>::operator()(int i, int j) const
   return m[j][i];
 }
 
-template <class T> inline Pnt3 
+template <class T> inline Pnt3
 Xform<T>::unproject(float u, float v, float z) const
 {
   float w =  1.0/(u*m[0][3]+v*m[1][3]+z*m[2][3]+m[3][3]);
@@ -986,7 +986,7 @@ Xform<T>::unproject(float u, float v, float z) const
 	      (u*m[0][2]+v*m[1][2]+z*m[2][2]+m[3][2])*w);
 }
 
-template <class T> inline Pnt3 
+template <class T> inline Pnt3
 Xform<T>::unproject_fast(float u, float v, float z) const
 {
   float w =  1.0/(z*m[2][3]+m[3][3]);
@@ -1052,11 +1052,11 @@ Xform<T>::enforce_rigidity(void)
 
 template <class T> inline Xform<T>
 operator*(const Xform<T> &a, const Xform<T> &b)
-{ 
+{
   Xform<T> out;
   for (int i=0; i<4; i++) {
     for (int j=0; j<4; j++) {
-      out.m[j][i] = 
+      out.m[j][i] =
 	a.m[0][i] * b.m[j][0] + a.m[1][i] * b.m[j][1] +
 	a.m[2][i] * b.m[j][2] + a.m[3][i] * b.m[j][3];
     }
@@ -1117,7 +1117,7 @@ bilinear_interp(const Xform<T> &u0v0,
 		       linear_interp(u0v1, u1v1, u), v);
 }
 
-template <class T> inline Xform<T> 
+template <class T> inline Xform<T>
 relative_xform(const Xform<T> &a, Xform<T> b)
 {
   return b.fast_invert() * a;
@@ -1125,7 +1125,7 @@ relative_xform(const Xform<T> &a, Xform<T> b)
 
 template <class T> inline ostream&
 operator<<(ostream &out, const Xform<T> &xf)
-{ 
+{
   for (int i=0; i<4; i++) {
     for (int j=0; j<4; j++) {
       //out << xf(i,j) << " ";
@@ -1138,7 +1138,7 @@ operator<<(ostream &out, const Xform<T> &xf)
 
 template <class T> inline istream&
 operator>>(istream &in, Xform<T> &xf)
-{ 
+{
   for (int i=0; i<4; i++) {
     for (int j=0; j<4; j++) {
       in >> ws >> xf.m[j][i];
@@ -1161,7 +1161,7 @@ operator>>(istream &in, Xform<T> &xf)
 #define SHOW(x) cout << #x " = " << x << endl
 #define SHOW3(x) cout << #x " = " << x[0] << " " << x[1] << " " << x[2] << " " << endl
 
-void 
+void
 main(void)
 {
   Xform<double> xf;

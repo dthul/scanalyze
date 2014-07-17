@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // MMScan.cc
 //
 // Jeremy Ginsberg
@@ -27,8 +27,8 @@
 
 #include "Random.h"
 #include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include "sys/stat.h"
 
 #include "plvScene.h"
@@ -56,7 +56,7 @@ MMScan::~MMScan()
   scans.clear();
 }
 
-static bool 
+static bool
 getXformFilename (const char* meshName, char* xfName)
 {
   if (meshName == NULL || meshName[0] == 0)
@@ -82,7 +82,7 @@ MMScan::absorb_xforms(char *basename)
   char *pExt = strrchr(buffer, '.');
   if (pExt == NULL)
     pExt = buffer + strlen(buffer);
-  
+
   for (int i = 0; i < scans.size(); i++) {
     char temp[15];
     if (i < 10) sprintf(temp, "_00%d.xf", i);
@@ -103,11 +103,11 @@ MMScan::absorb_xforms(char *basename)
   }
   computeBBox();
 }
-  
-    
+
+
 int
 MMScan::write_xform_ply(int whichRes, char *directory,
-			crope &confLines, bool applyXform)
+			string &confLines, bool applyXform)
 {
   if (!load_resolution(whichRes)) {
     cerr << "MMScan::write_xform_ply couldn't load desired resolution"
@@ -123,9 +123,9 @@ MMScan::write_xform_ply(int whichRes, char *directory,
   }
 
   int numFragsSaved = 0;
-  
+
   // get basename for ply files
-  
+
   char buffer[PATH_MAX], *slash;
   strcpy(buffer, get_name().c_str());
   for (slash = buffer; *slash; slash++)
@@ -137,28 +137,28 @@ MMScan::write_xform_ply(int whichRes, char *directory,
 
   /*
     okay so we don't really want confidence
-    
+
     // build confidence if we don't have it
     if (scans[0].meshes[0].confidence.size() == 0)
     calcConfidence();
   */
   vector<Pnt3> scanVtx;
-  
+
   Pnt3 axis;
   float rotAngle, quat[4];
   Xform<float> xf, invXF;
-  
+
   // stuff for global alignment
   Xform<float> meshXF;
   Xform<float> comboXF;
   float comboTrans[3];
-  
+
   meshXF = this->getXform();
 
   // set up conf strings
 
   //confLines = new char *[scans.size()];
-  
+
   // save each scan to a separate file
   for(int i = 0; i < scans.size(); i++) {
 
@@ -168,11 +168,11 @@ MMScan::write_xform_ply(int whichRes, char *directory,
     }
     else {
        //cout << "Scan # " << i << ":" << endl;
-      
+
       if (i < 10) sprintf(pExt, "_00%d.ply", i);
       else if (i < 100) sprintf(pExt, "_0%d.ply", i);
       else sprintf(pExt, "_%d.ply", i);
-      
+
 #if 0
       // An effort to combat flipped view direction
       Pnt3 nrm(0,0,0);
@@ -196,7 +196,7 @@ MMScan::write_xform_ply(int whichRes, char *directory,
       //cout << "rotating " << rotAngle << " rads around " << axis << endl;
       xf.rot(rotAngle, axis[0], axis[1], axis[2]);
       //cout << scans[i].num_vertices(whichRes) << " points" << endl;
-      
+
       invXF = xf;
       invXF.invert();
       comboXF = meshXF * invXF;
@@ -204,7 +204,7 @@ MMScan::write_xform_ply(int whichRes, char *directory,
       comboXF.getTranslation(comboTrans);
       if (applyXform) {
 	char line[PATH_MAX + 100];
-	
+
 	// save transformation to conf string
 	sprintf(line, "{bmesh %s %g %g %g %g %g %g %g}",
 		buffer, comboTrans[0], comboTrans[1], comboTrans[2],
@@ -216,24 +216,24 @@ MMScan::write_xform_ply(int whichRes, char *directory,
 	}
 	confLines += line;
       }
-      
+
       scanVtx.reserve(scans[i].meshes[whichRes].vtx.size());
-      
+
       // apply transformation to points
       for(int k = 0; k < scans[i].meshes[whichRes].vtx.size(); k++) {
 	Pnt3 pt = scans[i].meshes[whichRes].vtx[k];
-	if (applyXform) 
+	if (applyXform)
 	  xf(pt);
 	scanVtx.push_back(pt);
       }
 
       char full_path[PATH_MAX];
       sprintf(full_path, "%s/%s", directory, buffer);
-      write_ply_file(full_path, scanVtx, 
+      write_ply_file(full_path, scanVtx,
 		     scans[i].meshes[whichRes].tris, false
 		     );
       scanVtx.clear();
-      
+
 
       // write xf
       strcpy (full_path + strlen(full_path) - 3, "xf");
@@ -245,7 +245,7 @@ MMScan::write_xform_ply(int whichRes, char *directory,
 	 xffile << meshXF;
 
       if (xffile.fail()) {
-	 cerr << "Scan " << buffer 
+	 cerr << "Scan " << buffer
 	      << " failed to write xform!" << endl;
 	 break;
       }
@@ -281,7 +281,7 @@ MMScan::mesh(bool perVertex, bool stripped,
 	mt->setNrm (&res->nrm, MeshTransport::share);
       } else {
 	return NULL;
-	/* no support now 
+	/* no support now
 	if (!res->triNrm.size()) {
 	  if (!res->tris.size()) strips_to_tris(res->tstrips, res->tris);
 	  calcTriNormals (res->tris, res->triNrm);
@@ -326,11 +326,11 @@ MMScan::setMTColor (MeshTransport* mt, int iScan, bool perVertex,
 
   vector<uchar>* colors = new vector<uchar>;
   mt->setColor (colors, MeshTransport::steal);
-  
+
   if (perVertex)
     colors->reserve (res->vtx.size() * colorsize);
   else return;
-    /* no support now 
+    /* no support now
     colors->reserve (num_tris(resNum) / 3 * colorsize);
     */
 
@@ -341,7 +341,7 @@ MMScan::setMTColor (MeshTransport* mt, int iScan, bool perVertex,
     if (perVertex) {
       // per-vertex confidence zone
       if (res->confidence.size() == 0) return;
-      
+
       for (j = 0; j < res->confidence.size(); j++)
 	pushColor(*colors, colorsize, res->confidence[j]);
     }
@@ -350,7 +350,7 @@ MMScan::setMTColor (MeshTransport* mt, int iScan, bool perVertex,
       /* no support now
       // per-face confidence zone
       if (res->confidence.size() == 0) return;
-      
+
       for (j = 0; j < res->tris.size(); j+=3)
 	pushColor(*colors, colorsize,
 		  res->confidence[res->tris[j+0]],
@@ -359,7 +359,7 @@ MMScan::setMTColor (MeshTransport* mt, int iScan, bool perVertex,
       */
     }
     break; // end confidence color zone
-  
+
   case colorTrue:
     // MMScan doesn't have true-color information, so it interprets this
     // flag as a request for per-fragment coloring.
@@ -373,10 +373,10 @@ MMScan::setMTColor (MeshTransport* mt, int iScan, bool perVertex,
     // on filtered vertex sets, i'm not sure how the intensity
     // is going to be derived, so check and see where that data
     // is coming from if you're concerned.
-    
+
     if (perVertex) {
       // per-vertex intensities
-      
+
       if (res->intensity.size() == 0) return;
       for (j = 0; j < res->vtx.size(); j++)
 	pushColor(*colors, colorsize, res->intensity[j]);
@@ -397,7 +397,7 @@ MMScan::setMTColor (MeshTransport* mt, int iScan, bool perVertex,
 }
 
 
-crope
+string
 MMScan::getInfo(void)
 {
   char buf[1000];
@@ -405,7 +405,7 @@ MMScan::getInfo(void)
 	  " %d resolutions\n\n",
 	  num_scans(), num_stripes(), num_vertices(0), num_resolutions());
 
-  return crope (buf) + RigidScan::getInfo();
+  return string (buf) + RigidScan::getInfo();
 }
 
 
@@ -419,7 +419,7 @@ MMScan::num_tris(int res)
 
   int numTris = 0;
   for (int i = 0; i < scans.size(); i++) {
-    if (scans[i].isVisible) 
+    if (scans[i].isVisible)
       numTris += scans[i].meshes[res].tris.size() / 3;
   }
   return numTris;
@@ -496,23 +496,23 @@ MMScan::create_resolution_absolute(int budget, Decimator dec)
       fprintf(stderr, "ended up with %ld tris\n", newRes->tris.size()/3);
     else fprintf(stderr, "done\n");
     decimatedTris += newRes->tris.size() / 3;
-    
+
     getVertexNormals(newRes->vtx, newRes->tris, false, newRes->nrm, true);
-    
+
   }
   insert_resolution(decimatedTris, get_name(), true, true);
 
   int iPos = findLevelForRes(decimatedTris);
 
-  for (i = 0; i < scans.size(); i++) {
-    scans[i].meshes.insert(&(scans[i].meshes[iPos]), resolutions[i]);
+  for (int i = 0; i < scans.size(); i++) {
+    scans[i].meshes.insert(scans[i].meshes.begin() + iPos, resolutions[i]);
   }
   delete[] resolutions;
 
   return decimatedTris;
 }
 
-void 
+void
 MMScan::computeBBox (void)
 {
   bbox.clear();
@@ -530,7 +530,7 @@ MMScan::computeBBox (void)
   } else {
     rot_ctr = bbox.center();
   }
-}  
+}
 
 void
 MMScan::flipNormals (void)
@@ -544,11 +544,11 @@ MMScan::flipNormals (void)
       // tstrip normals
       flip_tris(scans[i].meshes[j].tstrips, true);
       // per-vertex normals
-      for (k = 0; k < scans[i].meshes[j].nrm.size(); k++) {
+      for (int k = 0; k < scans[i].meshes[j].nrm.size(); k++) {
 	scans[i].meshes[j].nrm[k] *= -1;
       }
     }
-    for (j = 0; j < scans[i].stripes.size(); j++) {
+    for (int j = 0; j < scans[i].stripes.size(); j++) {
       // this isn't completely effective; causes z-axis align problems
       scans[i].stripes[j].sensorVec *= -1;
       if (scans[i].stripes[j].scanDir == 1) scans[i].stripes[j].scanDir = 2;
@@ -570,11 +570,11 @@ MMScan::flipNormals (int scanNum)
     // tstrip normals
     flip_tris(scans[scanNum].meshes[j].tstrips, true);
     // per-vertex normals
-    for (k = 0; k < scans[scanNum].meshes[j].nrm.size(); k++) {
+    for (int k = 0; k < scans[scanNum].meshes[j].nrm.size(); k++) {
       scans[scanNum].meshes[j].nrm[k] *= -1;
     }
   }
-  for (j = 0; j < scans[scanNum].stripes.size(); j++) {
+  for (int j = 0; j < scans[scanNum].stripes.size(); j++) {
     // sensor vectors (so that it will triangulate flipped next time
     scans[scanNum].stripes[j].sensorVec *= -1;
     if (scans[scanNum].stripes[j].scanDir == 1)
@@ -582,7 +582,7 @@ MMScan::flipNormals (int scanNum)
     else scans[scanNum].stripes[j].scanDir = 1;
   }
   scans[scanNum].viewDir *= -1;
-}  
+}
 
 bool
 MMScan::isValidPoint(int scanNum, int stripeNum, int colNum)
@@ -632,7 +632,7 @@ MMScan::calcScanDir(void)
 
       scanDir.set(0,0,0);
       stripeDir.set(0,0,0);
-      numPts = 0; 
+      numPts = 0;
       for (i = 0; i < STRIPE_PTS - 1; i++) {
 	// first get scan direction
 	if (isValidPoint(k,j,i) && isValidPoint(k,j+1,i)) {
@@ -730,7 +730,7 @@ MMScan::calcTriNormals(const vector<int> &tris, vector<short> &triNrm)
       }
     }
   }
-}  
+}
 */
 
 static Random rnd;
@@ -751,7 +751,8 @@ MMScan::load_resolution (int iRes)
   cerr << name << ": build mesh (~" << resolutions[iRes].abs_resolution
        << ") from " << scans.size() << " fragments: " << flush;
 
-  for (int i = 0; i < scans.size(); i++) {
+  int i;
+  for (i = 0; i < scans.size(); i++) {
     progress.update(i);
     mmScanFrag *scan = &scans[0] + i;
     mmResLevel& res = scan->meshes[iRes];
@@ -794,7 +795,7 @@ MMScan::triangulate(mmScanFrag *scan, mmResLevel *res, int subSamp)
 
   if (scan->indices.size() == 0) calcIndices();
   if (!haveScanDir) calcScanDir();
-  
+
   // create a list saying whether a vertex is going to be used
   // int *vert_index = new int[vtx.size()];
   // for (i = 0; i < vtx.size(); i++)
@@ -864,7 +865,7 @@ MMScan::triangulate(mmScanFrag *scan, mmResLevel *res, int subSamp)
       // note about vin_x vs. in_x :
       // vin's should be used if new vertex lists are being generated.
       // on subsamp == 1, we aren't remapping. otherwise, we are.
-      
+
       if (in1 >= 0) {
 	if (subSamp == 1) vin1 = in1;
 	  else vin1 = vert_remap[in1];
@@ -939,7 +940,7 @@ MMScan::triangulate(mmScanFrag *scan, mmResLevel *res, int subSamp)
   /*
   if (subSamp != 1) {
     // re-map triangle indices
-    
+
     for (i = 0; i < res->tris.size(); i++)
       res->tris[i] = vert_remap[res->tris[i]];
   }
@@ -954,7 +955,7 @@ MMScan::triangulate(mmScanFrag *scan, mmResLevel *res, int subSamp)
   //  remove_stepedges(res->vtx, res->tris, 4, 90);
 
   cerr << "." << flush;
-}  
+}
 
 void
 MMScan::make_tstrips(mmScanFrag *scan, mmResLevel *res, int subSamp)
@@ -1053,7 +1054,7 @@ MMScan::make_tstrips(mmScanFrag *scan, mmResLevel *res, int subSamp)
       // note about vin_x vs. in_x :
       // vin's should be used if new vertex lists are being generated.
       // on subsamp == 1, we aren't remapping. otherwise, we are.
-      
+
       if (in1 >= 0) {
 	if (subSamp == 1) vin1 = in1;
 	  else vin1 = vert_remap[in1];
@@ -1093,16 +1094,16 @@ MMScan::make_tstrips(mmScanFrag *scan, mmResLevel *res, int subSamp)
 	      newStrip = true;
 	      numStrips++;
 	    }
-	} 
+	}
 	else {
 	  // compute lengths of cross-edges
 	  float len1 = dist2(res->vtx[vin1], res->vtx[vin3]);
 	  float len2 = dist2(res->vtx[vin2], res->vtx[vin4]);
-	  
+
 	  if (len1 < len2) {
 	    // entering the normal-diagonal zone
 	    // (meaning diagonal lies between 1 and 3, instead of 2 and 4)
-	    
+
 	    if (!(whichDiag || newStrip)) {
 	      // if we're in the middle of a reverse-diagonal strip...
 	      // end the strip
@@ -1120,10 +1121,10 @@ MMScan::make_tstrips(mmScanFrag *scan, mmResLevel *res, int subSamp)
 	    // always add the two newest indices
 	    res->tstrips.push_back(vin3);
 	    res->tstrips.push_back(vin4);
-	    
+
 	  } else {
 	    // we're in the reverse-diagonal zone now
-	    
+
 	    // if we're starting a new strip or ending a normal-diagonal,
 	    // we add a single triangle and begin again
 	    if (whichDiag || newStrip) {
@@ -1256,7 +1257,7 @@ MMScan::make_tstrips(mmScanFrag *scan, mmResLevel *res, int subSamp)
       newStrip = true;
       numStrips++;
     }
-    
+
   }
 
   // if we haven't ended the current strip, end it
@@ -1288,7 +1289,7 @@ MMScan::subsample_points(float rate, vector<Pnt3> &p, vector<Pnt3> &n)
   int totalNum = (int)(rate * nv);
 
   if (totalNum > nv) totalNum = nv;
-  
+
   p.clear(); p.reserve(totalNum);
   n.clear(); n.reserve(totalNum);
 
@@ -1301,7 +1302,7 @@ MMScan::subsample_points(float rate, vector<Pnt3> &p, vector<Pnt3> &n)
     for (int j = 0; j < end; j++) {
       if (rnd(nv) <= num) {
 	p.push_back(res.vtx[j]);                  // save point
-	pushNormalAsPnt3 (n, res.nrm.begin(), j); // and norm
+	pushNormalAsPnt3 (n, res.nrm.data(), j); // and norm
 	num--;
       }
       nv--;
@@ -1323,7 +1324,7 @@ MMScan::getRegData (void)
   reg.vtx.clear(); reg.vtx.reserve(numVerts);
   reg.nrm.clear(); reg.nrm.reserve(numVerts * 3);
   reg.tris.clear(); reg.tris.reserve(num_tris(curr_res) * 3);
-  
+
   // used to reindex triangle vertices in the global array
   int reIndexFactor;
 
@@ -1336,7 +1337,7 @@ MMScan::getRegData (void)
       reg.nrm.push_back(res.nrm[3 * j + 1]);
       reg.nrm.push_back(res.nrm[3 * j + 2]);
     }
-    for (j = 0; j < res.tris.size(); j++)
+    for (int j = 0; j < res.tris.size(); j++)
       reg.tris.push_back(res.tris[j] + reIndexFactor);
   }
 
@@ -1355,7 +1356,7 @@ MMScan::mark_boundary(mergedRegData& reg)
 
   int nVtx = reg.vtx.size();
   reg.boundary.reserve(nVtx);
-  for (int j = 0; j < nVtx; j++) 
+  for (int j = 0; j < nVtx; j++)
     reg.boundary.push_back(0);
 
   ::mark_boundary_verts(reg.boundary, reg.tris);
@@ -1377,8 +1378,8 @@ MMScan::get_kdtree()
   mergedRegData& reg = getRegData();
 
   delete kdtree[curr_res];
-  kdtree[curr_res] = CreateKDindtree (reg.vtx.begin(),
-				      reg.nrm.begin(),
+  kdtree[curr_res] = CreateKDindtree (reg.vtx.data(),
+				      reg.nrm.data(),
 				      reg.vtx.size());
 
   isDirty_mem = false;
@@ -1388,14 +1389,14 @@ MMScan::get_kdtree()
 
 
 bool
-MMScan::closest_point(const Pnt3 &p, const Pnt3 &n, 
+MMScan::closest_point(const Pnt3 &p, const Pnt3 &n,
 		      Pnt3 &cp, Pnt3 &cn,
 		      float thr, bool bdry_ok)
 {
   int ind, ans;
   KDindtree* tree = get_kdtree();
   mergedRegData& reg = getRegData();
-  ans = tree->search(reg.vtx.begin(), reg.nrm.begin(), p, n, ind, thr);
+  ans = tree->search(reg.vtx.data(), reg.nrm.data(), p, n, ind, thr);
 
   if (ans) {
     if (bdry_ok == 0) {
@@ -1423,24 +1424,24 @@ bool
 MMScan::filter_inplace(const VertexFilter &filter)
 {
   int i,j,k;
-  mmScanFrag *scan;
+  vector<mmScanFrag>::iterator scan;
   bool changedScan = false;
-  
+
   // #1: loop through all scans
   for (j = 0; j < scans.size(); j++) {
-    scan = &scans[0] + j;
+    scan = scans.begin() + j;
     cout << "looking at scan #" << j << endl;
     if (scan->isVisible) {
-      changedScan = false;      
+      changedScan = false;
       int maxVerts = scan->num_vertices(0);
       int *vert_remap = new int[maxVerts];
       for (i = 0; i < maxVerts; i++)
 	vert_remap[i] = -1;
 
       int count = 0, vtxIndex = 0;
-      mmStripeInfo *stripe;
+      vector<mmStripeInfo>::iterator stripe;
       for (k = 0; k < scan->stripes.size(); k++) {
-	stripe = &scan->stripes[0] + k;
+	stripe = scan->stripes.begin() + k;
 	for (i = 0; i < STRIPE_PTS; i++) {
 	  if (isValidPoint(j, k, i)) {
 	    if (filter.accept(scan->meshes[0].vtx[vtxIndex])) {
@@ -1479,9 +1480,9 @@ MMScan::filter_inplace(const VertexFilter &filter)
 	j--;
       }
       else if (changedScan) {
-	mmResLevel *res;
+	vector<mmResLevel>::iterator res;
 	for (res = scan->meshes.begin(); res != scan->meshes.end(); res++) {
-	  
+
 	  if (res != scan->meshes.begin()) {
 	    cout << "res other than the first one" << endl;
 	    continue;
@@ -1599,7 +1600,7 @@ MMScan::filtered_copy(const VertexFilter& filter)
       int vertIndex = 0;
       int vertCount = 0;
       vector<int> newIndices;
-      
+
       // #2a: loop through each stripe in the scan,
       // to figure out which verts
       // make it and to generate valid stripe information
@@ -1609,14 +1610,14 @@ MMScan::filtered_copy(const VertexFilter& filter)
 	mmStripeInfo stripe;
 	for (i = 0; i < 40; i++)
 	  stripe.validMap[i] = '\0';
-	
+
 	for (i = 0; i < STRIPE_PTS; i++) {
 	  if (isValidPoint(j, k, i)) {
 	    if (filter.accept (scans[j].meshes[0].vtx[vertIndex])) {
 	      if (stripe.numPoints == 0) stripe.startIdx = vertCount;
 	      stripe.numPoints++;
 	      stripe.validMap[i/8] |= (1 << (i % 8));
-	      
+
 	      newIndices.push_back(1);
 	      vertCount++;
 	    }
@@ -1649,9 +1650,9 @@ MMScan::filtered_copy(const VertexFilter& filter)
 	for (k = 0; k < scans[j].meshes.size(); k++) {
 	  mmResLevel newRes;
 	  mmResLevel *oldRes = &(scans[j].meshes[k]);
-	  
+
 	  int triCount = 0;
-	  
+
 	  // #3a: figure out which verts make the cut, except on the first
 	  // mesh where we already know
 
@@ -1665,9 +1666,9 @@ MMScan::filtered_copy(const VertexFilter& filter)
 	      else newIndices.push_back(-1);
 	    }
 	  }
-	  
+
 	  // #3b: figure out which tris make the cut
-	  
+
 	  for (i = 0; i < oldRes->tris.size(); i += 3) {
 	    if (newIndices[oldRes->tris[i  ]] >= 0 &&
 		newIndices[oldRes->tris[i+1]] >= 0 &&
@@ -1675,7 +1676,7 @@ MMScan::filtered_copy(const VertexFilter& filter)
 	      triCount++;
 	    }
 	  }
-	
+
 	  // #3c: copy the surviving vertices
 	  int count = 0;
 	  newRes.vtx.reserve (vertCount);
@@ -1685,7 +1686,7 @@ MMScan::filtered_copy(const VertexFilter& filter)
 	    newRes.confidence.reserve (vertCount);
 	  if (oldRes->intensity.size())
 	    newRes.intensity.reserve (vertCount);
-	
+
 	  for (i = 0; i < oldRes->vtx.size(); i++) {
 	    if (newIndices[i] > 0) {
 	      newIndices[i] = count;
@@ -1695,12 +1696,12 @@ MMScan::filtered_copy(const VertexFilter& filter)
 		newRes.nrm.push_back(oldRes->nrm[i * 3 + 0]);
 		newRes.nrm.push_back(oldRes->nrm[i * 3 + 1]);
 		newRes.nrm.push_back(oldRes->nrm[i * 3 + 2]);
-	      }		
+	      }
 	      if (oldRes->confidence.size())
 		newRes.confidence.push_back(oldRes->confidence[i]);
 	      if (oldRes->intensity.size())
 		newRes.intensity.push_back(oldRes->intensity[i]);
-	    
+
 	      count++;
 	    }
 	  }
@@ -1712,13 +1713,13 @@ MMScan::filtered_copy(const VertexFilter& filter)
 	    if (newIndices[oldRes->tris[i  ]] >= 0 &&
 		newIndices[oldRes->tris[i+1]] >= 0 &&
 		newIndices[oldRes->tris[i+2]] >= 0) {
-	    
+
 	      for (int z = 0; z < 3; z++)
 		newRes.tris.push_back(-1);
 	      newRes.tris[count  ] = newIndices[oldRes->tris[i  ]];
 	      newRes.tris[count+1] = newIndices[oldRes->tris[i+1]];
 	      newRes.tris[count+2] = newIndices[oldRes->tris[i+2]];
-	    
+
 	      count += 3;
 	    }
 	  }
@@ -1732,7 +1733,7 @@ MMScan::filtered_copy(const VertexFilter& filter)
 	newMesh->scans.push_back(newScan);
 
       } // end "if (numStripes > 0)"
-      
+
     } // end "if isVisible"
     else {
 
@@ -1741,11 +1742,11 @@ MMScan::filtered_copy(const VertexFilter& filter)
     }
 
   } // end scan loop
-  
+
   // seems like a bad idea, but we'll see
 
   if (newMesh->scans.size() == 0) return NULL;
-	
+
   // finalize mmscan details
 
   for (i = 0; i < newMesh->scans[0].meshes.size(); i++) {
@@ -1753,7 +1754,7 @@ MMScan::filtered_copy(const VertexFilter& filter)
     cerr << "mesh num " << i << " has " << count << " tris." << endl;
     char info[20];
     sprintf (info, ".clip%d", count);
-    crope fragName (get_basename() + info);
+    string fragName (get_basename() + info);
     newMesh->insert_resolution(count, fragName, true, true);
   }
 
@@ -1762,7 +1763,7 @@ MMScan::filtered_copy(const VertexFilter& filter)
   newMesh->isDirty_mem = newMesh->isDirty_disk = true;
   newMesh->computeBBox();
 
-  crope clipName(get_basename());
+  string clipName(get_basename());
   char info[20];
   sprintf(info, "clip.%d.mms", newMesh->num_vertices());
   clipName += info;
@@ -1776,18 +1777,18 @@ MMScan::filtered_copy(const VertexFilter& filter)
 bool
 MMScan::filter_vertices (const VertexFilter& filter, vector<Pnt3>& p)
 {
-  mmScanFrag *endScanFrag = scans.end();
+  vector<mmScanFrag>::iterator endScanFrag = scans.end();
     //for every mmScanFrag in scans vector
-    for(mmScanFrag *curScanFrag = scans.begin();
+    for(vector<mmScanFrag>::iterator curScanFrag = scans.begin();
 	curScanFrag < endScanFrag; curScanFrag++)
     {
-      
+
       //get the current points vector (full resolution)
       vector<Pnt3> *curPtVector;
       curPtVector = &(curScanFrag->meshes[0].vtx);
       //for every point apply the function
-      Pnt3 *vtxend = curPtVector->end();
-      for(Pnt3 *pnt = curPtVector->begin(); pnt < vtxend; pnt++)
+      vector<Pnt3>::iterator vtxend = curPtVector->end();
+      for(vector<Pnt3>::iterator pnt = curPtVector->begin(); pnt < vtxend; pnt++)
 	{
 	  if(filter.accept (*pnt))
 	    p.push_back(*pnt);
@@ -1858,7 +1859,7 @@ MMScan::calcConfidence()
       float conf = 1.0;
       if (boundPlus[i] > 0)
 	conf = (1.0 - FEARANGE) + (boundPlus[i] / (float)FEASTEPS) * FEARANGE;
-      
+
       scans[k].meshes[0].confidence.push_back(conf);
     }
     boundPlus.clear();
@@ -1908,17 +1909,17 @@ remove_unused_vtxs(vector<Pnt3> &vtx,
   // also keep tab on how the indices change
   int cnt = 0;
   n = vtx.size();
-  for (i=0; i<n; i++) {
+  for (int i=0; i<n; i++) {
     if (vtx_ind[i] != -1) {
       vtx_ind[i] = cnt;
       vtx[cnt] = vtx[i];
       cnt++;
     }
   }
-  vtx.erase(&vtx[cnt], vtx.end());
+  vtx.erase(vtx.begin() + cnt, vtx.end());
   // march through triangles and correct the indices
   n = tri.size();
-  for (i=0; i<n; i+=3) {
+  for (int i=0; i<n; i+=3) {
     tri[i+0] = vtx_ind[tri[i+0]];
     tri[i+1] = vtx_ind[tri[i+1]];
     tri[i+2] = vtx_ind[tri[i+2]];
@@ -1946,8 +1947,8 @@ MMScan::filter_unused_vtx(mmScanFrag *scan)
 	// found a valid point in the map... check to see if it died
 	if (vtx_ind[numChecked] != expected) {
 	      stripe->validMap[j/8] &= ~(1 << (j % 8));
-	  
-  
+
+
 }
 */
 
@@ -2030,11 +2031,11 @@ typedef struct {
 
 
 
-static void 
+static void
 CopyReverseWord (void* dest, void* src, int nWords)
   // like memcpy but copies 32-bit words instead of bytes,
   // and flips byte order
-  // to convert endian-ness as it copies.  
+  // to convert endian-ness as it copies.
 
   // ***NOTE***: this version is set-up to do nothing on win32 machines and
   // to swap on unix machines... should be used for modelmaker files only
@@ -2047,8 +2048,8 @@ CopyReverseWord (void* dest, void* src, int nWords)
   #else
   for (int i = 0; i < nWords; i++) {
     unsigned int temp = *(unsigned int*)src;
-    
-    temp = (temp >> 24) | ((temp >> 8) & 0xFF00) | 
+
+    temp = (temp >> 24) | ((temp >> 8) & 0xFF00) |
       ((temp << 8) & 0xFF0000) | (temp << 24);
 
     (*(unsigned int*)dest) = temp;
@@ -2076,7 +2077,7 @@ WSwap(double in)
 
 // overloaded MMS version of the other ReversePoints
 
-static void 
+static void
 ReversePoints(MMSio *points, int numPoints) {
 
   // switches word-byte order for an array of inputted points
@@ -2092,7 +2093,7 @@ ReversePoints(MMSio *points, int numPoints) {
   #endif
 }
 
-static void 
+static void
 ReversePoints(mmIO *points, int numPoints) {
 
   // switches word-byte order for an array of inputted points
@@ -2112,7 +2113,7 @@ ReversePoints(mmIO *points, int numPoints) {
 }
 
 
-static void 
+static void
 triSet(float *dest, Pnt3 *src)
   // converts Pnt3 -> float[3]; used to store mms files
   // needs to be rewritten for doubles if we bring back cta writing
@@ -2161,11 +2162,11 @@ MMScan::stripeCompare(int strNum, mmScanFrag *scan)
   if (numPts < (0.95 * str1->numPoints)) return false;
 
   avgDist /= numPts;
-  
+
   if ((avgDist < 0.1) && (numLargeDist < 5)) return true;
   return false;
 }
-  
+
 
 // *****************************************
 // I/O FUNCTIONS: read and write
@@ -2173,7 +2174,7 @@ MMScan::stripeCompare(int strNum, mmScanFrag *scan)
 
 
 bool
-MMScan::read_mms(const crope &fname)
+MMScan::read_mms(const string &fname)
 {
   mmStripeInfo stripe;
   mmScanFrag *scan;
@@ -2190,7 +2191,7 @@ MMScan::read_mms(const crope &fname)
   const char *filename = fname.c_str();
 
   FILE *pFile = fopen(filename, "rb");
-  
+
   // check that file opened OK
   if( !pFile )
     return false;
@@ -2241,8 +2242,8 @@ MMScan::read_mms(const crope &fname)
 
   // get number of scans
   fread(&numScans, sizeof( int ), 1, pFile);
-  
-  cout << "Reading " << numPoints << " points, " 
+
+  cout << "Reading " << numPoints << " points, "
        << numStripes << " stripes, "
        << numScans << " scans." << endl;
 
@@ -2253,7 +2254,7 @@ MMScan::read_mms(const crope &fname)
   stripes = new MMSstripe[numStripes];
 
   if (stripes == NULL) {
-    cerr << "Couldn't allocate enough memory for " 
+    cerr << "Couldn't allocate enough memory for "
 	 << numStripes << " stripes" << endl;
     return false;
   }
@@ -2281,7 +2282,7 @@ MMScan::read_mms(const crope &fname)
       stripe.numPoints = stripes[i].numPoints;
       stripe.scanDir = stripes[i].scanDir[0];
       stripe.sensorVec.set(stripes[i].sensorVec);
-    
+
       stripe.startIdx = numVerts[scans.size()];
       numVerts[scans.size()] += stripe.numPoints;
 
@@ -2319,7 +2320,7 @@ MMScan::read_mms(const crope &fname)
 
   points = new MMSio[numPoints];
   if (!points) {
-    cerr << "Couldn't allocate memory for " << numPoints 
+    cerr << "Couldn't allocate memory for " << numPoints
 	 << " points." << endl;
     return false;
   }
@@ -2345,10 +2346,10 @@ MMScan::read_mms(const crope &fname)
   fclose( pFile );
 
   return true;
-}  
+}
 
 bool
-MMScan::read_cta(const crope &fname)
+MMScan::read_cta(const string &fname)
 {
   mmIO points[STRIPE_PTS], sensorVec;
   mmStripeInfo stripe;
@@ -2362,7 +2363,7 @@ MMScan::read_cta(const crope &fname)
   const char *filename = fname.c_str();
 
   FILE *pFile = fopen(filename, "rb");
-  
+
   // check that file opened OK
   if( !pFile )
     return false;
@@ -2370,9 +2371,9 @@ MMScan::read_cta(const crope &fname)
   // read file version info
   char szFileID[10] = "";
   fread( szFileID, 10, 1, pFile );
-  
+
   // get number of stripes
-  
+
   fread(&numStripes, sizeof( int ), 1, pFile );
   CopyReverseWord(&numStripes, &numStripes, 1);
 
@@ -2399,17 +2400,17 @@ MMScan::read_cta(const crope &fname)
 
     // load map
     fread( &stripe.validMap, 40, 1, pFile );
-    
+
     // load number of points in stripe
     fread(&stripe.numPoints, sizeof( int ), 1, pFile );
     CopyReverseWord(&stripe.numPoints, &stripe.numPoints, 1);
-    
+
     stripe.startIdx = scan->num_vertices(0);
 
     // load points if there are any
     if(stripe.numPoints > 0 )
     {
-      
+
       // load and reverse points
       fread(points, sizeof(mmIO)* stripe.numPoints, 1, pFile );
       ReversePoints(points, stripe.numPoints);
@@ -2420,7 +2421,7 @@ MMScan::read_cta(const crope &fname)
 
 	// note: we're discarding normals in the cta file because
 	// they're not measured, just generated really poorly
-	
+
 	// intensity is the 4th byte of the first variable
 	intensity = *((char *)(&points[j].inten)+3);
 
@@ -2471,18 +2472,18 @@ MMScan::read_cta(const crope &fname)
     }
     if ((i % 100) == 0) progress.update(i+1);
   }
-  
+
   // close file
   fclose( pFile );
 
-  if (numSkipped) cout << "SKIPPED " << numSkipped 
+  if (numSkipped) cout << "SKIPPED " << numSkipped
 		       << "STRIPES while loading." << endl;
   return true;
 }
- 
+
 
 bool
-MMScan::read(const crope &fname)
+MMScan::read(const string &fname)
 {
   set_name(fname);
 
@@ -2558,7 +2559,7 @@ MMScan::read(const crope &fname)
 // writes an mms file
 
 bool
-MMScan::write(const crope &fname)
+MMScan::write(const string &fname)
 {
   MMSstripe blankStripe;
 
@@ -2580,7 +2581,7 @@ MMScan::write(const crope &fname)
   for (i=0; i < 3; i++) {
     blankStripe.sensorVec[i] = 0.0;
   }
-  
+
   for (i=0; i < 40; i++)
     blankStripe.validMap[i] = '\0';
 
@@ -2642,7 +2643,7 @@ MMScan::write(const crope &fname)
       progress.update(numSoFar);
       if (numSoFar == numStripes)
 	cerr << "reached the end of our array " << endl;
-      
+
     }
     stripes[numSoFar] = blankStripe;
     numSoFar++;

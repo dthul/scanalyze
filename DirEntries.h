@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // DirEntries.h
 //
 // Kari Pulli
@@ -22,9 +22,11 @@
 #endif
 
 #include <string.h>
-#include <vector.h>
-//#include <rope.h>
+#include <vector>
+//#include <string>
 #include <string>
+
+using namespace std;
 
 class DirEntries {
 
@@ -33,9 +35,9 @@ class DirEntries {
   vector<std::string> m_entry;
 
 public:
-  
+
   bool isdir;
-  
+
   DirEntries(std::string dirname,
 	     std::string end_filter = "")
     : count(0)
@@ -67,14 +69,14 @@ public:
 	// loop body, shared
 	if (strcmp(name, ".")  != 0 && strcmp(name, "..") != 0) {
 	  if (end_filter.size()) {
-	    if (strcmp(&name[strlen(name)-end_filter.size()], 
+	    if (strcmp(&name[strlen(name)-end_filter.size()],
 		       end_filter.c_str()) == 0)
 	      {
 		m_entry.push_back(std::string(name));
 	      }
 	  }
 	}
-	
+
 #ifndef WIN32
 
       // Windows loop epilogue
@@ -127,9 +129,9 @@ public:
 
 #if 0
 
-#include <iostream.h>
+#include <iostream>
 
-void 
+void
 main(int argc, char **argv)
 {
   for (DirEntries de(argv[1], argc>2 ? argv[2] : NULL);

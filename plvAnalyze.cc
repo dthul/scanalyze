@@ -2,7 +2,7 @@
 // plvAnalyze.cc
 // Matt Ginzton, Lucas Pereira
 // Thu Jun 18 13:02:22 PDT 1998
-// 
+//
 // Interface for reading points or groups of points from z buffer
 //###############################################################
 
@@ -32,7 +32,7 @@
 // don't have rint, just consider it a noop
 #	define rint (int)
 #endif
-#ifdef linux
+#ifdef __linux
 #define MAXFLOAT FLT_MAX
 #endif
 
@@ -161,7 +161,7 @@ WriteOrthoDepth(ClientData clientData, Tcl_Interp *interp,
 //GL is lower left..yah
 
 int
-WriteWorldDataFromScreen(ClientData clientData, Tcl_Interp *interp, 
+WriteWorldDataFromScreen(ClientData clientData, Tcl_Interp *interp,
 	       int argc, char *argv[])
 {
   Pnt3 pt;
@@ -281,7 +281,7 @@ ScreenToWorldCoordinatesExt (int x, int y, Pnt3& ptWorld,
     // have poly data (or hidden-line/point, also filled)
     // read it from front buffer
     glReadBuffer (GL_FRONT);
-    glReadPixels (x, y, 1, 1, GL_DEPTH_COMPONENT, 
+    glReadPixels (x, y, 1, 1, GL_DEPTH_COMPONENT,
 		  GL_FLOAT, &pixdepth);
     //printf("pixdepth (from front): %f\n", pixdepth);
   }
@@ -301,7 +301,7 @@ ScreenToWorldCoordinatesExt (int x, int y, Pnt3& ptWorld,
     }
 
     glReadBuffer (GL_BACK);
-    glReadPixels (x, y, 1, 1, GL_DEPTH_COMPONENT, 
+    glReadPixels (x, y, 1, 1, GL_DEPTH_COMPONENT,
 		  GL_FLOAT, &pixdepth);
     //printf("pixdepth (from back): %f\n", pixdepth);
 
@@ -320,7 +320,7 @@ ScreenToWorldCoordinatesExt (int x, int y, Pnt3& ptWorld,
   Unprojector unproject (tb);
   ptWorld = unproject (x, y, pixdepth);
 
-  //printf("You selected world position: %.4f %.4f %.4f\n", 
+  //printf("You selected world position: %.4f %.4f %.4f\n",
   //   worldPos[0], worldPos[1], worldPos[2]);
 
   return true;
@@ -390,7 +390,7 @@ ClipLineInfo::ClipLineInfo (int w)
 
 ClipLineInfo::~ClipLineInfo()
 {
-  for (ClipLineData** iter = data.begin(); iter < data.end(); iter++)
+  for (vector<ClipLineData*>::iterator iter = data.begin(); iter < data.end(); iter++)
     delete *iter;
 }
 
@@ -412,7 +412,7 @@ ClipLineData::~ClipLineData()
 
 
 int
-PlvAnalyzeLineModeCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvAnalyzeLineModeCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   static float zsBase = 1;
@@ -471,8 +471,8 @@ PlvAnalyzeLineModeCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvExportGraphAsText(ClientData clientData, Tcl_Interp *interp, 
-		     int argc, char *argv[]) 
+PlvExportGraphAsText(ClientData clientData, Tcl_Interp *interp,
+		     int argc, char *argv[])
 {
   Togl *togl;
   char *winName;
@@ -507,13 +507,13 @@ PlvExportGraphAsText(ClientData clientData, Tcl_Interp *interp,
   // set ps output file, set title of graph
   fprintf(ctlfile, "set output \"%s.ps\"\nset title \"%s\"\n", fileName, fileName);
 
- 
+
   cli = (ClipLineInfo*)Togl_GetClientData(togl);
   int nPix = cli->width;
 
   //  int k = 0;
   fprintf(ctlfile, "plot ");
-  for (ClipLineData** pcld = cli->data.begin(); 
+  for (vector<ClipLineData*>::iterator pcld = cli->data.begin();
        pcld < cli->data.end(); pcld++) {
     ClipLineData* cld = *pcld;
 
@@ -539,7 +539,7 @@ PlvExportGraphAsText(ClientData clientData, Tcl_Interp *interp,
     //    k++;
     fclose(datafile);
   }
-  
+
   fclose(ctlfile);
   return TCL_OK;
 } // PlvExportGraphAsText
@@ -564,7 +564,7 @@ PlotLineDepth (struct Togl* togl)
   glClear (GL_COLOR_BUFFER_BIT);
 
   //draw grid -- square only if correct aspect ratio
-  double scaleW = (cli->xMax - cli->xMin) * 
+  double scaleW = (cli->xMax - cli->xMin) *
 	   (cli->width / (double)(cli->nLastGood - cli->nFirstGood));
   double scaleH = cli->zMax - cli->zMin;
   float zRescaleRatio = (cli->zRescale - 1) / cli->zRescale;
@@ -580,7 +580,7 @@ PlotLineDepth (struct Togl* togl)
       glVertex2f (0, i);
       glVertex2f (scaleW, i);
     }
-    for (i = 0; i <= scaleW; i += step) {
+    for (double i = 0; i <= scaleW; i += step) {
       glVertex2f (i, 0);
       glVertex2f (i, scaleH);
     }
@@ -589,7 +589,7 @@ PlotLineDepth (struct Togl* togl)
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity();
-  //xMin and xMax will be clamped around object, ignoring background -- we 
+  //xMin and xMax will be clamped around object, ignoring background -- we
   //want to show background -- pixel width of data is 0 to cli->width;
   //pixel width of object w/o background is cli->nFirstGood to cli->nLastGood;
   //xMin and xMax are in nFirstGood to nLastGood range and need to be scaled
@@ -606,7 +606,7 @@ PlotLineDepth (struct Togl* togl)
   //printf ("Z: %g to %g\n", bottom, top);
   //fflush (stdout);
 
-  for (ClipLineData** pcld = cli->data.begin(); pcld < cli->data.end();
+  for (vector<ClipLineData*>::iterator pcld = cli->data.begin(); pcld < cli->data.end();
        pcld++) {
     ClipLineData* cld = *pcld;
 
@@ -638,7 +638,7 @@ PlotLineDepth (struct Togl* togl)
       }
       glDisable (GL_BLEND);
     }
-    
+
     //draw data points, connected by lines (mesh's false color)
     if (cli->bShowColor)
       glColor3ub (cld->color[0], cld->color[1], cld->color[2]);
@@ -663,7 +663,7 @@ PlotLineDepth (struct Togl* togl)
       //cld->objX[x], cld->objY[x], cld->objZ[x], x, cld->pixels[x]);
     }
     glEnd();
-    
+
     //now draw individual data points (green)
     if (cli->bShowFramebuffPts) {
       glColor3f (0, 1, 0);
@@ -672,7 +672,7 @@ PlotLineDepth (struct Togl* togl)
 	ptSize = 1.0;    //dominate white line, but want points visible
       glPointSize (ptSize);
       glBegin (GL_POINTS);
-      for (x = 0 ; x < nPixels; x++) {
+      for (int x = 0 ; x < nPixels; x++) {
 	if (!ISBACKGROUND(cld->pixels[x]))
 	  glVertex2f (cld->objPt[x][0], cld->objPt[x][2]);
       }
@@ -707,7 +707,7 @@ int nAnalysis = 0;             //need to change window name each time so
 
 
 int
-PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp, 
+PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   struct Togl* toglAnalyze;
@@ -736,7 +736,7 @@ PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp,
     interp->result = "You must first select a line";
     return TCL_ERROR;
   }
-  
+
   ClipLineInfo* cli = new ClipLineInfo (nPixels);
 
   //need to unproject z-buffer data with identity modelview
@@ -750,7 +750,7 @@ PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp,
   PushRenderParams();
   theRenderParams->boundSelection = false;
 
-  for (DisplayableMesh** pdm = theScene->meshSets.begin();
+  for (vector<DisplayableMesh*>::iterator pdm = theScene->meshSets.begin();
        pdm < theScene->meshSets.end();
        pdm++) {
     if (!(*pdm)->getVisible())
@@ -800,7 +800,7 @@ PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp,
 	    cli->zMin = z;
 	  if (z > cli->zMax)
 	    cli->zMax = z;
-	  
+
 	  float x = cld->objPt[i][0];
 	  if (x < cli->xMin)
 	    cli->xMin = x;
@@ -868,7 +868,7 @@ PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp,
   sprintf (toglName, ".analyze%d.togl", nAnalysis);
   toglAnalyze = toglHash.FindTogl (toglName);
   assert (toglAnalyze != NULL);
-  
+
   Togl_SetClientData (toglAnalyze, cli);
   Togl_SetDisplayFunc (toglAnalyze, PlotLineDepth);
   Togl_SetDestroyFunc (toglAnalyze, FreeLineDepthInfo);
@@ -1004,7 +1004,7 @@ bool ReadZBufferArea (vector<Pnt3>& pts, const Selection& sel,
 void fitPnt3Plane (const vector<Pnt3>& pts, Pnt3& n, float& d, Pnt3& outCentroid);
 
 int
-PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
   if (argc < 2) {
@@ -1066,7 +1066,7 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
 
     if (!meshFrom->filter_vertices (*filter, pts)) {
       interp->result = "This scan does not implement filter_vertices.";
-      return TCL_ERROR;      
+      return TCL_ERROR;
     }
 
     delete filter;
@@ -1129,7 +1129,7 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
     SHOW (eyeNorm);
 
   float err = 0;
-  for (Pnt3* pt = pts.begin(); pt < pts.end(); pt++) {
+  for (vector<Pnt3>::iterator pt = pts.begin(); pt < pts.end(); pt++) {
     err += fabs (dot (*pt, norm) - dist);
   }
   float avgErr = err / pts.size();
@@ -1141,7 +1141,7 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
     Pnt3 target (0, 0, 1);
 
     // fitPnt3Plane seems to return +/- normals randomly.
-    // Flip the normal if necessary, to make it point up the visible z axis.  
+    // Flip the normal if necessary, to make it point up the visible z axis.
     // This will make our life easier later on....
     if (eyeNorm[2] < 0) {
       //alex commented this back in..the cout line
@@ -1152,7 +1152,7 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
     float cosTh = dot (eyeNorm, target);
     if (fabs (cosTh - 1.0) > 1.e-6) {
       Pnt3 axis = cross (eyeNorm, target);
-      
+
       Pnt3 center;
       ScreenPnt sc (0, 0);
       int nPts = theSel.pts.size();
@@ -1174,7 +1174,7 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
 	tbView->newRotationCenter (center);
 	tbView->rotateAroundAxis (axis, acos(cosTh));
       }
-      
+
       redraw (true);
     } else {
       cout << "Scanalyze considers it futile to try to make this any flatter"
@@ -1343,7 +1343,7 @@ bool findZBufferNeighborExt (int x, int y, Pnt3& neighbor,
 }
 
 int
-wsh_WarpMesh(ClientData clientData, Tcl_Interp *interp, 
+wsh_WarpMesh(ClientData clientData, Tcl_Interp *interp,
 	     int argc, char *argv[])
 {
   Mesh *theMesh = new Mesh();
@@ -1381,13 +1381,13 @@ GetPtMeshMap (int w, int h, vector<DisplayableMesh*>& ptMeshMap)
   Togl_MakeCurrent (toglCurrent);
   int scale = 16;   // unimportant as long as small -- cuts into range
   drawSceneIndexColored (scale);
-  
+
   vector<uchar> rgb;
   rgb.reserve (w * h * 4);
 
   glReadBuffer (GL_BACK);
   glPixelStorei (GL_PACK_ALIGNMENT, 4);
-  glReadPixels (0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, rgb.begin());
+  glReadPixels (0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, rgb.data());
 
   int nErrors = 0;
   for (int y = 0; y < h; y++) {
@@ -1441,7 +1441,7 @@ GetPtMeshVector (int xstart, int ystart, int w, int h,
   if (ystart+h > winheight) h = winheight-ystart;
 
   // printf ("%d %d %d %d %d %d\n",xstart,ystart,w,h,winwidth,winheight);
-  
+
   ptMeshMap.clear();
   // Set every mesh to NULL initially
   ptMeshMap.insert (ptMeshMap.begin(),theScene->meshSets.size(), NULL);
@@ -1451,13 +1451,13 @@ GetPtMeshVector (int xstart, int ystart, int w, int h,
   Togl_MakeCurrent (toglCurrent);
   int scale = 16;   // unimportant as long as small -- cuts into range
   drawSceneIndexColored (scale);
-  
+
   vector<uchar> rgb;
   rgb.reserve (winwidth * winheight * 4);
- 
+
   glReadBuffer (GL_BACK);
   glPixelStorei (GL_PACK_ALIGNMENT, 4);
-  glReadPixels (0, 0, winwidth, winheight, GL_RGBA, GL_UNSIGNED_BYTE, rgb.begin());
+  glReadPixels (0, 0, winwidth, winheight, GL_RGBA, GL_UNSIGNED_BYTE, rgb.data());
 
   // cerr << "Check In:" << xstart << " " << ystart << " " << w << " " << h << "\n";
   int nErrors = 0;
@@ -1480,7 +1480,7 @@ GetPtMeshVector (int xstart, int ystart, int w, int h,
 	// background, no mesh
 
       } else if (i >= 0 && i < theScene->meshSets.size()) {
-	
+
 	ptMeshMap[i] = theScene->meshSets[i];
       } else {
 	//printf ("Error: %d,%d has mesh #%d (rgb=%02x,%02x,%02x)\n",
@@ -1496,7 +1496,7 @@ GetPtMeshVector (int xstart, int ystart, int w, int h,
 	 << "perhaps the rendering window is obscured?" << endl;
 }
 
-int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp, 
+int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if ( argc < 8 ) {
@@ -1509,7 +1509,7 @@ int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp,
     interp->result = "wsh_AlignPointsToPlane: missing mesh";
     return TCL_ERROR;
   }
-  RigidScan* meshFrom = meshDisp->getMeshData();  
+  RigidScan* meshFrom = meshDisp->getMeshData();
 
   int x1 = atoi(argv[2]);
   int y1 = atoi(argv[3]);
@@ -1517,7 +1517,7 @@ int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp,
   int y2 = atoi(argv[5]);
   int x3 = atoi(argv[6]);
   int y3 = atoi(argv[7]);
-  
+
   Pnt3 p1, p2, p3;
 
   printf("%i %i, %i %i, %i %i\n", x1, y1, x2, y2, x3, y3);
@@ -1546,7 +1546,7 @@ int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp,
 
   float cosTh = dot(planeNorm, target);
   //  cout << cosTh << endl;
-  Pnt3 axis = cross (planeNorm, target);  
+  Pnt3 axis = cross (planeNorm, target);
   if (fabs (cosTh - 1.0) > 1.e-6) {
     //    axis.normalize();
     printf("z: %f %f %f, %f\n", axis[0], axis[1], axis[2], cosTh);
@@ -1573,7 +1573,7 @@ int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp,
   float hcosTh = dot(planex, htarget);
   if (fabs (hcosTh - 1.0) > 1.e-6) {
     Pnt3 haxis = cross (planex, htarget);
-    
+
     printf("x: %f %f %f, %f\n", haxis[0], haxis[1], haxis[2], hcosTh);
 
     tbView->rotateAroundAxis (haxis, acos(hcosTh), meshFrom);
@@ -1582,7 +1582,7 @@ int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp,
   } else {
     cout << "Scanalyze considers it futile to try to make this any flatter"
 	 << endl;
-  }  
+  }
 
   return TCL_OK;
 } //wsh_AlignPointsToPlane
@@ -1591,7 +1591,7 @@ int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp,
 Auto_a_Line *lines_g = NULL;
 
 int
-PlvDrawAnalyzeLines(ClientData clientData, Tcl_Interp *interp, 
+PlvDrawAnalyzeLines(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if ( argc < 8 ) {
@@ -1616,10 +1616,10 @@ PlvDrawAnalyzeLines(ClientData clientData, Tcl_Interp *interp,
 
 // PlvClearAnalyzeLines
 // a hack: the screen dump only seems to work correctly if called from tcl only
-// but since the Auto_a_Line is created in C, I need to make a call to this 
+// but since the Auto_a_Line is created in C, I need to make a call to this
 // function to properly clean up.
 int
-PlvClearAnalyzeLines(ClientData clientData, Tcl_Interp *interp, 
+PlvClearAnalyzeLines(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if ( lines_g != NULL ) {
@@ -1640,7 +1640,7 @@ PlvClearAnalyzeLines(ClientData clientData, Tcl_Interp *interp,
 // -------------------------------------
 extern DrawObjects draw_other_things;
 
-Auto_a_Line::Auto_a_Line(Togl *_togl, char _axis, int _x0, int _y0, 
+Auto_a_Line::Auto_a_Line(Togl *_togl, char _axis, int _x0, int _y0,
 			 int _len, int _space, int _num)
 {
   togl = _togl;
@@ -1664,21 +1664,21 @@ void
 Auto_a_Line::drawthis()
 {
   int width, height;
-  
+
   width = Togl_Width (togl);
   height = Togl_Height (togl);
 
   glPushMatrix();
-  
+
   glViewport(0, 0, width, height);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   //  gluOrtho2D(-0.5, width+0.5, -0.5, height+0.5);
   gluOrtho2D(0, width, 0, height);
-  
+
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  
+
   glPushAttrib (GL_LIGHTING_BIT);
   glDisable (GL_LIGHTING);
 

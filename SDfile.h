@@ -12,8 +12,8 @@
 #ifndef __SDFILE_H__
 #define __SDFILE_H__
 
-#include <rope.h>
-#include <fstream.h>
+#include <string>
+#include <fstream>
 #include "CyberXform.h"
 #include "Bbox.h"
 class VertexFilter;
@@ -83,8 +83,8 @@ public:
   SDfile(void);
   ~SDfile(void);
 
-  bool read (const crope &fname);
-  bool write (const crope &fname);
+  bool read (const string &fname);
+  bool write (const string &fname);
 
   void fill_holes(int max_missing, int thresh);
 

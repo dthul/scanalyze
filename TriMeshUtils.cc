@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // TriMeshUtils.cc
 //
 // Utility functions for triangle meshes that are represented
@@ -10,10 +10,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream.h>
-#include <vector.h>
-#include <hash_map.h>
-#include <hash_set.h>
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "TriMeshUtils.h"
 #include "Median.h"
@@ -22,7 +22,7 @@
 #include "Progress.h"
 #include "Timer.h"
 
-
+using namespace std;
 
 // calculate vertex normals by averaging from triangle
 // normals (obtained from cross products)
@@ -63,8 +63,8 @@ getVertexNormals(const vector<Pnt3> &vtx,
       }
     } else {
       for (int i = 0; i < ntris; i += 3) {
-	Pnt3 norm = normal(vtx[tri[i+0]], 
-			   vtx[tri[i+1]], 
+	Pnt3 norm = normal(vtx[tri[i+0]],
+			   vtx[tri[i+1]],
 			   vtx[tri[i+2]]);
 	nrm[tri[i+0]] += norm;
 	nrm[tri[i+1]] += norm;
@@ -102,16 +102,16 @@ getVertexNormals(const vector<Pnt3> &vtx,
     } else {
       for (int i = 0; i < ntris; i += 3) {
 
-	/*	
+	/*
 	float area = .5 * cross(vtx[tri[i+0]], vtx[tri[i+1]],
 				vtx[tri[i+2]]).norm();
-	Pnt3 areaNorm = normal(vtx[tri[i+0]], 
-			       vtx[tri[i+1]], 
+	Pnt3 areaNorm = normal(vtx[tri[i+0]],
+			       vtx[tri[i+1]],
 			       vtx[tri[i+2]]);
 	areaNorm *= area;
 	*/
-	Pnt3 areaNorm = cross(vtx[tri[i+0]], 
-			      vtx[tri[i+1]], 
+	Pnt3 areaNorm = cross(vtx[tri[i+0]],
+			      vtx[tri[i+1]],
 			      vtx[tri[i+2]]);
 	nrm[tri[i+0]] += areaNorm;
 	nrm[tri[i+1]] += areaNorm;
@@ -122,7 +122,7 @@ getVertexNormals(const vector<Pnt3> &vtx,
 
   nrm_s.clear();
   nrm_s.reserve (3 * vtx.size());
-  for (Pnt3* n = nrm.begin(); n != nrm.end(); n++) {
+  for (vector<Pnt3>::iterator n = nrm.begin(); n != nrm.end(); n++) {
     n->set_norm(32767.0);
     nrm_s.push_back (short(n->operator[](0)));
     nrm_s.push_back (short(n->operator[](1)));
@@ -141,7 +141,7 @@ median_edge_length(vector<Pnt3> &vtx,
   if (n < 3) return 0.0;
 
   Median<float> med(percentile, n);
-    
+
   if (strips) {
     int *end = &tri[n];
     // reuse the "inner edge" length in the strip
@@ -169,7 +169,7 @@ median_edge_length(vector<Pnt3> &vtx,
       med += dist2(vtx[tri[i+0]], vtx[tri[i+1]]);
       med += dist2(vtx[tri[i+2]], vtx[tri[i+1]]);
       med += dist2(vtx[tri[i+0]], vtx[tri[i+2]]);
-    } 
+    }
   }
  done:
   return sqrtf(med.find());
@@ -178,10 +178,10 @@ median_edge_length(vector<Pnt3> &vtx,
 // find the median edge length
 // if a triangle has an edge that's longer than
 // factor times the median (or percentile), remove the triangle
-void 
+void
 remove_stepedges(vector<Pnt3> &vtx,
 		 vector<int>  &tri,
-		 int           factor, 
+		 int           factor,
 		 int           percentile,
 		 bool          strips)
 {
@@ -202,7 +202,7 @@ remove_stepedges(vector<Pnt3> &vtx,
 	bool end_here  = false;
 	if (!end_found) {
 	  // check for too long edges
-	  if (cnt == 1) 
+	  if (cnt == 1)
 	    end_here = (dist2(vtx[tri[i]], vtx[tri[i-1]]) > thr);
 	  else
 	    end_here = (dist2(vtx[tri[i]], vtx[tri[i-1]]) > thr ||
@@ -281,7 +281,7 @@ remove_unused_vtxs(vector<Pnt3> &vtx,
 {
   // prepare vertex index map
   vector<int> vtx_ind(vtx.size(), -1);
-  
+
   // march through the triangles
   // and mark the vertices that are actually used
   int n = tri.size();
@@ -295,17 +295,17 @@ remove_unused_vtxs(vector<Pnt3> &vtx,
   // also keep tab on how the indices change
   int cnt = 0;
   n = vtx.size();
-  for (i=0; i<n; i++) {
+  for (int i=0; i<n; i++) {
     if (vtx_ind[i] != -1) {
       vtx_ind[i] = cnt;
       vtx[cnt] = vtx[i];
       cnt++;
     }
   }
-  vtx.erase(&vtx[cnt], vtx.end());
+  vtx.erase(vtx.begin() + cnt, vtx.end());
   // march through triangles and correct the indices
   n = tri.size();
-  for (i=0; i<n; i+=3) {
+  for (int i=0; i<n; i+=3) {
     tri[i+0] = vtx_ind[tri[i+0]];
     tri[i+1] = vtx_ind[tri[i+1]];
     tri[i+2] = vtx_ind[tri[i+2]];
@@ -377,7 +377,7 @@ remove_this_triangle(vector<int> &ts, int i)
     int curr = ts[i+j]; // current neighbor
     if (curr >= 0) {
       if      (ts[curr]   == -2) continue; // nbor has been removed
-      // mark the correct edge of the neighbor to 
+      // mark the correct edge of the neighbor to
       // not have a neighbor any more
       if      (ts[curr]   == i) ts[curr]   = -1;
       else if (ts[curr+1] == i) ts[curr+1] = -1;
@@ -392,7 +392,7 @@ static int Verbose = 1;
 static int Warnings = 1;
 
 static void
-old_tris_to_strips(const vector<int> &tris, 
+old_tris_to_strips(const vector<int> &tris,
 		   vector<int>& tstripinds,
 		   const char* name)
 {
@@ -401,13 +401,13 @@ old_tris_to_strips(const vector<int> &tris,
   tstripinds.reserve(1.1*nTris/3);
 
   // build a multimap: map edges to incident triangles
-  typedef hash_multimap<_edge,int,hash_edge,equal_edge> hmm;
+  typedef unordered_multimap<_edge,int,hash_edge,equal_edge> hmm;
   hmm edges;
   hmm::iterator edge_it;
   int i,j;
   _edge e;
 
-  cout << "Creating triangle strips from raw triangle data..." 
+  cout << "Creating triangle strips from raw triangle data..."
        << endl;
   if (Verbose)
     printf ("input: %d vertices (%d triangles)\n", nTris, nTris/3);
@@ -426,11 +426,11 @@ old_tris_to_strips(const vector<int> &tris,
       edges.insert(pair<const _edge,int>(e,i));
     }
   }
-  
+
 
   // march through triangles
-  // store for each edge the neighboring triangle 
-  //  -1 if neighbor doesn't exist, 
+  // store for each edge the neighboring triangle
+  //  -1 if neighbor doesn't exist,
   //  later -2 if the triangle is removed/processed
   vector<int> tri_nbors(nTris);
   for (i = 0; i < nTris; i+=3) {
@@ -453,7 +453,7 @@ old_tris_to_strips(const vector<int> &tris,
 		    "edge (%d,%d)\n", e.a, e.b);
 	    while (Verbose && edge_it != p.second) {
 	      int tri = (*edge_it).second;
-	      fprintf(stderr, 
+	      fprintf(stderr,
 		      "\t: offending tri: #%d (%d,%d,%d)\n",
 		      tri, tris[tri+0],
 		      tris[tri+1], tris[tri+2]);
@@ -466,7 +466,7 @@ old_tris_to_strips(const vector<int> &tris,
 	}
       }
       // there's only 1 or 2 triangles for this edge
-      if ((*edge_it).second != i) { 
+      if ((*edge_it).second != i) {
 	// if the first match is not this triangle,
 	// the neighbor across this edge is the current triangle
 	tri_nbors[i+j] = (*edge_it).second;
@@ -486,7 +486,7 @@ old_tris_to_strips(const vector<int> &tris,
       }
     }
   }
-  
+
   int nStrips = 0; //for stat-keeping
 
   // start removing triangles from the tri_nbors
@@ -495,7 +495,7 @@ old_tris_to_strips(const vector<int> &tris,
   for (i = 0; i < nNbors; i += 3) {
     if (i%300 == 0)
       progress.update (2* nTris + i);
-      
+
     if (tri_nbors[i] == -2) continue; // has been removed
     // try finding a neighbor
     int nbor = -1;
@@ -515,7 +515,7 @@ old_tris_to_strips(const vector<int> &tris,
       tstripinds.push_back(tris[i+(nbor+2)%3]);
       tstripinds.push_back(tris[i+(nbor  )  ]);
       tstripinds.push_back(tris[i+(nbor+4)%3]);
-      
+
       int prev = i;
       int dir = 1;
       int curr = tri_nbors[prev+nbor];
@@ -525,7 +525,7 @@ old_tris_to_strips(const vector<int> &tris,
 	else if (tri_nbors[curr+1] == prev) nbor = 1;
 	else if (tri_nbors[curr+2] == prev) nbor = 2;
 	else printf ("Warning: really lost!\n");
-	
+
 	remove_this_triangle(tri_nbors, prev);
 	tstripinds.push_back(tris[curr+(nbor+2)%3]);
 	// find next nbor
@@ -581,10 +581,10 @@ TriMesh_FindAdjacentFaces (int numvertices,
   unsigned* adjacentfacedata = new unsigned [numfaces];
   // this pointer will be incremented as needed but adjacentfaces[0]
   // will always point to the beginning so it can later be freed
-  
+
   // Step II - compute the actual vertex->tri lists...
   adjacentfacelist* adjacentfaces = new adjacentfacelist[numvertices];
-  for (i = 0; i < numvertices; i++) {
+  for (int i = 0; i < numvertices; i++) {
     adjacentfaces[i] = adjacentfacedata;
     adjacentfacedata += numadjacentfaces[i];
 
@@ -595,8 +595,8 @@ TriMesh_FindAdjacentFaces (int numvertices,
   assert (adjacentfacedata == adjacentfaces[0] + numfaces);
   for (unsigned* afdp = adjacentfaces[0]; afdp < adjacentfacedata; afdp++)
     *afdp = numfaces;
-  
-  for (i = 0; i < numfaces; i++) {
+
+  for (int i = 0; i < numfaces; i++) {
     unsigned *p = adjacentfaces[faces[i]];
     while (*p != numfaces)
       p++;
@@ -644,7 +644,7 @@ Tstrip_Next_Tri(unsigned tri, unsigned v1, unsigned v2)
 	return f1;
     }
   }
-  
+
   return -1;
 }
 
@@ -656,7 +656,7 @@ static void Tstrip_Crawl(unsigned v1, unsigned v2, unsigned v3,
   *stripsp++ = v1;
   *stripsp++ = v2;
   *stripsp++ = v3;
-  
+
   unsigned vlast1 = v3;
   unsigned vlast2 = v2;
 
@@ -686,7 +686,7 @@ static void Tstrip_Crawl(unsigned v1, unsigned v2, unsigned v3,
 	(faces[next+2] == vlast1) &&
 	(faces[next+0] == vnext))
       thisflipped = false;
-    
+
     if (thisflipped != shouldbeflipped) {
       if (nEvilTriangles-- > 0) {
 	cerr << "Tstrip generation: inconsistent triangle orientation, "
@@ -694,8 +694,8 @@ static void Tstrip_Crawl(unsigned v1, unsigned v2, unsigned v3,
       }
       goto bail;
     }
-    
-    
+
+
     // Record it
 
     *stripsp++ = vnext;
@@ -703,10 +703,10 @@ static void Tstrip_Crawl(unsigned v1, unsigned v2, unsigned v3,
     vlast1 = vnext;
     done[next/3] = true;
     shouldbeflipped = !shouldbeflipped;
-    
+
     // Try to find the next tri
   } while ((next = Tstrip_Next_Tri(next, vlast1, vlast2)) != -1);
-  
+
  bail:
   // OK, done.  Mark end of strip
   *stripsp++ = -1;
@@ -718,37 +718,37 @@ static void Tstrip_Crawl(unsigned v1, unsigned v2, unsigned v3,
 static void Tstrip_Bootstrap(unsigned tri)
 {
   done[tri] = true;
-  
+
   // Find two vertices with which to start.
   // We do only a bit of lookahead, starting with vertices that will
   // let us form a strip of length at least 2...
-  
+
   tri *= 3;
   unsigned vert1 = faces[tri];
   unsigned vert2 = faces[tri+1];
   unsigned vert3 = faces[tri+2];
-  
+
   // Try vertices 1 and 2...
   int nextface = Tstrip_Next_Tri(tri, vert1, vert2);
   if (nextface != -1) {
     Tstrip_Crawl(vert3, vert1, vert2, nextface);
     return;
   }
-  
+
   // Try vertices 2 and 3...
   nextface = Tstrip_Next_Tri(tri, vert2, vert3);
   if (nextface != -1) {
     Tstrip_Crawl(vert1, vert2, vert3, nextface);
     return;
   }
-  
+
   // Try vertices 3 and 1...
   nextface = Tstrip_Next_Tri(tri, vert3, vert1);
   if (nextface != -1) {
     Tstrip_Crawl(vert2, vert3, vert1, nextface);
     return;
   }
-  
+
   // OK, nothing we can do. Do a single-triangle-long tstrip.
   *stripsp++ = vert1;
   *stripsp++ = vert2;
@@ -768,18 +768,18 @@ static unsigned *Build_Tstrips(int numvertices,
 
   cout << " stripping... " << flush;
   int numfaces = tris.size() / 3;
-  
+
   // Allocate more than enough memory
   unsigned* strips = new unsigned[4*numfaces+1];
   stripsp = strips;
   nEvilTriangles = 3;
-  
+
   // Allocate array to record what triangles we've already done
   done = new bool[numfaces];
   memset(done, 0, numfaces*sizeof(bool));
   faces = &tris[0];
   nstrips = 0;
-  
+
   // Build the tstrips
   for (int i = 0; i < numfaces; i++) {
     if (!done[i])
@@ -793,7 +793,7 @@ static unsigned *Build_Tstrips(int numvertices,
 	 << " more evil triangles for which no warnings were printed."
 	 << endl << endl;
   }
-  
+
   // cleanup global arrays
   delete [] done; done = NULL;
   delete [] numadjacentfaces; numadjacentfaces = NULL;
@@ -829,7 +829,7 @@ tris_to_strips(int numvertices,
     // this is a hair faster...
     //tstripinds.reserve (end-strips);
     //memcpy (&tstripinds[0], strips, 4*(end-strips));
-    
+
     // but this is legal :)
     //#ifdef __STL_MEMBER_TEMPLATES
 #if 0
@@ -852,8 +852,8 @@ tris_to_strips(int numvertices,
 
 
 
-void 
-strips_to_tris(const vector<int> &tstrips, 
+void
+strips_to_tris(const vector<int> &tstrips,
 	       vector<int>& tris, int nTris)
 {
   if (!tstrips.size())
@@ -891,7 +891,7 @@ void
 flip_tris(vector<int> &inds, bool stripped)
 {
   int n = inds.size();
-  
+
   if (stripped) {
     int i=0;
     while (i<n) {
@@ -960,10 +960,10 @@ nbors_tris(int    n_vtx,
   int *data = new int[n_tri_inds];
   // this pointer will be incremented as needed but nbors[0]
   // will always point to the beginning so it can later be freed
-  
+
   // Step II - compute the actual vertex->tri lists...
   nbors = new int*[n_vtx];
-  for (i=0; i<n_vtx; i++) {
+  for (int i=0; i<n_vtx; i++) {
     nbors[i] = data;
     data += n_nbors[i];
   }
@@ -975,14 +975,14 @@ nbors_tris(int    n_vtx,
     *p = -1;
   }
 
-  for (i=0; i<n_tri_inds; i++) {
+  for (int i=0; i<n_tri_inds; i++) {
     int *p = nbors[tris[i]];
     while (*p != -1) p++;
     *p = i;
   }
 
   if (sorted) {
-    for (i=0; i<n_vtx; i++) {
+    for (int i=0; i<n_vtx; i++) {
       sort_nbors(nbors[i], n_nbors[i], tris);
     }
   }
@@ -1001,7 +1001,7 @@ mark_boundary_verts(vector<char> &bdry,
   int *n_nbors, **nbors;
   nbors_tris(nv, tris, n_nbors, nbors, true);
 
-  // for each vertex, try to find a full loop 
+  // for each vertex, try to find a full loop
   // around it, if can't its boundary
   int va, vb; // vertex after, vertex before
   for (int i=0; i<nv; i++) {
@@ -1035,7 +1035,7 @@ mark_boundary_verts(vector<char> &bdry,
 	// not a continuous neighbor chain
 	bdry[i] = 1;
       }
-    }      
+    }
   }
 
   // cleanup
@@ -1052,7 +1052,7 @@ static void
 build_nbor_map(vecvec &nlist, const vector<int> &tris)
 {
   // build an edge set
-  typedef hash_set<_edge,hash_edge,equal_edge> hs;
+  typedef unordered_set<_edge,hash_edge,equal_edge> hs;
   hs edges;
   int n = tris.size();
   for (int i=0; i<n; i+=3) {
@@ -1119,7 +1119,7 @@ distance_from_boundary(vector<float> &distances,
   int cnt = nbdry;
   cout << pnts.size() << "..." << flush;
   while (!workset.empty()) {
-    
+
     cout << pnts.size() - cnt << "..." << flush;
     cnt += workset.size();
 
@@ -1148,7 +1148,7 @@ distance_from_boundary(vector<float> &distances,
   cout << endl << "Restart" << endl;
 
   // second round: put all the nonboundary vertices into
-  // the workset, all the 
+  // the workset, all the
 
   workset.clear();
   for (i=0; i<n; i++) {
@@ -1158,7 +1158,7 @@ distance_from_boundary(vector<float> &distances,
   }
 
   while (!workset.empty()) {
-    
+
     cout << workset.size() << "..." << flush;
 
     nextset.clear();
@@ -1207,7 +1207,7 @@ distance_from_boundary(vector<float> &distances,
   int *n_nbors, **nbors;
   nbors_tris(n, tris, n_nbors, nbors, true);
 
-  // for each vertex, try to find a full loop 
+  // for each vertex, try to find a full loop
   // around it, if can't its boundary
   int va, vb; // vertex after, vertex before
   for (int i=0; i<n; i++) {
@@ -1241,7 +1241,7 @@ distance_from_boundary(vector<float> &distances,
 	// not a continuous neighbor chain
 	bdry[i] = 1;
       }
-    }      
+    }
   }
 
   cout << "done boundary" << endl;
@@ -1250,14 +1250,14 @@ distance_from_boundary(vector<float> &distances,
   distances.clear();
   distances.insert(distances.begin(), n, 1e33);
   int nbdry = 0;
-  for (i=0; i<n; i++) {
+  for (int i=0; i<n; i++) {
     if (bdry[i]) { distances[i] = 0.0; nbdry++; }
   }
 
   // find the neighbors of bdry vertices
-  hash_set<int,hash<int>,equal_to<int> > prevset, workset, nextset;
-  hash_set<int,hash<int>,equal_to<int> >::const_iterator hcit;
-  for (i=0; i<n; i++) {
+  unordered_set<int> prevset, workset, nextset;
+  unordered_set<int>::const_iterator hcit;
+  for (int i=0; i<n; i++) {
     if (bdry[i]) {
       for (int j=0; j<n_nbors[i]; j++) {
 	int k = AFTER(nbors[i][j]%3, nbors[i][j]);
@@ -1275,12 +1275,12 @@ distance_from_boundary(vector<float> &distances,
   int cnt = nbdry;
   cout << pnts.size() << "..." << flush;
   while (!workset.empty()) {
-    
+
     cout << pnts.size() - cnt << "..." << flush;
     cnt += workset.size();
 
     for (hcit = workset.begin(); hcit != workset.end(); hcit++) {
-      i = *hcit;
+      int i = *hcit;
       for (int j=0; j<n_nbors[i]; j++) {
 	int k = AFTER(nbors[i][j]%3, nbors[i][j]);
 	// calculate new distance
@@ -1304,23 +1304,23 @@ distance_from_boundary(vector<float> &distances,
   cout << endl << "Restart" << endl;
 
   // second round: put all the nonboundary vertices into
-  // the workset, all the 
+  // the workset, all the
 
   workset.clear();
-  for (i=0; i<n; i++) {
+  for (int i=0; i<n; i++) {
     if (!bdry[i]) {
       workset.insert(i);
     }
   }
 
   while (!workset.empty()) {
-    
+
     cout << workset.size() << "..." << flush;
 
     nextset.clear();
     // calculate distances
     for (hcit = workset.begin(); hcit != workset.end(); hcit++) {
-      i = *hcit;
+      int i = *hcit;
       for (int j=0; j<n_nbors[i]; j++) {
 	int k = AFTER(nbors[i][j]%3, nbors[i][j]);
 	float d = dist(pnts[i], pnts[k]) + distances[k];
@@ -1330,7 +1330,7 @@ distance_from_boundary(vector<float> &distances,
 
     // see if neighbors should be in set
     for (hcit = workset.begin(); hcit != workset.end(); hcit++) {
-      i = *hcit;
+      int i = *hcit;
       for (int j=0; j<n_nbors[i]; j++) {
 	int k = AFTER(nbors[i][j]%3, nbors[i][j]);
 	float d = dist(pnts[i], pnts[k]) + distances[i];
@@ -1380,14 +1380,14 @@ quadric_simplify(const vector<Pnt3> &vtx_in,
            << endl;
       return;
    }
-   for (i=0; i<vtx_in.size(); ++i) 
+   for (i=0; i<vtx_in.size(); ++i)
       fprintf(f, "v %f %f %f\n", vtx_in[i][0], vtx_in[i][1], vtx_in[i][2]);
-   for (i=0; i<tri_in.size(); i+=3) 
+   for (i=0; i<tri_in.size(); i+=3)
       fprintf(f, "f %d %d %d\n", tri_in[i]+1, tri_in[i+1]+1, tri_in[i+2]+1);
    fclose(f);
 
    // Get a filename for the temporary output file
-   
+
    if (!tmpnam(outName))  {
       cerr << "ERROR: Unable to get temporary filename for QSlim output"
            << endl;
@@ -1472,33 +1472,33 @@ struct TriLocal {
 };
 
 
-static PlyProperty vert_prop_x =  
+static PlyProperty vert_prop_x =
    {"x", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_y =  
+static PlyProperty vert_prop_y =
   {"y", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_z =  
+static PlyProperty vert_prop_z =
   {"z", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_nx =  
+static PlyProperty vert_prop_nx =
    {"nx", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_ny =  
+static PlyProperty vert_prop_ny =
   {"ny", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_nz =  
+static PlyProperty vert_prop_nz =
   {"nz", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_intens =  
+static PlyProperty vert_prop_intens =
   {"intensity", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
 static PlyProperty vert_prop_conf =
   {"confidence", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE,
    PLY_START_TYPE, 0};
 
 
-static PlyProperty vert_prop_diff_r =  
+static PlyProperty vert_prop_diff_r =
   {"diffuse_red", PLY_UCHAR, PLY_UCHAR, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_diff_g =  
+static PlyProperty vert_prop_diff_g =
   {"diffuse_green", PLY_UCHAR, PLY_UCHAR, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_diff_b =  
+static PlyProperty vert_prop_diff_b =
   {"diffuse_blue", PLY_UCHAR, PLY_UCHAR, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
 
-static PlyProperty face_props[] = { 
+static PlyProperty face_props[] = {
   {"vertex_indices", PLY_INT, PLY_INT, 0, true, PLY_UCHAR, PLY_UCHAR, 0},
 };
 
@@ -1582,7 +1582,7 @@ write_ply_file(const char *fname,
   if (hasIntensity) {
     vert_props.push_back(vert_prop_intens);
   }
-    
+
   if (hasConfidence) {
     vert_props.push_back(vert_prop_conf);
   }
@@ -1592,19 +1592,19 @@ write_ply_file(const char *fname,
     vert_props.push_back(vert_prop_diff_g);
     vert_props.push_back(vert_prop_diff_b);
   }
-    
+
   // count offset
   face_props[0].offset = offsetof(PlyFace, verts);
-  face_props[0].count_offset = offsetof(PlyFace, nverts);  
-    
-  ply.describe_element ("vertex", vtx.size(), 
+  face_props[0].count_offset = offsetof(PlyFace, nverts);
+
+  ply.describe_element ("vertex", vtx.size(),
 			vert_props.size(), &vert_props[0]);
   if (strips)
     ply.describe_element ("tristrips", 1, 1, tstrips_props);
   else
     ply.describe_element ("face", tris.size()/3, 1, face_props);
   ply.header_complete();
-    
+
     // set up and write the vertex elements
   PlyVertex plyVert;
 
@@ -1638,20 +1638,20 @@ write_ply_file(const char *fname,
   if (strips) {
     ply.put_element_setup ("tristrips");
 
-    tstrip_info ts_info = { tris.size(), tris.begin() };
+    tstrip_info ts_info = { tris.size(), tris.data() };
     ply.put_element (&ts_info);
 
   } else {
 
     ply.put_element_setup ("face");
-    
+
     PlyFace plyFace;
     for (i = 0; i < tris.size(); i+=3) {
       plyFace.nverts = 3;
       plyFace.verts[0] = tris[i+0];
       plyFace.verts[1] = tris[i+1];
       plyFace.verts[2] = tris[i+2];
-      
+
       ply.put_element_static_strg((void *) &plyFace);
     }
   }
@@ -1667,7 +1667,7 @@ write_ply_file(const char *fname,
 	       const vector<uchar> &intensity,
 	       const vector<float> &confidence)
 {
-  write_ply_file(fname, vtx, tris, strips, nrm, intensity, confidence, 
+  write_ply_file(fname, vtx, tris, strips, nrm, intensity, confidence,
 		 true, true, true);
 }
 
@@ -1679,7 +1679,7 @@ write_ply_file(const char *fname,
 	       const vector<uchar> &intensity)
 {
   vector<float> confidence;
-  write_ply_file(fname, vtx, tris, strips, nrm, intensity, confidence, 
+  write_ply_file(fname, vtx, tris, strips, nrm, intensity, confidence,
 		 true, true, false);
 }
 
@@ -1691,7 +1691,7 @@ write_ply_file(const char *fname,
 {
   vector<uchar> intensity;
   vector<float> confidence;
-  write_ply_file(fname, vtx, tris, strips, nrm, intensity, confidence, 
+  write_ply_file(fname, vtx, tris, strips, nrm, intensity, confidence,
 		 true, false, false);
 }
 
@@ -1751,7 +1751,7 @@ write_ply_file(const char *fname,
 	       const vector<float> &confidence)
 {
   vector<uchar> intensity;
-  write_ply_file(fname, vtx, tris, strips, nrm, intensity, confidence, 
+  write_ply_file(fname, vtx, tris, strips, nrm, intensity, confidence,
 		 true, false, true);
 }
 

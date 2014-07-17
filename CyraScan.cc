@@ -1,20 +1,20 @@
 //############################################################
-// 
+//
 // CyraScan.cc
 //
 // Lucas Pereira
 // Thu Jul 16 15:20:47 1998
 //
-// Store range scan information from a Cyra Cyrax Beta 
+// Store range scan information from a Cyra Cyrax Beta
 // time-of-flight laser range scanner.
 //
 //############################################################
 
 #include "CyraScan.h"
 #include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
-#include <stack.h>
+#include <iostream>
+#include <fstream>
+#include <stack>
 #include "defines.h"
 #include "TriMeshUtils.h"
 #include "KDindtree.h"
@@ -23,6 +23,8 @@
 #include "KDtritree.h"
 #include "Timer.h"
 #include "MeshTransport.h"
+
+using namespace std;
 
 
 //////////////////////////////////////////////////////////////////////
@@ -66,21 +68,21 @@ CyraScan::mesh(bool perVertex, bool stripped,
 }
 
 
-int 
+int
 CyraScan::num_vertices()
 {
   // Return num_vertices for current resolution
   return(num_vertices(current_resolution_index()));
 }
 
-int 
+int
 CyraScan::num_tris()
 {
   // Return num_tris for current resolution
   return(num_tris(current_resolution_index()));
 }
 
-int 
+int
 CyraScan::num_vertices(int resNum)
 {
   if (resNum < levels.size()) {
@@ -91,7 +93,7 @@ CyraScan::num_vertices(int resNum)
 }
 
 
-int 
+int
 CyraScan::num_tris(int resNum)
 {
   if (resNum < levels.size()) {
@@ -102,7 +104,7 @@ CyraScan::num_tris(int resNum)
 }
 
 
-void 
+void
 CyraScan::computeBBox(void)
 {
 
@@ -130,13 +132,13 @@ CyraScan::flipNormals(void)
 
 
 bool
-CyraScan::ReadPts(const crope &inname)
+CyraScan::ReadPts(const string &inname)
 {
   // read it into a new level
   CyraResLevel *level = new CyraResLevel();
   if (level->ReadPts(inname)) {
-    levels.push_back(*level); 
-  } else {	
+    levels.push_back(*level);
+  } else {
     return false;
   }
 
@@ -148,7 +150,7 @@ CyraScan::ReadPts(const crope &inname)
   for (int i = 1; i < 6; i++) {
     CyraResLevel *sublevel = new CyraResLevel();
     levels.push_back(*sublevel);
-    
+
     // Tell scanalyze about the mesh...
     int estimate = levels[0].num_tris() / (1 << (2*i));
     insert_resolution(estimate, inname, false, false);
@@ -166,7 +168,7 @@ CyraScan::ReadPts(const crope &inname)
 
 
 bool
-CyraScan::WritePts(const crope &inname)
+CyraScan::WritePts(const string &inname)
 {
   // write out the highest level to the .pts file
   return(levels[0].WritePts(inname));
@@ -178,11 +180,11 @@ CyraScan::load_resolution (int iRes)
 {
   if (resolutions[iRes].in_memory)
     return true;
-  
+
   int subSamp = 1;
   for (int i = 0; i < iRes; i++)
     subSamp *= SubSampleBase;
-  
+
   CyraResLevel *sublevel = new CyraResLevel();
   sublevel->Subsample(levels[0], subSamp, subSamp, cfMEAN50);
 
@@ -196,8 +198,8 @@ CyraScan::load_resolution (int iRes)
 }
 
 
-bool 
-CyraScan::read(const crope &inname)
+bool
+CyraScan::read(const string &inname)
 {
   set_name (inname);
   assert(has_ending(".pts"));
@@ -213,8 +215,8 @@ CyraScan::read(const crope &inname)
 }
 
 
-bool 
-CyraScan::write(const crope &fname)
+bool
+CyraScan::write(const string &fname)
 {
   cerr << "CyraScan::write was called.\n";
 
@@ -242,7 +244,7 @@ CyraScan::write(const crope &fname)
 bool
 CyraScan::filter_inplace(const VertexFilter& filter)
 {
-  // Filter each level 
+  // Filter each level
   for (int i=0; i < levels.size(); i++) {
     CyraResLevel *level = &levels[i];
     level->filter_inplace(filter);
@@ -256,7 +258,7 @@ CyraScan::filter_inplace(const VertexFilter& filter)
 }
 
 
-RigidScan* 
+RigidScan*
 CyraScan::filtered_copy(const VertexFilter& filter)
 {
   CyraScan *newScan = new CyraScan;
@@ -266,7 +268,7 @@ CyraScan::filtered_copy(const VertexFilter& filter)
   for (int i=0; i < levels.size(); i++) {
     CyraResLevel *newLevel = new CyraResLevel;
     assert(newLevel != NULL);
-    
+
     newLevel->filtered_copy(levels[i], filter);
     newScan->levels.push_back(*newLevel);
   }
@@ -275,16 +277,16 @@ CyraScan::filtered_copy(const VertexFilter& filter)
   newScan->computeBBox();
 
   // Set the name of newScan
-  crope clipName(get_basename());
+  string clipName(get_basename());
   char info[50];
   sprintf(info, "clip.%d.cyra", newScan->num_vertices());
   clipName += info;
 
   // Tell scanalyze about the meshes...
-  for (i=0; i < newScan->levels.size(); i++) {
+  for (int i=0; i < newScan->levels.size(); i++) {
     CyraResLevel *level = &newScan->levels[i];
     newScan->insert_resolution(level->num_tris(), clipName, true, true);
-    cerr << "Telling scanalyze about " << level->num_tris() 
+    cerr << "Telling scanalyze about " << level->num_tris()
 	 << " tris." << endl;
   }
 
@@ -292,15 +294,15 @@ CyraScan::filtered_copy(const VertexFilter& filter)
 }
 
 // for ICP...
-void 
+void
 CyraScan::subsample_points(float rate, vector<Pnt3> &p, vector<Pnt3> &n)
 {
   CyraResLevel& res = levels[curr_res];
   res.subsample_points(rate, p, n);
 }
 
-bool 
-CyraScan::closest_point(const Pnt3 &p, const Pnt3 &n, 
+bool
+CyraScan::closest_point(const Pnt3 &p, const Pnt3 &n,
 			Pnt3 &cp, Pnt3 &cn,
 			float thr, bool bdry_ok)
 {
@@ -326,8 +328,8 @@ CyraScan::closest_point_on_mesh (const Pnt3 &p, Pnt3 &cl_pnt,
     cout << "Obtaining geometry for KDtritree..." << flush;
     triKD_mesh = levels[0].mesh (true, false, RigidScan::colorNone, 0);
     cout << "building tree..." << flush;
-    triKD = create_KDtritree(triKD_mesh->vtx[0]->begin(),
-			     triKD_mesh->tri_inds[0]->begin(),
+    triKD = create_KDtritree(triKD_mesh->vtx[0]->data(),
+			     triKD_mesh->tri_inds[0]->data(),
 			     triKD_mesh->tri_inds[0]->size());
     cout << "done." << endl;
   }
@@ -341,8 +343,8 @@ CyraScan::closest_point_on_mesh (const Pnt3 &p, Pnt3 &cl_pnt,
     cl_pnt = prev_point;
   }
   d = sqrtf(d);
-  triKD->search(triKD_mesh->vtx[0]->begin(),
-		triKD_mesh->tri_inds[0]->begin(),
+  triKD->search(triKD_mesh->vtx[0]->data(),
+		triKD_mesh->tri_inds[0]->data(),
 		p, cl_pnt, d);
   prev_point = cl_pnt;
 
@@ -359,8 +361,8 @@ CyraScan::closest_point_on_mesh (const Pnt3 &p, Pnt3 &cl_pnt,
 // magi's hack implementation for vrip member functions follows...
 //////////////////////////////////////////////////////////////////////
 
-float 
-CyraScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp, 
+float
+CyraScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp,
 				      OccSt &status_p)
 {
   build_vrip_accelerators();
@@ -484,14 +486,14 @@ CyraScan::closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp,
 
 
 static const float g_intersectTolerance = 1.e-5;
-bool 
+bool
 OriginRaySphereIntersect (const Pnt3& rayD, const Pnt3& center,
 			  float sphereRad, float& t1, float& t2)
 {
   //from Heckbert, "Writing a Ray Tracer", in Glassner p. 280
   //int nroots;
   float b, disc;
-  
+
   b = dot (center, rayD);
   disc = b*b - dot(center,center) + sphereRad*sphereRad;
   if (disc < 0.) return false;                    // doesn't hit
@@ -606,7 +608,7 @@ CyraScan::carve_cube  (const Pnt3 &ctr, float side)
 	  float mag = pntmag[p];
 	  if (!mag) continue;
 	  Pnt3& dir = pntdir[p];
-      
+
 	  float t1, t2;
 	  if (OriginRaySphereIntersect (dir, ctr, side, t1, t2)) {
 #if HISTORY
@@ -641,12 +643,12 @@ CyraScan::carve_cube  (const Pnt3 &ctr, float side)
 #if HISTORY
   } else {
     cout << oldinds.size() << ": ";
-    for (int* it = oldinds.begin(); it != oldinds.end(); it++) {
+    for (vector<int>::iterator it = oldinds.begin(); it != oldinds.end(); it++) {
       float mag = pntmag[*it];
       if (!mag) continue;
 
       Pnt3& dir = pntdir[*it];
-      
+
       float t1, t2;
       if (OriginRaySphereIntersect (dir, ctr, side, t1, t2)) {
 	hist.top().pinds.push_back(*it);
@@ -675,7 +677,7 @@ CyraScan::carve_cube  (const Pnt3 &ctr, float side)
     cout << "IN" << endl;
     return INSIDE;
   } else if (bBefore) {
-    cout << "OUT" << endl; 
+    cout << "OUT" << endl;
    return OUTSIDE;
   }
 
@@ -685,7 +687,7 @@ CyraScan::carve_cube  (const Pnt3 &ctr, float side)
 
 /*
 // for debugging...
-void 
+void
 CyraScan::TriOctreeMesh(vector<Pnt3> &p, vector<int> &ind)
 {
   if (trioct == NULL) {

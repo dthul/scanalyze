@@ -2,16 +2,16 @@
 // GlobalReg.cc
 // Kari Pulli
 // Tue Jun 23 11:54:00 PDT 1998
-// 
+//
 // Global registration of several scans simultaneously
 //############################################################
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <stdlib.h>
-#include <multimap.h>
-#include <deque.h>
-#include <strstream.h>
+#include <map>
+#include <deque>
+#include <iterator>
 #include <sys/stat.h>
 #include "GlobalReg.h"
 #include "absorient.h"
@@ -27,7 +27,9 @@
 #include "CyberScan.h"
 #include "GroupScan.h"
 #include "TclCmdUtils.h"
-#include <math.h>
+#include <cmath>
+
+using namespace std;
 
 // TODO: make these sliders in globalreg window
 #define VB_SIZE (100.0)
@@ -46,14 +48,14 @@ inline short swap_short(short x)
   return ((x & 0xff) << 8) | ((unsigned short)x >> 8);
 }
 
-/* unsigned is essential, otherwise bitshift will 
+/* unsigned is essential, otherwise bitshift will
  * sign extend and mess up the conversion.
  */
 inline int swap_int(unsigned int x)
 {
   return (x << 24) |
-         ((x << 8) & 0x00ff0000) | 
-	 ((x >> 8) & 0x0000ff00) | 
+         ((x << 8) & 0x00ff0000) |
+	 ((x >> 8) & 0x0000ff00) |
 	 (x >> 24);
 }
 
@@ -61,8 +63,8 @@ inline float swap_float(float x)
 {
   unsigned int y = (*((unsigned int *)&x));
   y= (y << 24) |
-     ((y << 8) & 0x00ff0000) | 
-     ((y >> 8) & 0x0000ff00) | 
+     ((y << 8) & 0x00ff0000) |
+     ((y >> 8) & 0x0000ff00) |
       (y >> 24);
   return (*((float *)&y));
 }
@@ -81,7 +83,7 @@ inline float FixFloat(float x)
 {
   return (swap_float(x));
 }
- 
+
 // otherwise set up file loading routines for a big endian machine
 #else
 
@@ -148,10 +150,10 @@ inline void WriteSDRawPoints(vector<sd_raw_pnt> &rp, int n, ofstream &out)
 {
   for (int i=0; i<n; i++) {
     WriteInt(rp[i].config, out);
-    
-    WriteShort(rp[i].y, out); 
+
+    WriteShort(rp[i].y, out);
     WriteShort(rp[i].z, out);
-    
+
     WriteFloat(rp[i].nod, out);
     WriteFloat(rp[i].turn, out);
     WriteFloat(rp[i].tr_h, out);
@@ -162,7 +164,7 @@ inline void WritePnt3(vector<Pnt3> &pnt, int n, ofstream &out)
 {
   for (int i=0; i<n; i++) {
     Pnt3 p = pnt[i];
-    
+
     WriteFloat(*(float *)p, out);
     WriteFloat(*((float *)p + 1), out);
     WriteFloat(*((float *)p + 2), out);
@@ -208,7 +210,7 @@ inline void ReadPnt3(vector<Pnt3> &pnt, int n, ifstream &in)
 inline int
 scan_idx(const TbObj* a, const vector<TbObj*> &scan)
 {
-  for (int i=scan.size()-1; i>=0; i--) 
+  for (int i=scan.size()-1; i>=0; i--)
     if (scan[i] == a) return i;
   assert(0);
   return 0;
@@ -231,7 +233,7 @@ dist2(const vector<Pnt3> &P, const vector<Pnt3> &Q)
 
 
 static RigidScan*
-createProxyScanNamed (const crope& name)
+createProxyScanNamed (const string& name)
 {
   if (strcmp (Tcl_GetVar (g_tclInterp, "allowProxiesWithGR",
 			  TCL_GLOBAL_ONLY), "0") == 0) {
@@ -246,14 +248,14 @@ createProxyScanNamed (const crope& name)
     cerr << "Unable to locate scan for " << name << endl;
     return NULL;
   }
-  
+
   // create invisible scan with 0 bbox
   RigidScan* rs = CreateScanFromBbox (filename, Pnt3(), Pnt3());
   DisplayableMesh* dm = theScene->addMeshSet (rs);
 
   //cerr << "creating proxy named " << name << " as "
   //   << dm->getName() << endl;
-  
+
   Tcl_VarEval (g_tclInterp, "addMeshToWindow ",
 	       dm->getName(), " 0", NULL);
   Tcl_VarEval (g_tclInterp, "changeVis ", dm->getName(), " 0", NULL);
@@ -297,39 +299,39 @@ calcPairwiseRmsErr(const vector<Pnt3> &ptsa,
 }
 
 
-void 
+void
 GlobalReg::mapEntry::stats(void)
 {
   Xform<float> xf_a = xfa->getXform();
   Xform<float> xf_b = xfb->getXform();
-	
+
   int n = ptsa.size();
   Pnt3 first, second, nrm;
   maxErr = avgErr = rmsErr = 0.0;
-  
+
   Xform<float> actual_rel_xf = xf_b;
   actual_rel_xf.fast_invert();
   actual_rel_xf = actual_rel_xf * xf_a;
-  
+
   for (int j=0; j<n; j++) {
     // calculate the point wise distances
     first  = ptsa[j];
     second = ptsa[j];
     actual_rel_xf (first);
     rel_xf (second);
-    
+
     float d = dist2(first, second);
     if (d > maxErr) maxErr = d;
     rmsErr += d;
     avgErr += sqrtf(d);
   }
-  for (j=0; j<n; j++) {
+  for (int j=0; j<n; j++) {
     // calculate the point wise distances
     first  = ptsb[j];
     second = ptsb[j];
     actual_rel_xf.apply_inv(first,first);
     rel_xf.apply_inv(second,second);
-    
+
     float d = dist2(first, second);
     if (d > maxErr) maxErr = d;
     rmsErr += d;
@@ -342,7 +344,7 @@ GlobalReg::mapEntry::stats(void)
 }
 
 
-static bool 
+static bool
 write_points(ofstream &out, vector<Pnt3> &pts, TbObj *scan)
 {
   CyberScan* cs = dynamic_cast<CyberScan*> (scan);
@@ -355,7 +357,7 @@ write_points(ofstream &out, vector<Pnt3> &pts, TbObj *scan)
     // point count
     int n = pts.size();
     WriteInt(n, out);
-    
+
     // the points
     vector<sd_raw_pnt> cw(n);
     for (int i=0; i<n; i++) {
@@ -365,25 +367,25 @@ write_points(ofstream &out, vector<Pnt3> &pts, TbObj *scan)
 	return false;
       }
     }
-    
-    WriteSDRawPoints(cw, n, out);    
+
+    WriteSDRawPoints(cw, n, out);
   } else {
 
     // magic number (general point data 1)
-    out.write("gpd1", 4);  
+    out.write("gpd1", 4);
     // point count
     int n = pts.size();
     WriteInt(n, out);
-   
+
     // the points
-    WritePnt3(pts, n, out);   
+    WritePnt3(pts, n, out);
   }
 
   return !out.fail();
 }
 
 
-static bool 
+static bool
 read_points (ifstream &in,  vector<Pnt3> &pts)
 {
   // magic number (general point data 1)
@@ -396,7 +398,7 @@ read_points (ifstream &in,  vector<Pnt3> &pts)
     // CyberScan raw data
     int n;
     n = ReadInt(in);
-    
+
     pts.resize(n);
     unsigned int config;
     short yz[2];
@@ -411,9 +413,9 @@ read_points (ifstream &in,  vector<Pnt3> &pts)
       nt[0] = ReadFloat(in);
       nt[1] = ReadFloat(in);
       tr_h = ReadFloat(in);
-       
+
       int os = config&1; // other_screw
-      
+
       xf.setup(config, tr_h, nt[os]);
       xf.set_screw(nt[!os], nt[!os]);
       pts[i] = xf.apply_xform(yz[0],yz[1]);
@@ -435,11 +437,11 @@ read_points (ifstream &in,  vector<Pnt3> &pts)
     // good old regular 3d points
     // point count
     int n;
-    
+
     n = ReadInt(in);
-    
+
     pts.resize(n);
-    
+
     // the points
     ReadPnt3(pts, n, in);
   } else {
@@ -494,7 +496,7 @@ GlobalReg::mapEntry::export_to_file(const std::string &gr_dir)
     const char *tmp = name2;
     name2 = name1; name1 = tmp;
   }
-  
+
   std::string path = gr_dir;
   if (!manually_aligned) path += "/auto";
   path += std::string("/") + name1 + GR_MESHNAMES_SEP + name2 + ".gr";
@@ -511,12 +513,12 @@ GlobalReg::mapEntry::export_to_file(const std::string &gr_dir)
   } else {
     SHOW(path.c_str());
   }
-  
+
   // fill the file with useful stuff
 
   cout << "Writing correspondences between " << name1
        << " and " << name2 << " ... ";
-  
+
   out.write(GRVersionCurrent, 4); // magic number
 
   //SHOW(name1);
@@ -530,18 +532,18 @@ GlobalReg::mapEntry::export_to_file(const std::string &gr_dir)
     tmp_xf.fast_invert();
     for (int i=0; i<16; i++)
         WriteFloat(*((float*)tmp_xf + i), out);
-  } else {    
+  } else {
     write_points(out, ptsa, xfa);
     write_points(out, ptsb, xfb);
     for (int i=0; i<16; i++)
       WriteFloat(*((float*)rel_xf + i), out);
-  } 
+  }
 
   WriteFloat(pw_point_rmsErr, out);
   WriteFloat(pw_plane_rmsErr, out);
   WriteInt(quality_grade, out);
   out.write((char *)&manually_aligned, 1 /*sizeof(bool) */);
-  
+
   if (out.fail()) return;
   cout << "success." << endl;
 
@@ -554,7 +556,7 @@ GlobalReg::mapEntry::export_to_file(const std::string &gr_dir)
 
   // should also write:
   // rmserror to tangent plane
-  // sampling density? 
+  // sampling density?
   // or weight that would normalize based on area?
 }
 
@@ -575,7 +577,7 @@ GlobalReg::mapEntry::export_cyber_raw(const char *fname)
   } else {
     SHOW(fname);
   }
-  
+
   int cPnt = ptsa.size();
   out.write ((char*)&cPnt, sizeof(cPnt));
   //bool vert;
@@ -591,7 +593,7 @@ GlobalReg::mapEntry::export_cyber_raw(const char *fname)
     out.write((char*) &cw.y,   2*sizeof(short));
     out.write((char*) &cw.nod, 2*sizeof(float));
   }
-  for (i=0; i<cPnt; i++) {
+  for (int i=0; i<cPnt; i++) {
     if (csb->get_raw_data(ptsb[i], cw) == false) {
       cerr << "Problem in GlobalReg::mapEntry::export_cyber_raw()"
 	   << endl;
@@ -603,7 +605,7 @@ GlobalReg::mapEntry::export_cyber_raw(const char *fname)
     out.write((char*) &cw.nod, 2*sizeof(float));
   }
   out.write ((char*)(float*)rel_xf, 16 * sizeof(float));
-  
+
   if (g_verbose) {
     if (out.fail()) cout << "failure." << endl;
     else            cout << "success." << endl;
@@ -612,7 +614,7 @@ GlobalReg::mapEntry::export_cyber_raw(const char *fname)
 
 // if partner == NULL, this fn will return the points from ALL
 // the scans P is partnered with
-void 
+void
 GlobalReg::get_pts(TbObj *x, vector<Pnt3> &P, vector<Pnt3> &Q,
 		   TbObj* partner)
 {
@@ -657,7 +659,7 @@ GlobalReg::get_pts(TbObj *x, vector<Pnt3> &P, vector<Pnt3> &Q,
 
 
 // used for global registration, and only Horn's version
-void 
+void
 GlobalReg::get_pts_within_group(TbObj *x,
 				vector<Pnt3> &P, vector<Pnt3> &Q,
 				vector<TbObj*> &group)
@@ -678,7 +680,7 @@ GlobalReg::get_pts_within_group(TbObj *x,
       pp = &data->ptsb;//  qq = &data->ptsa;
       dataxf.fast_invert();
     }
-    
+
     if (CONTAINS(group, dataq)) {
       // copy the points (in local coordinates)
       int ind = P.size();
@@ -700,7 +702,7 @@ GlobalReg::get_pts_within_group(TbObj *x,
     }
 
   } END_FOR_KEYS;
-      
+
 }
 
 
@@ -716,7 +718,7 @@ GlobalReg::evaluate(const vector<TbObj*> &group)
 	     CONTAINS(group, data->xfb));
 
       if (data->xfb == group[i]) continue;
-      
+
       data->stats();
     } END_FOR_KEYS;
   }
@@ -729,7 +731,7 @@ GlobalReg::evaluate(TbObj *one)
   // calculate the mean distance between every point pair
   int   cnt   = 0;
   float sumSq = 0.0;
-  
+
   FOR_MATCHING_KEYS(one, data) {
      data->stats();
      int n     = data->ptsa.size();
@@ -746,7 +748,7 @@ GlobalReg::evaluate(TbObj *one)
 }
 
 
-static crope
+static string
 nameFromTbObj (TbObj* tbo)
 {
   if (tbo) {
@@ -756,13 +758,13 @@ nameFromTbObj (TbObj* tbo)
       if (dm) return dm->getName();
       else    return rs->get_name();
     }
-    return crope("(unknown)");
+    return string("(unknown)");
   }
-  return crope("(NULL)");
+  return string("(NULL)");
 }
 
 
-void 
+void
 GlobalReg::dump(void)
 {
   cout << endl;
@@ -773,14 +775,14 @@ GlobalReg::dump(void)
     SHOW(data->xfb);
     vector<Pnt3> &ptsa = data->ptsa;
     cout << "-" << endl;
-    copy(ptsa.begin(), ptsa.end(), 
+    copy(ptsa.begin(), ptsa.end(),
 	 ostream_iterator<Pnt3>(cout, "\n"));
     vector<Pnt3> &ptsb = data->ptsb;
     cout << "-" << endl;
-    copy(ptsb.begin(), ptsb.end(), 
+    copy(ptsb.begin(), ptsb.end(),
 	 ostream_iterator<Pnt3>(cout, "\n"));
     cout << "-" << endl;
-    copy(all_scans.begin(), all_scans.end(), 
+    copy(all_scans.begin(), all_scans.end(),
 	 ostream_iterator<TbObj*>(cout, "\n"));
   } END_FOR_MAP
   cout << endl;
@@ -831,7 +833,7 @@ GlobalReg::move_back(const vector<TbObj*> &group,
 
   // apply it
   for (i=0; i<group.size(); i++) {
-    group[i]->setXform((xfp * 
+    group[i]->setXform((xfp *
 			group[i]->getXform()).enforce_rigidity());
   }
   cout << "done." << endl;
@@ -869,7 +871,7 @@ GlobalReg::align_one_to_others (TbObj* one, TbObj* two)
     sum = evaluate(one);
     cout << "The average point-to-point distance is "
 	 << sum << endl;
-    
+
     if (BailDetector::bail()) {
       cerr << "global alignment cancelled." << endl;
       break;
@@ -884,8 +886,8 @@ GlobalReg::align_one_to_others (TbObj* one, TbObj* two)
     if (active.end() != find(active.begin(),active.end(),nbor)){
 #define END_FOR_NBORS }}}}
 
-/* // get emacs identation working after above macro definition... 
-{ 
+/* // get emacs identation working after above macro definition...
+{
 */
 
 // part covered by psuedo-code in the paper
@@ -909,13 +911,13 @@ GlobalReg::align_group(const vector<TbObj*> &group)
   // of links, choose the one with the most links as the seed
   //
   // push the seed to a queue and to the active set
-  // 
+  //
   // process the queue until empty
   //     take the scan at the front
   //     align it with the scans in the active set
   //     if it improves more than the threshold
   //         push all the neighbors in the active set to queue
-  // 
+  //
   // add to the queue and the active set the scan with the
   // most links to scans in the active set
 
@@ -990,7 +992,7 @@ GlobalReg::align_group(const vector<TbObj*> &group)
     active.push_back(seed);
     assert(que.empty());
     que.push_back(seed);
-    
+
     cout << "\n";
     SHOW(active.size());
     SHOW(dormant.size());
@@ -1009,7 +1011,7 @@ GlobalReg::align_group(const vector<TbObj*> &group)
       } END_FOR_NBORS;
 
       SHOW(nbors.size());
-      
+
       // here we already need to have determined the needed pts
       get_pts_within_group(seed, P, Q, nbors);
       assert(P.size());
@@ -1022,8 +1024,8 @@ GlobalReg::align_group(const vector<TbObj*> &group)
       //double q[7];
       //horn_align (&P[0], &Q[0], P.size(), q);
       //xf.fromQuaternion (q, q[4], q[5], q[6]);
-      
-      // ... so when we get to here we can compute a less 
+
+      // ... so when we get to here we can compute a less
       // biased xform
       Xform<float> xf = compute_xform(P, Q);
 
@@ -1035,10 +1037,10 @@ GlobalReg::align_group(const vector<TbObj*> &group)
 
       float diff = start_dist - end_dist;
 
-      if (diff > 0.0) 
+      if (diff > 0.0)
 	seed->setXform(xf * seed->getXform(), false);
 
-      if (diff > ftol * end_dist && 
+      if (diff > ftol * end_dist &&
 	  diff > 1.0e-6) {
 	if (cnt++ < 200) {
 	  for (it = nbors.begin(); it != nbors.end(); it++) {
@@ -1077,7 +1079,7 @@ GlobalReg::align_group(const vector<TbObj*> &group)
 
 
 bool
-GlobalReg::getPairError(TbObj *a, TbObj *b, 
+GlobalReg::getPairError(TbObj *a, TbObj *b,
                         float &pointError,
                         float &planeError,
                         float &globalError,
@@ -1132,7 +1134,7 @@ GlobalReg::import(const std::string &fname, bool manual)
       // the mesh is not in memory; need to proxy
       tbobj[is] = createProxyScanNamed (name[is].c_str());
       if (!tbobj[is]) {
-	//cerr << "  ignoring correspondence " 
+	//cerr << "  ignoring correspondence "
 	//     << fname.c_str() << endl;
 	return NULL;
       }
@@ -1145,8 +1147,8 @@ GlobalReg::import(const std::string &fname, bool manual)
       // this mapentry exists!
       if (manual && data->manually_aligned == false) {
 	// the previous entry was an autoICP entry, delete
-	cerr << "Warning: there seem to be several entries " 
-	     << endl << "involving meshes " << name[0].c_str() 
+	cerr << "Warning: there seem to be several entries "
+	     << endl << "involving meshes " << name[0].c_str()
 	     << " and " << name[1].c_str() << endl;
 	cerr << "Deleting autoICP *.gr entry" << endl;
 	unlink_gr_files(data->xfa, data->xfb, true);
@@ -1156,7 +1158,7 @@ GlobalReg::import(const std::string &fname, bool manual)
 	// don't read this entry
 	return NULL;
       }
-    }      
+    }
   } END_FOR_KEYS;
 
 #ifdef WIN32
@@ -1169,14 +1171,14 @@ GlobalReg::import(const std::string &fname, bool manual)
 	 << " for reading" << endl;
     return NULL;
   }
-  
+
   vector<Pnt3> ap, bp;
   float rel_xf[16];
   float pw_point_rmsErr, pw_plane_rmsErr;
   char version[4];
   in.read(version, 4);
   int cPnt;
-  
+
   int iVersion = GetGRVersion (version);
   switch (iVersion) {
   case 1:
@@ -1194,13 +1196,13 @@ GlobalReg::import(const std::string &fname, bool manual)
     in.read((char*)&cPnt, sizeof(int));
     ap.resize(cPnt); bp.resize(cPnt);
     in.read((char*)&ap[0], cPnt*sizeof(Pnt3));
-    in.read((char*)&bp[0], cPnt*sizeof(Pnt3)); 
+    in.read((char*)&bp[0], cPnt*sizeof(Pnt3));
     */
 
     break;
 
   case 2:
-    
+
     cPnt = ReadInt(in);
     ap.resize(cPnt); bp.resize(cPnt);
     ReadPnt3(ap, cPnt, in);
@@ -1224,14 +1226,14 @@ GlobalReg::import(const std::string &fname, bool manual)
 
   case 0:
   default:
-    cerr << fname.c_str() 
+    cerr << fname.c_str()
 	 << " does not have the correct signature" << endl;
     cerr << "It may have been created with an out-of-date "
 	 << "version of scanalyze" << endl;
     return NULL;
   }
 
-  for (int i=0; i<16; i++) 
+  for (int i=0; i<16; i++)
     (*((float *)rel_xf + i)) = ReadFloat(in);
   pw_point_rmsErr = ReadFloat(in);
   pw_plane_rmsErr = ReadFloat(in);
@@ -1241,10 +1243,10 @@ GlobalReg::import(const std::string &fname, bool manual)
     // version 4 fields: quality, manually_aligned
     // yeah, manual is passed in to this function, but that seems a
     // broken idea to me, so let this override it
-    
+
     quality = ReadInt(in);
     in.read((char*)&manual, 1 /*sizeof(bool)*/);
-    
+
   }
 
   // create and insert mapEntry
@@ -1270,7 +1272,7 @@ unlink_gr_file(std::string path,
   path += GR_MESHNAMES_SEP;
   path += n2;
   path += ".gr";
-  unlink_if_exists(path.c_str());  
+  unlink_if_exists(path.c_str());
 }
 
 
@@ -1293,7 +1295,7 @@ GlobalReg::unlink_gr_files(TbObj *a, TbObj *b, bool only_auto)
 GlobalReg::GlobalReg(void)
   : initial_import_done(false)
 {
-  
+
   //
   // set up gr_dir and gr_auto_dir
   //
@@ -1319,7 +1321,7 @@ GlobalReg::GlobalReg(void)
     cerr << "Reverting to current dir (" << gr_dir.c_str()
 	 << ") for globalregs" << endl;
   }
-  
+
   SHOW(gr_dir.c_str());
 
   cyber_raw_name = getenv("SC_RAW_DUMP");
@@ -1346,7 +1348,7 @@ GlobalReg::initial_import(void)
     gr_auto_dir.append("/auto");
 
     if (!check_file_access(gr_auto_dir.c_str(), 1,1,1,1,1)) {
-      cerr << "Creating autoreg directory " 
+      cerr << "Creating autoreg directory "
 	   << gr_auto_dir.c_str() << endl;
       portable_mkdir (gr_auto_dir.c_str(), 00775);
     }
@@ -1397,7 +1399,7 @@ GlobalReg::perform_import(void)
 
 
 GlobalReg::mapEntry*
-GlobalReg::addPair(TbObj *a, TbObj *b, 
+GlobalReg::addPair(TbObj *a, TbObj *b,
 		   const vector<Pnt3> &ap, const vector<Pnt3> &nrma,
 		   const vector<Pnt3> &bp, const vector<Pnt3> &nrmb,
 		   Xform<float> rel_xf,
@@ -1424,7 +1426,7 @@ GlobalReg::addPair(TbObj *a, TbObj *b,
   dirty_scans.insert(a);
   dirty_scans.insert(b);
 
-  // Compute errors, results stored 
+  // Compute errors, results stored
   me->stats();
 
   if (save) me->export_to_file(gr_dir);
@@ -1435,7 +1437,7 @@ GlobalReg::addPair(TbObj *a, TbObj *b,
 
 
 GlobalReg::mapEntry*
-GlobalReg::addPair(TbObj *a, TbObj *b, 
+GlobalReg::addPair(TbObj *a, TbObj *b,
 		   const vector<Pnt3> &ap,
 		   const vector<Pnt3> &bp,
 		   float pw_point_rmsErr,
@@ -1463,7 +1465,7 @@ GlobalReg::addPair(TbObj *a, TbObj *b,
   dirty_scans.insert(a);
   dirty_scans.insert(b);
 
-  // Compute errors, results stored 
+  // Compute errors, results stored
   me->stats();
 
   if (save) me->export_to_file(gr_dir);
@@ -1531,13 +1533,13 @@ GlobalReg::deleteAllPairs (TbObj *a, bool deleteFile)
   do {
     again = false;
 
-    // deletion invalidates existing iterators, so don't go 
+    // deletion invalidates existing iterators, so don't go
     // through the
     // FOR_MATCHING_KEYS loop more than once; exit it and restart.
     FOR_MATCHING_KEYS (a, data) {
       // erase once
       hmm.erase (__i);
-      
+
       // possible delete the *.gr file
       if (deleteFile) unlink_gr_files(data->xfa, data->xfb);
 
@@ -1555,7 +1557,7 @@ GlobalReg::deleteAllPairs (TbObj *a, bool deleteFile)
 	}
       } END_FOR_KEYS;
       assert (foundit);
-      
+
       // delete once
       delete data;
 
@@ -1580,7 +1582,7 @@ GlobalReg::deleteAutoPairs (float thr, TbObj *a)
   do {
     again = false;
 
-    // deletion invalidates existing iterators, so don't go 
+    // deletion invalidates existing iterators, so don't go
     // through the
     // FOR_MAP_ENTRIES loop more than once; exit it and restart.
     FOR_MAP_ENTRIES (key, data) {
@@ -1592,7 +1594,7 @@ GlobalReg::deleteAutoPairs (float thr, TbObj *a)
 
 	cnt++;
 	deletePair(data->xfa, data->xfb, true);
-	
+
 	// then reset the iterator
 	again = true;
 	break;
@@ -1600,17 +1602,17 @@ GlobalReg::deleteAutoPairs (float thr, TbObj *a)
     } END_FOR_MAP;
   } while (again);
 
-  cerr << "Nuked " << cnt 
+  cerr << "Nuked " << cnt
        << " auto pairs greater than " << thr << endl;
 }
 
 
-void 
+void
 GlobalReg::showPointpairCount(TbObj *a, TbObj *b)
 {
   assert(a);
   if (b == NULL) {
-    cout << endl << "From " 
+    cout << endl << "From "
 	 << nameFromTbObj(a) << " to" << endl;
     cout << "count\trmsErr\tglobalErr\tscan" << endl;
   }
@@ -1701,10 +1703,10 @@ GlobalReg::pairRegistered (TbObj* a, TbObj* b,
 }
 
 
-crope
+string
 GlobalReg::list_partners (TbObj* mesh, bool transitiveAllowed)
 {
-  crope response;
+  string response;
 
   if (!transitiveAllowed) {
     FOR_MATCHING_KEYS (mesh, data) {
@@ -1712,7 +1714,7 @@ GlobalReg::list_partners (TbObj* mesh, bool transitiveAllowed)
       if (other == mesh)
 	other = data->xfb;
       if (!response.empty())
-	response += crope (" ");
+	response += string (" ");
       response += nameFromTbObj(other);
     } END_FOR_KEYS;
 
@@ -1734,18 +1736,18 @@ GlobalReg::list_partners (TbObj* mesh, bool transitiveAllowed)
 	cc.connect(scan_idx(data->xfa, scan),
 		   scan_idx(data->xfb, scan));
       } END_FOR_MAP;
-      
+
       // find connected component containing a
       vector<int> g;
       while (cc.get_next_group(g)) {
 	// is a here?  if not, go to next group
 	if (CONTAINS(g, ind))
 	  continue;
-	
+
 	// this is a's group... dump it
 	for (int i = 0; i < g.size(); i++) {
 	  if (!response.empty())
-	    response += crope (" ");
+	    response += string (" ");
 	  response += nameFromTbObj(scan[g[i]]);
 	}
 	break;
@@ -1777,7 +1779,7 @@ GlobalReg::dump_connected_groups (void)
   for (ITS is = all_scans.begin(); is!=all_scans.end(); is++) {
     scan.push_back(*is);
   }
-  
+
   // find the connected components
   ConnComp cc(scan.size());
   FOR_MAP_ENTRIES(key, data) {
@@ -1792,8 +1794,8 @@ GlobalReg::dump_connected_groups (void)
   while (cc.get_next_group(g)) {
     if (g.size()) {
       cout << "group (" << g.size() << "): ";
-      for (int* p = g.begin(); p != g.end(); p++)
-	cout << nameFromTbObj (scan[*p]) << " ";
+      for (int p: g)
+	cout << nameFromTbObj (scan[p]) << " ";
       cout << endl;
       ++nGroups;
     }
@@ -1854,7 +1856,7 @@ GlobalReg::align(float _ftol,
 
 // TODO: use worldBbox instead of re-computing
 void
-GlobalReg::align(float _ftol, Bbox worldBbox, 
+GlobalReg::align(float _ftol, Bbox worldBbox,
 		 TbObj* scanToMove, TbObj* scanToMoveTo)
 {
   ftol   = _ftol;
@@ -1930,7 +1932,7 @@ void GlobalReg::normalize_samples(Bbox worldBbox, TbObj *scanToMoveTo)
   // find matching keys to the current scan we're considering
   // for each point in ptsa (don't check ptsb because corresponds),
   // - find which bucket it belongs to
-  // - check that bucket.  
+  // - check that bucket.
   // - if too full, delete points from a and b
   // - otherwise, throw the new points in the bucket
 
@@ -1963,7 +1965,7 @@ void GlobalReg::normalize_samples(Bbox worldBbox, TbObj *scanToMoveTo)
 	}
 	//if (should_delete_point(data->ptsa[j], vb, bucketInd)) {
 	if (vb[bucketInd].points.size() > THRESHOLD) {
-	  
+
 	  data->ptsa.erase(ip);
 	  data->ptsb.erase(ip2);
 	  cerr << "...throwing out" << endl;
@@ -1975,7 +1977,7 @@ void GlobalReg::normalize_samples(Bbox worldBbox, TbObj *scanToMoveTo)
 	  //vb[bucketInd].points.push_back(data->ptsb[j]);
 	  cerr << "...keeping" << endl;
 	}
-	
+
 	ip++; ip2++;
       } // for j
     } END_FOR_KEYS;
@@ -1988,7 +1990,7 @@ void GlobalReg::normalize_samples(Bbox worldBbox, TbObj *scanToMoveTo)
 
 // linear time vector delete
 // int k = 0;
-// 	  for (vector<Pnt3>::iterator ip = data->ptsa.begin(); 
+// 	  for (vector<Pnt3>::iterator ip = data->ptsa.begin();
 // 	       ip != data->ptsa.end(); ip++) {
 // 	    cerr << "looping a..., k = " << k << ", j = "
 // 		 << j << endl;
@@ -1998,7 +2000,7 @@ void GlobalReg::normalize_samples(Bbox worldBbox, TbObj *scanToMoveTo)
 // 	    k++;
 // 	  }
 // 	  k = 0;
-// 	  for (vector<Pnt3>::iterator ip2 = data->ptsb.begin(); 
+// 	  for (vector<Pnt3>::iterator ip2 = data->ptsb.begin();
 // 	       ip2 != data->ptsb.end(); ip2++) {
 // 	    cerr << "looping b..., k = " << k << ", j = "
 // 		 << j << endl;
@@ -2008,7 +2010,7 @@ void GlobalReg::normalize_samples(Bbox worldBbox, TbObj *scanToMoveTo)
 // 	    k++;
 // 	  }
 
-bool GlobalReg::should_delete_point(Pnt3 pt, VolumeBucket *vb, 
+bool GlobalReg::should_delete_point(Pnt3 pt, VolumeBucket *vb,
 				    int bucketInd)
 {
   if (vb[bucketInd].points.size() > THRESHOLD) return (true);
@@ -2018,13 +2020,13 @@ bool GlobalReg::should_delete_point(Pnt3 pt, VolumeBucket *vb,
   // very slow...
 
   return (false);
-} 
+}
 
 // figure out how large the space is
 // divide to make some number of buckets
 // store all the min and max vars for those buckets
-int GlobalReg::init_vol_buckets(VolumeBucket **vb, 
-				Bbox worldBbox, 
+int GlobalReg::init_vol_buckets(VolumeBucket **vb,
+				Bbox worldBbox,
 				TbObj *scanToMoveTo, float bucket_side)
 {
   Pnt3 min;
@@ -2045,7 +2047,7 @@ int GlobalReg::init_vol_buckets(VolumeBucket **vb,
   Pnt3 xincr(bucket_side, 0, 0);
   Pnt3 yincr(0, bucket_side, 0);
   Pnt3 zincr(0, 0, bucket_side);
-  
+
   int numBuckets = ceil(dim[0]) * ceil(dim[1]) * ceil(dim[2]);
   cerr << "Initializing " << numBuckets << " buckets...";
   *vb = new VolumeBucket[numBuckets];
@@ -2057,7 +2059,7 @@ int GlobalReg::init_vol_buckets(VolumeBucket **vb,
   for (int i = 0; i < ceil(dim[0]); i++) {
 
     for (int j = 0; j < ceil(dim[1]); j++) {
-      
+
       for (int k = 0; k < ceil(dim[2]); k++) {
 
 	max = min + vol_size;
@@ -2076,9 +2078,9 @@ int GlobalReg::init_vol_buckets(VolumeBucket **vb,
   return (numBuckets);
 }
 
-// TODO: optimize so runs in constant time 
+// TODO: optimize so runs in constant time
 // (currently linear time)
-int GlobalReg::find_bucket(Pnt3 pt, VolumeBucket *vb, 
+int GlobalReg::find_bucket(Pnt3 pt, VolumeBucket *vb,
 			   float bucket_side, int numBuckets)
 {
   for (int i = 0; i < numBuckets; i++) {
@@ -2095,16 +2097,16 @@ std::string
 GlobalReg::dump_meshpairs (int   choice,
 			   float listThresh)
 {
-  vector<crope> names;
+  vector<string> names;
   vector<TbObj*> objs;
 
-  for (DisplayableMesh** dm = theScene->meshSets.begin();
+  for (vector<DisplayableMesh*>::iterator dm = theScene->meshSets.begin();
        dm < theScene->meshSets.end(); dm++) {
     if ((*dm)->getVisible()) {
       names.push_back ((*dm)->getName());
       objs.push_back ((*dm)->getMeshData());
     } else {
-      cout << "Excluding invisible mesh " 
+      cout << "Excluding invisible mesh "
 	   << (*dm)->getName() << endl;
     }
   }
@@ -2131,7 +2133,7 @@ GlobalReg::dump_meshpairs (int   choice,
     for (j = 0; j < names.size(); j++) {
       char code[3];
       sprintf(code," -");
-      bool paired = getPairError (objs[i], objs[j], 
+      bool paired = getPairError (objs[i], objs[j],
 				  pointError,
 				  planeError,
 				  globalError,
@@ -2170,7 +2172,7 @@ GlobalReg::dump_meshpairs (int   choice,
   for (i = 0; i < names.size(); i++) {
     printf ("%28s:", names[i].c_str());
     for (j = 0; j < names.size(); j++) {
-      bool paired = getPairError (objs[i], objs[j], 
+      bool paired = getPairError (objs[i], objs[j],
 				  pointError,
 				  planeError,
 				  globalError,
@@ -2195,8 +2197,8 @@ GlobalReg::dump_meshpairs (int   choice,
 	   unsigned int tricky_code = (*it).second;
 	   unsigned int i = tricky_code / 65000;
 	   unsigned int j = tricky_code % 65000;
-	   
-	   bool paired = getPairError (objs[i], objs[j], 
+
+	   bool paired = getPairError (objs[i], objs[j],
 				       pointError,
 				       planeError,
 				       globalError,
@@ -2205,7 +2207,7 @@ GlobalReg::dump_meshpairs (int   choice,
 	   ans += names[j].c_str();
 	   if (manual) {
 	     printf("%s to %s: %g \t(manual %f)\n",
-		    names[i].c_str(), names[j].c_str(), 
+		    names[i].c_str(), names[j].c_str(),
 		    err, planeError);
 	     ans += " manual ";
 	   } else {
@@ -2253,7 +2255,7 @@ update_getPairingSummary_fields (GlobalReg::mapEntry* data,
   err[0] = min (err[0], errSrc);
   err[1] += errSrc;
   err[2] = max (err[2], errSrc);
-  
+
   ++qual[data->getQuality()];
 }
 
@@ -2271,7 +2273,7 @@ GlobalReg::getPairingSummary (TbObj* mesh, ERRMETRIC metric,
     FOR_MATCHING_KEYS(mesh, data) {
       update_getPairingSummary_fields (data, metric, count, err, qual);
     } END_FOR_KEYS;
-    
+
   } else {
 
     FOR_MAP_ENTRIES (mesh, data) {
@@ -2287,9 +2289,9 @@ GlobalReg::getPairingSummary (TbObj* mesh, ERRMETRIC metric,
 
   if (!mesh) { // don't double-count
     for (int i = 0; i < 3; i++) count[i] /= 2;
-    for (i = 0; i < 4; i++) qual[i] /= 2;
+    for (int i = 0; i < 4; i++) qual[i] /= 2;
   }
-  
+
   return true;
 }
 
@@ -2341,8 +2343,8 @@ main(void)
     xf[i].rotX((rnd()-.5)*M_PI*fact);
     xf[i].rotY((rnd()-.5)*M_PI*fact);
     xf[i].rotZ((rnd()-.5)*M_PI*fact);
-    xf[i].translate((rnd()-.5)*fact, 
-		     (rnd()-.5)*fact, 
+    xf[i].translate((rnd()-.5)*fact,
+		     (rnd()-.5)*fact,
 		     (rnd()-.5)*fact);
   }
 
@@ -2375,20 +2377,20 @@ main(void)
 	Q[k] += Pnt3(rnd()*.001-.0005,
 		     rnd()*.001-.0005,
  		     rnd()*.001-.0005);
-	
+
       }
       gr.addPair(&xf[i], &xf[views[j]], P, Q);
-    }    
+    }
   }
 
   float ftol = 1.e-3;
 
-  copy(xf.begin(), xf.end(), 
+  copy(xf.begin(), xf.end(),
        ostream_iterator<Xform<float> >(cout, "\n"));
 
   gr.align(ftol, alignHorn);
 
-  copy(xf.begin(), xf.end(), 
+  copy(xf.begin(), xf.end(),
        ostream_iterator<Xform<float> >(cout, "\n"));
 }
 #endif // MAIN_GR

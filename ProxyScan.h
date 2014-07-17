@@ -13,7 +13,7 @@ class ProxyScan: public RigidScan
 {
  public:
   // ProxyScan manipulation
-  ProxyScan (const crope& proxyForFileName,
+  ProxyScan (const string& proxyForFileName,
 	     const Pnt3& min, const Pnt3& max);
   ~ProxyScan();
 
@@ -26,7 +26,7 @@ class ProxyScan: public RigidScan
 			      ColorSource  color = colorNone,
 			      int          colorSize = 3);
 
-  virtual crope getInfo(void);
+  virtual string getInfo(void);
   virtual unsigned long byteSize() { return sizeof(ProxyScan); }
 };
 

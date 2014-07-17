@@ -1,4 +1,4 @@
-#include <iostream.h>
+#include <iostream>
 #include <ctype.h>
 #include "plvGlobals.h"
 #include "RigidScan.h"
@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "plvScene.h"
+#include "defines.h"
 
 
 //
@@ -84,7 +85,7 @@ Scene::addMeshSet(RigidScan* scan, bool bRecenterCameraOK, char* nameToUse)
 void
 Scene::addMeshInternal (DisplayableMesh* dm)
 {
-  DisplayableMesh** pos = lower_bound (meshSets.begin(), meshSets.end(),
+  auto pos = lower_bound (meshSets.begin(), meshSets.end(),
 				       dm, dmNameSort());
   meshSets.insert (pos, dm);
   AddMeshSetToHash (dm);
@@ -95,10 +96,10 @@ Scene::addMeshInternal (DisplayableMesh* dm)
 
 
 
-DisplayableMesh**
+vector<DisplayableMesh*>::iterator
 Scene::findSceneMesh (DisplayableMesh* mesh)
 {
-  for (DisplayableMesh** dm = meshSets.begin();
+  for (vector<DisplayableMesh*>::iterator dm = meshSets.begin();
        dm < meshSets.end();
        dm++) {
     if (*dm == mesh) {
@@ -106,7 +107,7 @@ Scene::findSceneMesh (DisplayableMesh* mesh)
     }
   }
 
-  return NULL;
+  return meshSets.end();
 }
 
 void
@@ -114,12 +115,12 @@ Scene::deleteMeshSet (DisplayableMesh* deadMesh)
 {
   MeshSetHashDelete((char*)deadMesh->getName());
   cerr << "Deleting mesh " << deadMesh->getName() << endl;
-  DisplayableMesh** dm = findSceneMesh (deadMesh);
-  assert (dm != NULL);
- 
-  DisplayableMesh **mydm = find (g_hilitedScans.begin(), g_hilitedScans.end(), *dm);
+  vector<DisplayableMesh*>::iterator dm = findSceneMesh (deadMesh);
+  assert (dm != meshSets.end());
+
+  vector<DisplayableMesh*>::iterator mydm = find (g_hilitedScans.begin(), g_hilitedScans.end(), *dm);
   if (mydm != g_hilitedScans.end()) g_hilitedScans.erase(mydm);
-  
+
   RigidScan* rs = (*dm)->getMeshData();
   // remove the pointers from the globalreg data structure
   globalReg->deleteAllPairs(rs);
@@ -141,7 +142,7 @@ Scene::renameMeshSet (DisplayableMesh* mesh, const char* nameToUse)
 
 
 void
-Scene::freeMeshes() 
+Scene::freeMeshes()
 {
   while (meshSets.size()) {
     RigidScan* rs = meshSets.back()->getMeshData();  // save...
@@ -174,7 +175,7 @@ Scene::computeBBox (bboxSyncMode synchronous)
     // nothing to do, this just forces existing callbacks to happen now
     return;
   }
-  
+
   // if not explicitly forced to happen now, wait and see if
   // we can batch together multiple calls
   if (synchronous == async) {
@@ -191,12 +192,12 @@ Scene::computeBBox (bboxSyncMode synchronous)
 
     DisplayableMesh *meshDisp = meshSets[k];
 
-    // Don't include meshes that are not being drawn or have 
+    // Don't include meshes that are not being drawn or have
     // no vertices (bounding sphere has radius zero)
 
     if (!meshDisp->getVisible()) continue;
 
-    // Update scene bounding box with mesh set bounding box that 
+    // Update scene bounding box with mesh set bounding box that
     // fits around mesh set bounding sphere - conservative
 
     bbox.add(meshDisp->getMeshData()->worldBbox());
@@ -229,7 +230,7 @@ Scene::centerCamera (void)
 }
 
 
-void 
+void
 Scene::flipNormals()
 {
   for (int k = 0; k < meshSets.size(); k++) {
@@ -247,8 +248,8 @@ Scene::setMeshResolution (int res)
 
   int newOverride = resDefault;
 
-  bool bInvisibleToo = 
-    atoi (Tcl_GetVar (interp, 
+  bool bInvisibleToo =
+    atoi (Tcl_GetVar (interp,
 		      "selectResIncludesInvisible",  TCL_GLOBAL_ONLY));
 
   switch (res) {
@@ -259,7 +260,7 @@ Scene::setMeshResolution (int res)
 
   default:
     {
-      DisplayableMesh** dmi;
+      vector<DisplayableMesh*>::iterator dmi;
       Progress progress (meshSets.size(), "Change resolution", true);
 
       for (dmi = meshSets.begin(); dmi != meshSets.end(); dmi++) {
@@ -268,15 +269,15 @@ Scene::setMeshResolution (int res)
 	  case resLow:
 	    (*dmi)->getMeshData()->select_coarsest();
 	    break;
-	    
+
 	  case resHigh:
 	    (*dmi)->getMeshData()->select_finest();
 	    break;
-	    
+
 	  case resNextLow:
 	    (*dmi)->getMeshData()->select_coarser();
 	    break;
-	    
+
 	  case resNextHigh:
 	    (*dmi)->getMeshData()->select_finer();
 	    break;
@@ -365,7 +366,7 @@ Scene::flattenCameraXform (void)
   tbView->getXform (q, t);
   Xform<float> viewer;
   viewer.fromQuaternion (q, t[0], t[1], t[2]);
-  
+
   for (int i = 0; i < meshSets.size(); i++) {
     RigidScan* scan = meshSets[i]->getMeshData();
 
@@ -406,7 +407,7 @@ Scene::setSlowPolyCount (int count)
 static Tcl_HashTable meshSetHash;
 static int mesh_set_hash_initted = 0;
 
-int 
+int
 MeshSetHashDelete(char *name)
 {
   if(!mesh_set_hash_initted)
@@ -418,7 +419,7 @@ MeshSetHashDelete(char *name)
 }
 
 
-int 
+int
 AddMeshSetToHash(DisplayableMesh* mesh)
 {
   if(!mesh_set_hash_initted) {
@@ -426,7 +427,7 @@ AddMeshSetToHash(DisplayableMesh* mesh)
     mesh_set_hash_initted = 1;
   }
   int isnew;
-  Tcl_HashEntry *ent = Tcl_CreateHashEntry(&meshSetHash, 
+  Tcl_HashEntry *ent = Tcl_CreateHashEntry(&meshSetHash,
 					   mesh->getName(), &isnew);
   if(!isnew)
     return(mesh == (DisplayableMesh *)Tcl_GetHashValue(ent) ? 0 : 1);
@@ -454,7 +455,7 @@ FindMeshDisplayInfo(const char *name)
 DisplayableMesh *
 FindMeshDisplayInfo(RigidScan* scan)
 {
-  for (DisplayableMesh** pdm = theScene->meshSets.begin();
+  for (vector<DisplayableMesh*>::iterator pdm = theScene->meshSets.begin();
        pdm < theScene->meshSets.end();
        pdm++) {
     if ((*pdm)->getMeshData() == scan)
@@ -465,20 +466,20 @@ FindMeshDisplayInfo(RigidScan* scan)
 }
 
 // FindMeshDisplayInfo(RigidScan* scan) only searches the meshSets
-// vector which only returns top level ("root") matches - if we need a 
-// match with leaves as well, then we need to look at the hashtable 
+// vector which only returns top level ("root") matches - if we need a
+// match with leaves as well, then we need to look at the hashtable
 // instead because it contains all the meshes in the scene, including
 // non-roots.
 
 DisplayableMesh *
-GetMeshForRigidScan (RigidScan *scan) 
+GetMeshForRigidScan (RigidScan *scan)
 {
   DisplayableMesh *dm;
   Tcl_HashSearch searchPtr;
   Tcl_HashEntry *entry = Tcl_FirstHashEntry(&meshSetHash, &searchPtr);
 
   while (entry) {
-    dm = (DisplayableMesh *)Tcl_GetHashValue(entry); 
+    dm = (DisplayableMesh *)Tcl_GetHashValue(entry);
     assert (dm);
     if (dm->getMeshData() == scan) {
       cerr << "Returning " << dm->getName() << endl;
@@ -486,7 +487,7 @@ GetMeshForRigidScan (RigidScan *scan)
     }
     entry = Tcl_NextHashEntry(&searchPtr);
   }
-  return NULL; 
+  return NULL;
 }
 
 
@@ -666,7 +667,7 @@ Scene::writeSessionFile (char* sessionName)
   if (file.fail())
     return false;
 
-  for (DisplayableMesh** pdm = meshSets.begin();
+  for (vector<DisplayableMesh*>::iterator pdm = meshSets.begin();
        pdm < meshSets.end(); pdm++) {
     RigidScan* scan = (*pdm)->getMeshData();
     Bbox bbox = scan->localBbox();
@@ -687,7 +688,7 @@ Scene::setScanLoadedStatus (DisplayableMesh* dm, bool load)
   RigidScan* scan = NULL;
   RigidScan* oldScan = dm->getMeshData();
 
-  const crope& name = oldScan->get_name();
+  const string& name = oldScan->get_name();
   if (load) {
     scan = CreateScanFromFile (name);
   } else {
@@ -769,7 +770,7 @@ sceneMeshSort::operator() (DisplayableMesh* d1, DisplayableMesh* d2)
 	if (s1.st_mtime == s2.st_mtime)
 #endif
 	  break;
-	
+
 	//cerr << d1->getName() << " and " << d2->getName()
 	//     << ": decided by date" << endl;
 #ifdef sgi
@@ -800,7 +801,7 @@ sceneMeshSort::operator() (DisplayableMesh* d1, DisplayableMesh* d2)
 	ri.clear();
 	d2->getMeshData()->existing_resolutions (ri);
 	int count2 = ri[0].abs_resolution;
-	
+
 	if (count1 == count2)
 	  break;
 

@@ -4,8 +4,8 @@
 // 10/25/95
 //############################################################
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
@@ -13,7 +13,7 @@
 #include <strings.h>
 #include <math.h>
 #include "Image.h"
-#ifndef linux
+#ifndef __linux
 #include <ifl/iflFile.h>
 #endif
 
@@ -24,7 +24,7 @@
 
 
 void
-bwtorgba(unsigned char *b,unsigned char *l,int n) 
+bwtorgba(unsigned char *b,unsigned char *l,int n)
 {
   while(n--) {
     l[0] = *b;
@@ -36,7 +36,7 @@ bwtorgba(unsigned char *b,unsigned char *l,int n)
 }
 
 void
-bwtorgb(unsigned char *b,unsigned char *l,int n) 
+bwtorgb(unsigned char *b,unsigned char *l,int n)
 {
   while(n--) {
     l[0] = *b;
@@ -48,7 +48,7 @@ bwtorgb(unsigned char *b,unsigned char *l,int n)
 
 void
 rgbtorgba(unsigned char *r,unsigned char *g,unsigned char *b,
-	  unsigned char *l,int n) 
+	  unsigned char *l,int n)
 {
   while(n--) {
     l[0] = r[0];
@@ -61,7 +61,7 @@ rgbtorgba(unsigned char *r,unsigned char *g,unsigned char *b,
 
 void
 rgbatorgba(unsigned char *r,unsigned char *g,unsigned char *b,
-	   unsigned char *a,unsigned char *l,int n) 
+	   unsigned char *a,unsigned char *l,int n)
 {
   while(n--) {
     l[0] = r[0];
@@ -74,7 +74,7 @@ rgbatorgba(unsigned char *r,unsigned char *g,unsigned char *b,
 
 void
 rgbtorgb(unsigned char *r,unsigned char *g,unsigned char *b,
-	 unsigned char *l,int n) 
+	 unsigned char *l,int n)
 {
   while(n--) {
     l[0] = r[0];
@@ -101,11 +101,11 @@ typedef struct _ImageRec {
 } ImageRec;
 
 static void
-ConvertShort(unsigned short *array, long length) 
+ConvertShort(unsigned short *array, long length)
 {
   unsigned long b1, b2;
   unsigned char *ptr;
-  
+
   ptr = (unsigned char *)array;
   while (length--) {
     b1 = *ptr++;
@@ -115,11 +115,11 @@ ConvertShort(unsigned short *array, long length)
 }
 
 static void
-ConvertLong(unsigned *array, long length) 
+ConvertLong(unsigned *array, long length)
 {
   unsigned long b1, b2, b3, b4;
   unsigned char *ptr;
-  
+
   ptr = (unsigned char *)array;
   while (length--) {
     b1 = *ptr++;
@@ -140,14 +140,14 @@ ImageOpen(const char *fileName)
   ImageRec *image;
   int swapFlag;
   int x;
-  
+
   endianTest.testWord = 1;
   if (endianTest.testByte[0] == 1) {
     swapFlag = 1;
   } else {
     swapFlag = 0;
   }
-  
+
   image = (ImageRec *)malloc(sizeof(ImageRec));
   if (image == NULL) {
     fprintf(stderr, "Image: Out of memory!\n");
@@ -157,23 +157,23 @@ ImageOpen(const char *fileName)
     perror(fileName);
     exit(1);
   }
-  
+
   fread(image, 1, 12, image->file);
-  
+
   if (swapFlag) {
     ConvertShort(&image->imagic, 6);
   }
-  
+
   image->tmp  = (unsigned char *)malloc(image->xsize*256);
   image->tmpR = (unsigned char *)malloc(image->xsize*256);
   image->tmpG = (unsigned char *)malloc(image->xsize*256);
   image->tmpB = (unsigned char *)malloc(image->xsize*256);
-  if (image->tmp  == NULL || image->tmpR == NULL || 
+  if (image->tmp  == NULL || image->tmpR == NULL ||
       image->tmpG == NULL || image->tmpB == NULL) {
     fprintf(stderr, "Image: Out of memory!\n");
     exit(1);
   }
-  
+
   if ((image->type & 0xFF00) == 0x0100) {
     x = image->ysize * image->zsize * sizeof(unsigned);
     image->rowStart = (unsigned *)malloc(x);
@@ -195,7 +195,7 @@ ImageOpen(const char *fileName)
 }
 
 static void
-ImageClose(ImageRec *image) 
+ImageClose(ImageRec *image)
 {
   fclose(image->file);
   free(image->tmp);
@@ -206,16 +206,16 @@ ImageClose(ImageRec *image)
 }
 
 static void
-ImageGetRow(ImageRec *image, unsigned char *buf, int y, int z) 
+ImageGetRow(ImageRec *image, unsigned char *buf, int y, int z)
 {
   unsigned char *iPtr, *oPtr, pixel;
   int count;
-  
+
   if ((image->type & 0xFF00) == 0x0100) {
     fseek(image->file, image->rowStart[y+z*image->ysize], SEEK_SET);
     fread(image->tmp, 1, (unsigned int)
 	  image->rowSize[y+z*image->ysize], image->file);
-    
+
     iPtr = image->tmp;
     oPtr = buf;
     while (1) {
@@ -243,15 +243,15 @@ ImageGetRow(ImageRec *image, unsigned char *buf, int y, int z)
 }
 
 unsigned *
-read_texture(char *name, int *width, int *height, int *components) 
+read_texture(char *name, int *width, int *height, int *components)
 {
   unsigned *base, *lptr;
   unsigned char *rbuf, *gbuf, *bbuf, *abuf;
   ImageRec *image;
   int y;
-  
+
   image = ImageOpen(name);
-  
+
   if(!image)
     return NULL;
   (*width)=image->xsize;
@@ -271,7 +271,7 @@ read_texture(char *name, int *width, int *height, int *components)
       ImageGetRow(image,gbuf,y,1);
       ImageGetRow(image,bbuf,y,2);
       ImageGetRow(image,abuf,y,3);
-      rgbatorgba(rbuf,gbuf,bbuf,abuf,(unsigned char *)lptr, 
+      rgbatorgba(rbuf,gbuf,bbuf,abuf,(unsigned char *)lptr,
 	       image->xsize);
       lptr += image->xsize;
     } else if(image->zsize==3) {
@@ -291,20 +291,20 @@ read_texture(char *name, int *width, int *height, int *components)
   free(gbuf);
   free(bbuf);
   free(abuf);
-  
+
   return (unsigned *) base;
 }
 
 unsigned *
-read_textureRGB(char *name, int *width, int *height) 
+read_textureRGB(char *name, int *width, int *height)
 {
   unsigned *base, *lptr;
   unsigned char *rbuf, *gbuf, *bbuf, *abuf;
   ImageRec *image;
   int y;
-  
+
   image = ImageOpen(name);
-  
+
   if(!image)
     return NULL;
   (*width)=image->xsize;
@@ -342,7 +342,7 @@ read_textureRGB(char *name, int *width, int *height)
   free(gbuf);
   free(bbuf);
   free(abuf);
-  
+
   return (unsigned *) base;
 }
 
@@ -353,7 +353,7 @@ read_textureRGB(char *name, int *width, int *height)
 
 
 
-void 
+void
 Image::create(const int w, const int h, const int d)
 {
   if (w*h*d > xsize*ysize*dim) {
@@ -368,7 +368,7 @@ Image::create(const int w, const int h, const int d)
     xsize = w;  dim = d;
   }
   ysize = h;
-}  
+}
 
 Image::Image()
 : xsize(0), ysize(0), data(NULL), _data(NULL), dim(0)
@@ -420,7 +420,7 @@ ostream &operator <<(ostream &out, Image &im)
 }
 
 /*
-void 
+void
 Image::rgb2bw()
 {
   unsigned char tmp;
@@ -463,12 +463,12 @@ Image::toRGBA(void)
       *ptr_new++ = tmp;
       *ptr_new++ = tmp;
       *ptr_new++ = *ptr_old++;
-    }     
+    }
   }
   delete[] _data;
   _data = new_data;
   dim = 4;
-  for (i=0; i<ysize; i++) data[i] = &_data[xsize*dim*i];
+  for (int i=0; i<ysize; i++) data[i] = &_data[xsize*dim*i];
 }
 
 
@@ -499,15 +499,15 @@ Image::toRGB(void)
       *ptr_new++ = tmp;
       *ptr_new++ = tmp;
       ptr_old++;
-    }     
+    }
   }
   delete[] _data;
   _data = new_data;
   dim = 3;
-  for (i=0; i<ysize; i++) data[i] = &_data[xsize*dim*i];
+  for (int i=0; i<ysize; i++) data[i] = &_data[xsize*dim*i];
 }
 
-void 
+void
 Image::RGB2HSV(void)
 {
   assert(dim == 3);
@@ -542,7 +542,7 @@ Image::RGB2HSV(void)
   }
 }
 
-void 
+void
 Image::HSV2RGB(void)
 {
   assert(dim == 3);
@@ -599,7 +599,7 @@ Image::HSV2RGB(void)
   }
 }
 
-void 
+void
 Image::RGB2rgI(void)
 {
   assert(dim == 3);
@@ -624,7 +624,7 @@ Image::RGB2rgI(void)
   }
 }
 
-void 
+void
 Image::rgI2RGB(void)
 {
   assert(dim == 3);
@@ -650,7 +650,7 @@ Image::resize(int w, int h)
   // copy the data
   int maxy = (h > ysize ? ysize : h);
   int maxx = (w > xsize ? xsize : w);
-  for (i=0; i<maxy; i++) 
+  for (int i=0; i<maxy; i++)
     //bcopy(&_data[i*xsize*dim], &n_data[i*w*dim], maxx*dim);
     memcpy(&n_data[i*w*dim], &_data[i*xsize*dim], maxx*dim);
   // delete old space
@@ -670,18 +670,18 @@ Image::flip(void)
 {
   int row = dim*xsize;
   uchar *buf = new uchar[row];
- 
+
   for (int i=0; i<ysize/2; i++) {
     memcpy(buf, data[i], row);
     memcpy(data[i], data[ysize-i-1], row);
-    memcpy(data[ysize-i-1], buf, row);    
+    memcpy(data[ysize-i-1], buf, row);
   }
- 
+
   delete[] buf;
 }
 
 // assume input is a single channel image with values 0 and 255
-// calculate distances from 0 by looking at neighbors and 
+// calculate distances from 0 by looking at neighbors and
 // replacing the value with the min(nbors) + 1
 // do i iterations
 // use 8-nborhood
@@ -691,11 +691,11 @@ Image::distances(int iter)
 {
   for (int i=0; i<iter; i++) {
     int vi = i%2;
-    for (int v=vi?0:ysize-1; 
+    for (int v=vi?0:ysize-1;
 	 vi?(v<ysize):(v>=0);
 	 vi?v++:v--) {
       int ui = (i%4)>>1;
-      for (int u=ui?0:xsize-1; 
+      for (int u=ui?0:xsize-1;
 	   ui?(u<xsize):(u>=0);
 	   ui?u++:u--) {
 	if (getR(u,v) == 0) continue;
@@ -753,14 +753,14 @@ Image::dist4fast(void)
   }
 }
 
-int 
+int
 Image::read(const char *fname, Format format, int w, int h)
 {
   int i;
   if (w==0) {
     w=xsize; h=ysize;
   }
-  
+
   switch (format) {
   case WSU:
     {
@@ -775,7 +775,7 @@ Image::read(const char *fname, Format format, int w, int h)
     }
     break;
   case SGI:
-#ifndef linux
+#ifndef __linux
     {
       iflStatus sts;
       iflFile* file = iflFile::open(fname, O_RDONLY, &sts);
@@ -800,11 +800,11 @@ Image::read(const char *fname, Format format, int w, int h)
       // close the file
       file->close();
 
-      /*      
+      /*
       ImageRec *image = ImageOpen(fname);
-      
+
       if (!image) return 0;
-      
+
       create(image->xsize, image->ysize, image->zsize);
 
       uchar *rbuf = new uchar[xsize];
@@ -874,7 +874,7 @@ Image::read(const char *fname, Format format, int w, int h)
   return 1;
 }
 
-int 
+int
 Image::write(const char *fname, Format format)
 {
   switch (format) {
@@ -891,7 +891,7 @@ Image::write(const char *fname, Format format)
     }
     break;
   case SGI:
-#ifndef linux
+#ifndef __linux
     {
       cout << "Saving rgb" << endl;
       // create a one-channel, unsigned char image file
@@ -1049,7 +1049,7 @@ Image::warp(float m[3][3]) const
   Mi[2][0] = m[1][0]*m[2][1] - m[1][1]*m[2][0];
   Mi[2][1] = m[0][1]*m[2][0] - m[0][0]*m[2][1];
   Mi[2][2] = m[0][0]*m[1][1] - m[0][1]*m[1][0];
-  
+
   Image im(xsize, ysize, dim);
   int tmp[4], cnt;
   float x,y;
@@ -1070,19 +1070,19 @@ Image::warp(float m[3][3]) const
 	    continue;
 	  cnt++;
 	  val = at(x,y);
-	  for (int d=0; d<dim; d++) 
+	  for (int d=0; d<dim; d++)
 	    tmp[d] += int(val[d]);
 	}
       }
       val = im.getValues(u,v);
-      for (int d=0; d<dim; d++) 
+      for (int d=0; d<dim; d++)
 	val[d] = (cnt ? tmp[d] / float(cnt) : 0);
     }
   }
   return im;
 }
 
-Image 
+Image
 Image::crop(int x, int y, int dx, int dy)
 {
   Image im(dx,dy,dim);

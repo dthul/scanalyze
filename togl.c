@@ -149,6 +149,7 @@
 #endif
 #include <tcl.h>
 #include <tk.h>
+#include <tk-private/generic/tkInt.h>
 #if defined(X11)
 #if TK_MAJOR_VERSION==4 && TK_MINOR_VERSION==0
 #  include "tkInt4.0.h"
@@ -174,7 +175,7 @@
 #elif TK_MAJOR_VERSION==8 && TK_MINOR_VERSION==3 && TK_RELEASE_SERIAL==3
 #  include "tkInt8.3.2.h"
 #else
-#error   Sorry, you will have to edit togl.c to include the right tkInt.h file
+//#error   Sorry, you will have to edit togl.c to include the right tkInt.h file
 #endif
 #elif defined(WIN32)
 #if TK_MAJOR_VERSION<8
@@ -974,8 +975,8 @@ static void RenderOverlay( ClientData clientData )
 #if defined(__sgi) && defined(STEREO)
       stereoMakeCurrent( Tk_Display(togl->TkWin),
                          togl->OverlayWindow,
-                         togl->OverlayCtx );	
-#endif /*__sgi STEREO */	
+                         togl->OverlayCtx );
+#endif /*__sgi STEREO */
 #endif /* WIN32 */
       togl->OverlayDisplayProc(togl);
    }
@@ -1012,7 +1013,7 @@ int Togl_Configure(Tcl_Interp *interp, struct Togl *togl,
                           argc, argv, (char *)togl, flags) == TCL_ERROR) {
       return(TCL_ERROR);
    }
-	
+
    Tk_GeometryRequest(togl->TkWin, togl->Width, togl->Height);
 
    if (togl->RgbaFlag != oldRgbaFlag
@@ -1178,7 +1179,7 @@ static int Togl_Cmd(ClientData clientData, Tcl_Interp *interp,
 #elif defined(X11)
    togl->GlCtx = NULL;
    togl->OverlayCtx = NULL;
-#endif /* WIN32 */ 
+#endif /* WIN32 */
    togl->display = Tk_Display( tkwin );
    togl->TkWin = tkwin;
    togl->Interp = interp;
@@ -1220,11 +1221,11 @@ static int Togl_Cmd(ClientData clientData, Tcl_Interp *interp,
    togl->Ident = NULL;
    togl->Client_Data = DefaultClientData;
 
-   /* for EPS Output */ 
+   /* for EPS Output */
    togl->EpsRedMap = togl->EpsGreenMap = togl->EpsBlueMap = NULL;
    togl->EpsMapSize = 0;
 
-   /* Create command event handler */ 
+   /* Create command event handler */
    togl->widgetCmd = Tcl_CreateCommand(interp, Tk_PathName(tkwin),
 				       Togl_Widget, (ClientData)togl,
 				       (Tcl_CmdDeleteProc*) ToglCmdDeletedProc);
@@ -1243,35 +1244,35 @@ static int Togl_Cmd(ClientData clientData, Tcl_Interp *interp,
     * If OpenGL window wasn't already created by Togl_Configure() we
     * create it now.  We can tell by checking if the GLX context has
     * been initialized.
-    */ 
+    */
 #if defined(WIN32)
    if (!togl->tglGLHdc) {
 #elif defined(X11)
    if (!togl->GlCtx) {
-#endif /* WIN32 */ 
+#endif /* WIN32 */
       if (Togl_MakeWindowExist(togl) == TCL_ERROR) {
          goto error;
       }
    }
 
-   /* If defined, call create callback */ 
+   /* If defined, call create callback */
    if (togl->CreateProc) {
       togl->CreateProc(togl);
    }
 
-   /* If defined, call reshape proc */ 
+   /* If defined, call reshape proc */
    if (togl->ReshapeProc) {
       togl->ReshapeProc(togl);
    }
 
-   /* If defined, setup timer */ 
+   /* If defined, setup timer */
    if (togl->TimerProc){
       Tk_CreateTimerHandler( togl->Time, Togl_Timer, (ClientData)togl );
    }
 
    Tcl_AppendResult(interp, Tk_PathName(tkwin), NULL);
 
-   /* Add to linked list */ 
+   /* Add to linked list */
    AddToList(togl);
 
    return TCL_OK;
@@ -1393,11 +1394,11 @@ static LRESULT CALLBACK Win32WinProc( HWND hwnd, UINT message,
     TkWinColormap *cmap;
     HPALETTE OldPal;
     UINT i;
-		
+
 	switch( message ){
     case WM_WINDOWPOSCHANGED:
         /* Should be processed by DefWindowProc, otherwise a double buffered
-        context is not properly resized when the corresponding window is resized.*/ 
+        context is not properly resized when the corresponding window is resized.*/
         break;
     case WM_DESTROY:
         if (togl->tglGLHglrc) {
@@ -1407,7 +1408,7 @@ static LRESULT CALLBACK Win32WinProc( HWND hwnd, UINT message,
             ReleaseDC(hwnd, togl->tglGLHdc);
         }
         break;
-    default: 
+    default:
 	return TkWinChildProc(hwnd, message, wParam, lParam);
     }
 
@@ -1415,7 +1416,7 @@ static LRESULT CALLBACK Win32WinProc( HWND hwnd, UINT message,
     Tcl_ServiceAll();
     return result;
 }
-#pragma optimize("g", on)	
+#pragma optimize("g", on)
 #endif /* WIN32 */
 
 
@@ -1611,7 +1612,7 @@ static int Togl_MakeWindowExist(struct Togl *togl)
    if (ToglClassInitialized == 0) {
 	   ToglClassInitialized = 1;
        ToglClass.style = CS_HREDRAW | CS_VREDRAW;
-       ToglClass.cbClsExtra = 0;										
+       ToglClass.cbClsExtra = 0;
        ToglClass.cbWndExtra = 4;   /* to save struct Togl* */
        ToglClass.hInstance = hInstance;
        ToglClass.hbrBackground = NULL;
@@ -1628,7 +1629,7 @@ static int Togl_MakeWindowExist(struct Togl *togl)
    hwnd = CreateWindow(TOGL_CLASS_NAME, NULL, WS_CHILD | WS_CLIPCHILDREN
                        | WS_CLIPSIBLINGS, 0, 0, togl->Width, togl->Height,
                        parentWin, NULL, hInstance, NULL);
-   
+
    SetWindowLong(hwnd, 0, (LONG) togl);
    SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
   	            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
@@ -1912,7 +1913,7 @@ static int Togl_MakeWindowExist(struct Togl *togl)
  *      The widget is destroyed.
  *
  *----------------------------------------------------------------------
- */ 
+ */
 static void ToglCmdDeletedProc( ClientData clientData )
 {
    struct Togl *togl = (struct Togl *)clientData;
@@ -2066,7 +2067,7 @@ static void Togl_EventProc(ClientData clientData, XEvent *eventPtr)
 #else
 	    Tk_DeleteTimerHandler(togl->timerHandler);
 #endif
-	    
+
 	 }
 	 if (togl->UpdatePending) {
 #if (TCL_MAJOR_VERSION * 100 + TCL_MINOR_VERSION) >= 705
@@ -2667,7 +2668,7 @@ void Togl_PostOverlayRedisplay( struct Togl *togl )
        && togl->OverlayWindow && togl->OverlayDisplayProc) {
       Tk_DoWhenIdle( RenderOverlay, (ClientData) togl );
       togl->OverlayUpdatePending = 1;
-   } 
+   }
 }
 
 
@@ -3164,7 +3165,7 @@ Togl_StereoDrawBuffer(GLenum mode)
       stereo.currentStereoBuffer = STEREO_BUFFER_LEFT;
       break;
     case GL_RIGHT:
-    case GL_FRONT_RIGHT: 
+    case GL_FRONT_RIGHT:
       stereo.currentStereoBuffer = STEREO_BUFFER_RIGHT;
       mode = GL_FRONT;
       break;
@@ -3225,7 +3226,7 @@ Togl_StereoClear(GLbitfield mask)
 static void
 stereoMakeCurrent(Display *dpy, Window win, GLXContext ctx)
 {
-  
+
   if (stereo.useSGIStereo) {
     if (dpy && (dpy != stereo.currentDisplay)) {
       int event, error;
@@ -3271,7 +3272,7 @@ Togl_StereoFrustum(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top,
                GLfloat near, GLfloat far, GLfloat eyeDist, GLfloat eyeOffset)
 {
   GLfloat eyeShift = (eyeDist - near) * (eyeOffset / eyeDist);
-  
+
   glFrustum(left+eyeShift, right+eyeShift, bottom, top, near, far);
   glTranslatef(-eyeShift, 0.0, 0.0);
 }

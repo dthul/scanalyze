@@ -14,8 +14,8 @@
 #include "CyberXform.h"
 #include "CyberCalib.h"
 #include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #ifdef WIN32
 #	include "defines.h"
 #endif

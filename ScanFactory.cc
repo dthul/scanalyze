@@ -17,7 +17,7 @@
 RigidScan*
 CreateScanFromGeometry (const vector<Pnt3>& vtx,
 			const vector<int>& tris,
-			const crope& name)
+			const string& name)
 {
   Mesh* mesh = new Mesh (vtx, tris);
   GenericScan* gs = new GenericScan (mesh, name);
@@ -25,8 +25,8 @@ CreateScanFromGeometry (const vector<Pnt3>& vtx,
 }
 
 
-static bool 
-has_ending(const crope& filename, const crope& ending)
+static bool
+has_ending(const string& filename, const string& ending)
 {
   int lenf = filename.size();
   int lene = ending.size();
@@ -38,7 +38,7 @@ has_ending(const crope& filename, const crope& ending)
 
 
 RigidScan*
-CreateScanFromFile (const crope& filename)
+CreateScanFromFile (const string& filename)
 {
   RigidScan *scan = NULL;
   if      (has_ending(filename, ".ply"))
@@ -86,7 +86,7 @@ CreateScanGroup (const vector<DisplayableMesh*>& members, const char *nameToUse,
 {
   RigidScan* scan = new GroupScan (members, bDirty);
   scan->set_name (strdup(nameToUse));
-  
+
   return scan;
 }
 
@@ -98,7 +98,7 @@ BreakScanGroup (RigidScan* scan)
   GroupScan* group = dynamic_cast<GroupScan*> (scan);
   if (group) {
     if (group->get_children_for_display (members)) {
-      for (DisplayableMesh** mem = members.begin();
+      for (vector<DisplayableMesh*>::iterator mem = members.begin();
 	   mem < members.end(); mem++) {
 	group->RemoveScan (*mem);
       }
@@ -112,7 +112,7 @@ BreakScanGroup (RigidScan* scan)
 
 
 RigidScan*
-CreateScanFromBbox (const crope& name, const Pnt3& min, const Pnt3& max)
+CreateScanFromBbox (const string& name, const Pnt3& min, const Pnt3& max)
 {
   return new ProxyScan (name, min, max);
 }

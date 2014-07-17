@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // FileNameUtils.h
 //
 // Kari Pulli
@@ -11,7 +11,7 @@
 #ifndef _FILENAMEUTILS_H_
 #define _FILENAMEUTILS_H_
 
-#include <iostream.h>
+#include <iostream>
 #include <string.h>
 #ifndef WIN32
 #	include <unistd.h>
@@ -31,8 +31,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+using namespace std;
+
 inline bool
-get_filename_new_ending(const char* inName, const char* ext, 
+get_filename_new_ending(const char* inName, const char* ext,
 			char* outName)
 {
   if (inName == NULL || inName[0] == 0)
@@ -57,7 +59,7 @@ filename_has_ending(const char* filename, const char *ending)
   if (lenf <= lene)
     return false;
 
-  return (0 == strcmp (filename+lenf-lene, ending)); 
+  return (0 == strcmp (filename+lenf-lene, ending));
 }
 
 
@@ -85,7 +87,7 @@ check_file_access(const char *fname,
   if (readable  ) amode |= R_OK;
   if (writable  ) amode |= W_OK;
   if (executable) amode |= X_OK;
-  
+
   if (access(fname, amode)) {
     cerr << "You don't have the requested access mode "
 	 << "for " << fname << endl;

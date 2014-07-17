@@ -2,7 +2,7 @@
 #define _PLV_CLIP_BOX_CMDS_
 
 #include <tk.h>
-#include <vector.h>
+#include <vector>
 #include "VertexFilter.h"
 
 

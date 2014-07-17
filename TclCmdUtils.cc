@@ -1,6 +1,10 @@
+#include <cstring>
+#include <cstdlib>
+
 #include "plvGlobals.h"
 #include "TclCmdUtils.h"
 
+using namespace std;
 
 static bool
 boolFromString (char* str)

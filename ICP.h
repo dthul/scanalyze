@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // ICP.h
 //
 // Kari Pulli
@@ -16,9 +16,9 @@
 #	include "winGLdecs.h"
 #endif
 #include <GL/gl.h>
-#include <iostream.h>
-#include <algo.h>
-#include <vector.h>
+#include <iostream>
+#include <algorithm>
+#include <vector>
 #include "Median.h"
 #include "absorient.h"
 #include "Xform.h"
@@ -60,7 +60,7 @@ private:
       double thr = med.find();
 
       if (cull) {
-	i=0;
+	int i=0;
 	int k = 0;
 	for (int j=0; j<pP.size(); j++) {
 	  if (d[j] <= thr) {
@@ -72,10 +72,10 @@ private:
 	    if (j < firstend) k++;
 	  }
 	}
-	pP.erase(&pP[i], pP.end());
-	pQ.erase(&pQ[i], pQ.end());
-	nP.erase(&nP[i], nP.end());
-	nQ.erase(&nQ[i], nQ.end());
+	pP.erase(pP.begin() + i, pP.end());
+	pQ.erase(pQ.begin() + i, pQ.end());
+	nP.erase(nP.begin() + i, nP.end());
+	nQ.erase(nQ.begin() + i, nQ.end());
 	firstend -= k;
       }
       return sqrtf(thr);
@@ -85,7 +85,7 @@ private:
 
   float Horn_align(void)
     {
-      // calculate the best rigid motion for alignment 
+      // calculate the best rigid motion for alignment
       double q[7];
       horn_align(&pP[0], &pQ[0], pP.size(), q);
 
@@ -101,14 +101,14 @@ private:
 
   float CM_align(void)
     {
-      // calculate the best rigid motion for alignment 
+      // calculate the best rigid motion for alignment
       // we can do two loops of chen_medioni and the results
       // in general improve
       // third time doesn't improve much with the same pairs
       double q[7];
       for (int j=0; j<2; j++) {
 	chen_medioni(&pP[0], &pQ[0], &nQ[0], pP.size(), q);
-  
+
 	// apply the motion to the current transformation
 	xfP.addQuaternion(q, 7);
 
@@ -154,7 +154,7 @@ private:
       // then, from Q to P
       xfi = xfP; xfi.fast_invert();
       n = ssQ.size();
-      for (i=0; i<n; i++) {
+      for (int i=0; i<n; i++) {
 	// point to other mesh's coords
 	xfQ.apply(ssQ[i], wp); xfQ.apply_nrm(ssQn[i], wn); // world
 	xfi.apply(wp, lp);     xfi.apply_nrm(wn, ln); // local in P
@@ -175,19 +175,19 @@ private:
 
 public:
 
-  ICP(void) : allow_bdry(0), firstend(0) 
-    { 
+  ICP(void) : allow_bdry(0), firstend(0)
+    {
       draw_other_things.add(this);
     }
 
   ~ICP(void)
-    { 
+    {
       draw_other_things.remove(this);
     }
 
-  void set(T p, T q) 
-    { 
-      P = p; Q = q; 
+  void set(T p, T q)
+    {
+      P = p; Q = q;
       xfP = P->getXform();
       xfQ = Q->getXform();
     }
@@ -200,7 +200,7 @@ public:
       return sqrtf(len/n);
     }
 
-   
+
   void sort_into_buckets(const vector<Pnt3> &n,
 			 vector< vector<int> > &normbuckets)
   {
@@ -290,7 +290,7 @@ public:
         Q->subsample_points(sample_rate, ssQ, ssQn);
       }
 
-      if (thr_kind == 0) { 
+      if (thr_kind == 0) {
 	// relative threshold: change to absolute
 	// find the smaller bounding box diagonal
 	float diag = P->localBbox().diag();
@@ -323,7 +323,7 @@ public:
 	cout << avgError << endl;
       }
       P->setXform(xfP);
-      
+
       return avgError;
     }
 
@@ -407,10 +407,10 @@ public:
       if (tmp < thr_value) thr_value = tmp;
       thr_value *= .2;
 
-      if (normspace_sample) 
+      if (normspace_sample)
 	cerr << endl << "Using normal-space sampling..." << endl;
 
-      // now register 4 rounds with diminishing 
+      // now register 4 rounds with diminishing
       // cull percentage and threshold
       for (int i=0; i<4; i++) {
 
@@ -420,7 +420,7 @@ public:
 	  vector< vector<int> > normbuckets;
 	  tmpverts.reserve(max(P->num_vertices(), Q->num_vertices()));
 	  tmpnorms.reserve(max(P->num_vertices(), Q->num_vertices()));
-	  
+
 	  // Sample P
 	  P->subsample_points(1.0, tmpverts, tmpnorms);
 	  sort_into_buckets(tmpnorms, normbuckets);
@@ -454,12 +454,12 @@ public:
 	      }
 	    }
 	  }
-	  
+
 	} else {
 	  // random sampling
 	  P->subsample_points(Psample_rate, ssP, ssPn);
 	  Q->subsample_points(Qsample_rate, ssQ, ssQn);
-	}	  
+	}
 	// the interpolation doesn't intentionally go all the way
 	// (which would require a 5th round)
 	find_pairs(((4-i)*thr_value+i*final_abs_thresh)/5.0);
@@ -467,7 +467,7 @@ public:
 	cull_pairs(((4-i)*20+i*1)/5.0);
 	CM_align();
       }
-      
+
       // Now do sets of three iterations as long as the
       // results seem to get better.
 
@@ -488,7 +488,7 @@ public:
 	  vector< vector<int> > normbuckets;
 	  tmpverts.reserve(max(P->num_vertices(), Q->num_vertices()));
 	  tmpnorms.reserve(max(P->num_vertices(), Q->num_vertices()));
-	  
+
 	  // Sample P
 	  P->subsample_points(1.0, tmpverts, tmpnorms);
 	  sort_into_buckets(tmpnorms, normbuckets);
@@ -522,7 +522,7 @@ public:
 	      }
 	    }
 	  }
-	 
+
 	} else {
 	  P->subsample_points(Psample_rate, ssP, ssPn);
 	  Q->subsample_points(Qsample_rate, ssQ, ssQn);
@@ -606,14 +606,15 @@ public:
   void drawthis(void)
     {
       glDisable(GL_LIGHTING);
-      
+
       glBlendFunc(GL_ONE, GL_ONE);
       glEnable(GL_BLEND);
       glDepthFunc(GL_LEQUAL);
-      
+
       glBegin(GL_LINES);
       glColor3f(1,0,0);
-      for (int i=0; i<firstend; i++) {
+      int i = 0;
+      for (i=0; i<firstend; i++) {
 	glVertex3fv(pP[i]); glVertex3fv(pQ[i]);
       }
       glColor3f(0,1,0);
@@ -642,7 +643,7 @@ public:
 
   // both parameters in the same units as data, usually mm
   AutoICP(GlobalReg* pGlobalReg = NULL,
-	  float _abs_threshold = FLT_MAX, 
+	  float _abs_threshold = FLT_MAX,
 	  float _max_motion = 20.0)
     : final_abs_threshold(_abs_threshold), max_motion (_max_motion)
     {
@@ -665,13 +666,13 @@ public:
     {
       icp.set (a, b);
       Xform<float> rel_xf;
-      bool success = icp.auto_align(pP, nP, pQ, nQ, 
+      bool success = icp.auto_align(pP, nP, pQ, nQ,
 				    rel_xf,
 				    final_abs_threshold,
 				    FLT_MAX, nss);
-      
+
       if (success) {
-	regall->addPair (a, b, pP, nP, pQ, nQ, 
+	regall->addPair (a, b, pP, nP, pQ, nQ,
 			 rel_xf, false, max_pairs);
       }
 

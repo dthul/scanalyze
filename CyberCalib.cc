@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // CyberCalib.cc
 //
 // Daniel Wood
@@ -17,8 +17,9 @@
 #include "CyberCalib.h"
 #include <stdlib.h>
 #include <ctype.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
+#include <cstring>
 
 CyberCalib::CyberCalib()
 {
@@ -27,7 +28,7 @@ CyberCalib::CyberCalib()
     RopeDV r2dv;
     ifstream in( calibFN );
     if( in.fail() || !readNumbers( in, r2dv ) || !setMap(r2dv) ) {
-      cerr << "Couldn't read calibration file: " 
+      cerr << "Couldn't read calibration file: "
 	   << calibFN << endl;
       exit( 1 );
     } else {
@@ -50,7 +51,7 @@ bool
 setval( double (&d)[3], vector<double> &vd )
 // Set the size contents of the size n array d to be the same as the
 // contents of the vector, if possible.
-// 
+//
 // If not possible return false.
 {
     if( vd.size() != 3 )
@@ -77,13 +78,13 @@ bool
 setval( double (&d)[N], vector<double> &vd )
 // Set the size contents of the size n array d to be the same as the
 // contents of the vector, if possible.
-// 
+//
 // If not possible return false.
 {
     if( vd.size() != N )
         return 0;
 
-    memcpy( d, (double *) vd.begin(), sizeof(d) );
+    memcpy( d, vd.data(), sizeof(d) );
     return 1;
 }
 #endif
@@ -92,7 +93,7 @@ setval( double (&d)[N], vector<double> &vd )
 bool
 setval( double &d, vector<double> &vd )
 // Set d to be the value of the one and only element of vd, if possible.
-// 
+//
 // If not possible return false.
 {
     if( vd.size() != 1 )
@@ -135,7 +136,7 @@ CyberCalib::setMap( RopeDV &r2dv )
 #ifndef OLD_DEFAULTS
 void
 CyberCalib::setDefault()
-// Set all of the values to their compiled in defaults.    
+// Set all of the values to their compiled in defaults.
 {
                                 // turn axis and point on it.
     axturn[0] =  0.01805376092094;
@@ -153,7 +154,7 @@ CyberCalib::setDefault()
     axnod0[1] =  453.963537662380;
     axnod0[2] = -143.122138720635;
 
-    
+
                                 // optical correction matrix
     static const double default_A[] =
     {
@@ -163,7 +164,7 @@ CyberCalib::setDefault()
         0.0, -021.380307002909,   162.548102595433,   001.000000000000
     };
     memcpy( A, default_A, sizeof(A) );
-    
+
                                 // transforms from working value to scanner
     static const double default_opt_frm_v[] =
     {
@@ -223,7 +224,7 @@ CyberCalib::setDefault()
 #else
 void
 CyberCalib::setDefault()
-// Set all of the values to their compiled in defaults.    
+// Set all of the values to their compiled in defaults.
 {
                                 // turn axis and point on it.
     axturn[0] = -0.00113981711955;
@@ -241,7 +242,7 @@ CyberCalib::setDefault()
     axnod0[1] =  452.981000000000;
     axnod0[2] = -143.274367000629;
 
-    
+
                                 // optical correction matrix
     static const double default_A[] =
     {
@@ -251,7 +252,7 @@ CyberCalib::setDefault()
         0.0, -021.380307002909,   162.548102595433,   001.000000000000
     };
     memcpy( A, default_A, sizeof(A) );
-    
+
                                 // transforms from working value to scanner
     static const double default_opt_frm_v[] =
     {
@@ -348,7 +349,7 @@ CyberCalib::readNumbers( istream &in, RopeDV &r2dv )
         if( in.peek() == EOF )
             return 1;
                                 // read until next white space into rope
-        crope s;
+        string s;
         while( in.peek() != EOF && !isspace(in.peek())  )
             s += (char) in.get();
         vector<double> &vd = r2dv[s];

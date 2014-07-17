@@ -13,13 +13,15 @@
 # include "winGLdecs.h"
 #endif
 #include <GL/gl.h>
-#include <fstream.h>
-#include <iostream.h>
-#include <rope.h>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 #include "Xform.h"
 #include "Pnt3.h"
 #include "Bbox.h"
+
+using namespace std;
 
 
 class TbObj {
@@ -78,8 +80,8 @@ public:
   // These are virtual only so that we can do a dynamic
   // cast to TbObj
   // The input arg can be a string, the conversion is automatic
-  virtual bool    readXform  (const crope& baseFile);
-  virtual bool    writeXform (const crope& baseFile);
+  virtual bool    readXform  (const string& baseFile);
+  virtual bool    writeXform (const string& baseFile);
 };
 
 #endif

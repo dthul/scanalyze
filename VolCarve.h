@@ -12,9 +12,11 @@
 #ifndef _VOLCARVE_H_
 #define _VOLCARVE_H_
 
-#include <stack.h>
+#include <stack>
 #include "RigidScan.h"
-#include <math.h>
+#include <cmath>
+
+using namespace std;
 
 
 class CubeTreeBase {
@@ -43,9 +45,9 @@ class CubeTreeBase {
 
   int inside() const   { return type == INSIDE; }
   int outside() const  { return type == OUTSIDE; }
-  int boundary() const { return type == BOUNDARY || 
+  int boundary() const { return type == BOUNDARY ||
 			        type == SILHOUETTE; }
-  int go_on() const    { return type == BOUNDARY || 
+  int go_on() const    { return type == BOUNDARY ||
 			        type == SILHOUETTE ||
                                 type == INDETERMINATE; }
 
@@ -63,7 +65,7 @@ class CubeTreeBase {
   // in the direction of face, give its status
   CubeTreeBase*         find_neighbor(int face);
   bool                  is_neighbor_cell (int face, int& iChild);
-  virtual CubeTreeBase* recursive_find(int face, stack<int>& path, 
+  virtual CubeTreeBase* recursive_find(int face, stack<int>& path,
 				       bool bReachedTop) = 0;
 };
 
@@ -80,7 +82,7 @@ class CubeTree: public CubeTreeBase {
   void delete_children(void);
 
   // helper for find_neighbor
-  CubeTreeBase* recursive_find(int face, stack<int>& path, 
+  CubeTreeBase* recursive_find(int face, stack<int>& path,
 			       bool bReachedTop);
   void release_space(int i);
 protected:
@@ -92,7 +94,7 @@ protected:
 		   vector<int> &tri_inds,
 		   float perc_min, float perc_max);
 public:
-  CubeTree(Pnt3 c, float s, CubeTree* parent = NULL, 
+  CubeTree(Pnt3 c, float s, CubeTree* parent = NULL,
 	   int iParIdx = -1);
   ~CubeTree(void);
 
@@ -108,7 +110,7 @@ struct CubeTreeLeafData {
 
   // edge intersection vertices (indices to vertex_list)
   int eixi, eiyi, eizi;
-  
+
   CubeTreeLeafData(void) : eixi(-1), eiyi(-1), eizi(-1), distance(-1e33) {}
 };
 
@@ -127,7 +129,7 @@ class CubeTreeLeaf: public CubeTreeBase {
 
   OccSt          neighbor_status  (int face, int child);
   bool           is_neighbor_cell (int face, int& child);
-  CubeTreeBase*  recursive_find   (int face, stack<int>& path, 
+  CubeTreeBase*  recursive_find   (int face, stack<int>& path,
 				   bool bReachedTop);
   CubeTreeLeaf*  find_neighbor    (int face);
 
@@ -138,7 +140,7 @@ class CubeTreeLeaf: public CubeTreeBase {
 
   CubeTreeLeafData* data;
 
-  // stuff for accessing children... 
+  // stuff for accessing children...
   // could also be computed each time
   int   mask;
   int   nLeavesPerSide;

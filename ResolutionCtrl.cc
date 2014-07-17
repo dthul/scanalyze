@@ -1,5 +1,5 @@
  //############################################################
-// 
+//
 // ResolutionCtrl.cc
 //
 // Kari Pulli
@@ -17,34 +17,31 @@ ResolutionCtrl::split_name(void)
 {
   basename = name;
 
-  crope::const_iterator it = basename.end()-1;
-
-  // Special case - gzipped scans
-  if ((basename.size() > 3) &&
-      (*(it-2) == '.') &&
-      (*(it-1) == 'g') &&
-      (*(it  ) == 'z'))
-          it -= 3;
-
   // Search for a dot
-  while (*it != '.' && it != basename.begin()) it--;
+  size_t dotpos = basename.find_last_of('.');
+  if (dotpos == string::npos) {
+      ending = "";
+      return;
+  }
+  // Special case - gzipped scans
+  if (basename.substr(dotpos, 3) == ".gz")
+      dotpos = basename.find_last_of('.', basename.size() - 4);
 
-  if (it == basename.begin()) it = basename.end();
-  ending = basename.substr(it+1, basename.end());
-  basename = basename.substr (basename.begin(), it);
+  ending = basename.substr(dotpos+1, basename.size() - dotpos - 1);
+  basename = basename.substr (0, dotpos);
 }
 
 void
 ResolutionCtrl::set_name(const char  *n)
 {
-  name = crope(n);
+  name = string(n);
   // remove trailing slash, if a directory name
   if (name.back() == '/' || name.back() == '\\') name.pop_back();
   split_name();
 }
 
 void
-ResolutionCtrl::set_name(const crope &n)
+ResolutionCtrl::set_name(const string &n)
 {
   name = n;
   // remove trailing slash, if a directory name
@@ -53,19 +50,19 @@ ResolutionCtrl::set_name(const crope &n)
 }
 
 
-crope
+string
 ResolutionCtrl::get_name(void)
 {
   return name;
 }
 
-crope
+string
 ResolutionCtrl::get_basename(void)
 {
   return basename;
 }
 
-crope
+string
 ResolutionCtrl::get_nameending(void)
 {
   return ending;
@@ -74,25 +71,25 @@ ResolutionCtrl::get_nameending(void)
 bool
 ResolutionCtrl::has_ending(const char *end)
 {
-  if (end[0] == '.') return ending == crope(end+1);
-  else               return ending == crope(end);
+  if (end[0] == '.') return ending == string(end+1);
+  else               return ending == string(end);
 }
 
-bool 
+bool
 ResolutionCtrl::select_finest(void)
 {
   if (!resolutions.size()) return false;
   return switchToResLevel (0);
 }
 
-bool 
+bool
 ResolutionCtrl::select_coarsest(void)
 {
   if (!resolutions.size()) return false;
   return switchToResLevel (resolutions.size()-1);
-}      
+}
 
-bool 
+bool
 ResolutionCtrl::select_finer(void)
 {
   if (!resolutions.size()) return false;
@@ -103,18 +100,18 @@ ResolutionCtrl::select_finer(void)
   //return select_finest();
 }
 
-bool 
+bool
 ResolutionCtrl::select_coarser(void)
 {
   if (!resolutions.size()) return false;
   if (curr_res == resolutions.size()-1) return false;
   if (switchToResLevel (curr_res + 1)) return true;
-  
+
   return false;
   //return select_coarsest();
 }
 
-bool 
+bool
 ResolutionCtrl::select_by_count(int n)
 {
   return switchToResLevel (findLevelForRes (n));
@@ -125,12 +122,12 @@ int
 ResolutionCtrl::create_resolution_absolute(int budget, Decimator dec)
 { return 0; }
 
-bool 
+bool
 ResolutionCtrl::delete_resolution (int abs_res)
 { return false; }
 
 void
-ResolutionCtrl::insert_resolution (int abs, crope filename,
+ResolutionCtrl::insert_resolution (int abs, string filename,
 				   bool in_mem, bool desired_mem)
 {
   res_info res;
@@ -141,7 +138,7 @@ ResolutionCtrl::insert_resolution (int abs, crope filename,
 
   int n = resolutions.size();
   resolutions.push_back (res);
-  inplace_merge (resolutions.begin(), &resolutions[n], resolutions.end());
+  inplace_merge (resolutions.begin(), resolutions.begin()  + n, resolutions.end());
 }
 
 
@@ -158,11 +155,11 @@ ResolutionCtrl::set_load_desired (int res, bool desired)
 }
 
 
-void 
+void
 ResolutionCtrl::existing_resolutions(vector<res_info> &res)
 { res = resolutions; }
 
-ResolutionCtrl::res_info 
+ResolutionCtrl::res_info
 ResolutionCtrl::current_resolution(void)
 {
   if (curr_res < 0 || curr_res >= resolutions.size())
@@ -175,11 +172,11 @@ ResolutionCtrl::current_resolution(void)
   return resolutions[curr_res];
 }
 
-bool 
+bool
 ResolutionCtrl::load_resolution(int i)
 { return 0; }
 
-bool 
+bool
 ResolutionCtrl::release_resolution(int nPolys)
 {
   cerr << "Warning: no memory was actually freed" << endl;

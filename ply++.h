@@ -9,29 +9,29 @@ Modified from PLY library by
 
 A PLY file contains a single polygonal _object_.
 
-An object is composed of lists of _elements_.  
+An object is composed of lists of _elements_.
 Typical elements are vertices, faces, edges and materials.
 
-Each type of element for a given object has one or more 
-_properties_ associated with the element type.  
-For instance, a vertex element may have as properties three 
+Each type of element for a given object has one or more
+_properties_ associated with the element type.
+For instance, a vertex element may have as properties three
 floating-point values x,y,z and three unsigned
 chars for red, green and blue.
 
 ---------------------------------------------------------------
 
 Copyright (c) 1998 The Board of Trustees of The Leland Stanford
-Junior University.  All rights reserved.   
-  
-Permission to use, copy, modify and distribute this software and 
-its documentation for any purpose is hereby granted without fee, 
-provided that the above copyright notice and this permission 
-notice appear in all copies of this software and that you do not 
-sell the software.   
-  
+Junior University.  All rights reserved.
+
+Permission to use, copy, modify and distribute this software and
+its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice and this permission
+notice appear in all copies of this software and that you do not
+sell the software.
+
 THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND,
-EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY   
-WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.   
+EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 */
 
@@ -45,7 +45,9 @@ WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 #include <zlib.h>
 #endif
 
-#include <vector.h>
+#include <vector>
+
+using namespace std;
 
 #define PLY_ASCII      1        // ascii PLY file
 #define PLY_BINARY_BE  2        // binary PLY file, big endian
@@ -117,11 +119,11 @@ struct PlyProperty {    /* description of a property */
 struct PlyElement {     /* description of an element */
   char *name;                   // element name
   int num;                      // # of elements in this object
-  int size;                     // size of element (bytes) 
+  int size;                     // size of element (bytes)
                                 //  or -1 if variable
   vector<PlyProperty> props;    // list of properties in the file
   vector<int> store_prop;       // flags: property wanted by user?
-  int other_offset;             // offset to un-asked-for props, 
+  int other_offset;             // offset to un-asked-for props,
                                 //  or -1 if none
   int other_size;               // size of other_props structure
 
@@ -190,18 +192,18 @@ private:
 
   int  to_int(char *item, int type);
 
-  void get_and_store_binary_item(int type_ext, 
-				 int type_int, 
+  void get_and_store_binary_item(int type_ext,
+				 int type_int,
 				 char *item);
-  void get_and_store_binary_list(int type_ext, 
-				 int type_int, 
-				 char *item, 
+  void get_and_store_binary_list(int type_ext,
+				 int type_int,
+				 char *item,
 				 int n);
 
   PlyElement *find_element(char *);
-  void ascii_get_element(char *elem_ptr, 
+  void ascii_get_element(char *elem_ptr,
 			 int use_provided_storage);
-  void binary_get_element(char *elem_ptr, 
+  void binary_get_element(char *elem_ptr,
 			  int use_provided_storage);
   void write_scalar_type (int);
   void write_binary_item_BE(int, unsigned int, double, int);
@@ -226,7 +228,7 @@ public:
   PlyFile();
   ~PlyFile();
 
-  int  open_for_writing(const char *filename, int nelems, 
+  int  open_for_writing(const char *filename, int nelems,
 			char **elem_names, int file_type);
   void describe_element(char *, int, int, PlyProperty *);
   void describe_property(char *, PlyProperty *);
@@ -240,7 +242,7 @@ public:
   void put_comment(char *);
   void put_obj_info(char *);
 
-  int  open_for_reading(const char *filename, int *nelems, 
+  int  open_for_reading(const char *filename, int *nelems,
 			char ***elem_names);
   PlyProperty **get_element_description(char *, int*, int*);
   void get_element_setup(char *, int, PlyProperty *);

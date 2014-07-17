@@ -1,9 +1,8 @@
-#include <iostream.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <vector.h>
-#include <hash_map.h>
+#include <vector>
 #include <assert.h>
 #include <math.h>
 
@@ -34,7 +33,7 @@ Mesh::Mesh (const vector<Pnt3>& _vtx, const vector<int>& _tris)
   init();
   vtx = _vtx;
   tris = _tris;
-  
+
   initNormals(UseAreaWeightedNormals);
   computeBBox();
 }
@@ -58,16 +57,16 @@ Mesh::~Mesh()
 {
   if (vertMatDiff != NULL)
     delete [] vertMatDiff;
-  
+
   if (vertIntensity != NULL)
     delete [] vertIntensity;
-  
+
   if (vertConfidence != NULL)
     delete [] vertConfidence;
-  
+
   if (texture != NULL)
     delete [] texture;
-  
+
   if (triMatDiff != NULL)
     delete [] triMatDiff;
 }
@@ -85,7 +84,7 @@ Mesh::initNormals(int useArea)
   }
 }
 
-void 
+void
 Mesh::flipNormals()
 {
   if (tris.size())
@@ -139,20 +138,20 @@ Mesh::updateScale()
   // if the largest dimension is smaller than 10, assume we're dealing
   // with millimeters and scale everything up by 1000.
 
-  // will false-positive on millimeter-scale scans of objects smaller than 
+  // will false-positive on millimeter-scale scans of objects smaller than
   // 1cm x 1cm x 1cm (and they'll look too big).
 
   // will false-negative on meter-scale scans of objects bigger than 10m
   // on any side (and they'll stay too small, and render black).
 
   // will not affect ply conversions of Cyra data, whose dimensions are
-  // big enough to be in the bounds of the above test, because the test is 
-  // one-way, only growing things -- although if Cyra data were mistakenly 
+  // big enough to be in the bounds of the above test, because the test is
+  // one-way, only growing things -- although if Cyra data were mistakenly
   // saved as meters, this test would probably not catch it (the false
   // negative described above).
 
   // But wait!  This hack sucks rocks for pvrip output.  Often
-  // you get one or two chunks that are too small, so they scale	
+  // you get one or two chunks that are too small, so they scale
   // by 1000, and suddenly the viewing bbox is 1000x too big,
   // and everything else is 1000x too small (in comparison) and
   // so you only see that tiny chunk (or nothing at all) when
@@ -186,8 +185,8 @@ Mesh::num_tris (void)
 
   // ok, have to count tstrips
   numTris = tstrips.size();
-  for (const int* ti = tstrips.begin(); ti < tstrips.end(); ti++) {
-    if ((*ti) == -1)
+  for (int& ti: tstrips) {
+    if (ti == -1)
       numTris -= 3;
   }
 
@@ -257,17 +256,17 @@ Mesh::copyTriFrom (Mesh *meshSrc, int src, int dst)
     if (3*dst+i < this->tris.size()) {
       this->tris[3*dst+i] = meshSrc->tris[3*src+i];
       // copy voxel in - for voxel display feature
-      if (meshSrc->hasVoxels) 
+      if (meshSrc->hasVoxels)
 	this->fromVoxels[3*dst+i] = meshSrc->fromVoxels[3*src+i];
-      
+
     } else {  // adding to the end
       this->tris.push_back (meshSrc->tris[3*src+i]);
-      if (meshSrc->hasVoxels) 
+      if (meshSrc->hasVoxels)
 	this->fromVoxels.push_back(meshSrc->fromVoxels[3*src+i]);
-      
+
     }
   }
-    
+
   if (meshSrc->triMatDiff != NULL) {
     this->triMatDiff[dst][0] = meshSrc->triMatDiff[src][0];
     this->triMatDiff[dst][1] = meshSrc->triMatDiff[src][1];
@@ -298,21 +297,21 @@ Mesh::copyVertFrom (Mesh *meshSrc, int src, int dst)
       this->nrm.push_back(meshSrc->nrm[ns+2]);
     }
   }
-  
+
   if (meshSrc->vertMatDiff != NULL) {
     this->vertMatDiff[dst][0] = meshSrc->vertMatDiff[src][0];
     this->vertMatDiff[dst][1] = meshSrc->vertMatDiff[src][1];
     this->vertMatDiff[dst][2] = meshSrc->vertMatDiff[src][2];
   }
-  
+
   if (meshSrc->vertIntensity != NULL) {
     this->vertIntensity[dst] = meshSrc->vertIntensity[src];
   }
-  
+
   if (meshSrc->vertConfidence != NULL) {
     this->vertConfidence[dst] = meshSrc->vertConfidence[src];
   }
-  
+
   if (meshSrc->texture != NULL) {
     this->texture[dst][0] = meshSrc->texture[src][0];
     this->texture[dst][1] = meshSrc->texture[src][1];
@@ -378,7 +377,7 @@ struct PlyVertex {
 
 const int MAX_FACE_VERTS = 100;
 
-/* Added field to hold voxel from which the face was derived 
+/* Added field to hold voxel from which the face was derived
    - for voxel display feature */
 struct PlyFace {
   uchar nverts;
@@ -398,38 +397,38 @@ struct TriLocal {
 };
 
 
-static PlyProperty vert_prop_x =  
+static PlyProperty vert_prop_x =
    {"x", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_y =  
+static PlyProperty vert_prop_y =
   {"y", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_z =  
+static PlyProperty vert_prop_z =
   {"z", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_nx =  
+static PlyProperty vert_prop_nx =
    {"nx", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_ny =  
+static PlyProperty vert_prop_ny =
   {"ny", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_nz =  
+static PlyProperty vert_prop_nz =
   {"nz", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_texture_u =  
+static PlyProperty vert_prop_texture_u =
   {"texture_u", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_texture_v =  
+static PlyProperty vert_prop_texture_v =
   {"texture_v", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_intens =  
+static PlyProperty vert_prop_intens =
   {"intensity", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_std_dev =  
+static PlyProperty vert_prop_std_dev =
   {"std_dev", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_confidence =  
+static PlyProperty vert_prop_confidence =
   {"confidence", PLY_FLOAT, PLY_FLOAT, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_diff_r =  
+static PlyProperty vert_prop_diff_r =
   {"diffuse_red", PLY_UCHAR, PLY_UCHAR, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_diff_g =  
+static PlyProperty vert_prop_diff_g =
   {"diffuse_green", PLY_UCHAR, PLY_UCHAR, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
-static PlyProperty vert_prop_diff_b =  
+static PlyProperty vert_prop_diff_b =
   {"diffuse_blue", PLY_UCHAR, PLY_UCHAR, 0, 0, PLY_START_TYPE, PLY_START_TYPE, 0};
 
 /* Added another face_prop that holds data for the voxel from which
    the face was derived - for voxel display feature */
-static PlyProperty face_props[] = { 
+static PlyProperty face_props[] = {
   {"vertex_indices", PLY_INT, PLY_INT, 0, 1, PLY_UCHAR, PLY_UCHAR, 0},
 };
 
@@ -477,7 +476,7 @@ set_offsets(void)
 
 static const int progress_update = 0xfff;
 
-int  
+int
 Mesh::readPlyFile(const char *filename)
 {
   int i, j;
@@ -507,7 +506,7 @@ Mesh::readPlyFile(const char *filename)
   face_prop_from_voxel_x.offset = offsetof(PlyFace, fromVoxelX);
   face_prop_from_voxel_y.offset = offsetof(PlyFace, fromVoxelY);
   face_prop_from_voxel_z.offset = offsetof(PlyFace, fromVoxelZ);
-    
+
   PlyFile ply;
   if (ply.open_for_reading((char*)filename, &nelems, &elist) == 0)
     return 0;
@@ -527,7 +526,7 @@ Mesh::readPlyFile(const char *filename)
       }
     }
   }
-   
+
   vector<PlyProperty> vert_props;
 
   set_offsets();
@@ -540,16 +539,16 @@ Mesh::readPlyFile(const char *filename)
     // get the description of the first element
     elem_name = elist[i];
     ply.get_element_description(elem_name, &num_elems, &nprops);
-	
+
     // if we're on vertex elements, read them in
     if (equal_strings ("vertex", elem_name)) {
-	   
-#if VERBOSE 
+
+#if VERBOSE
       TIMER(Read_vertices);
 #endif
 
       vtx.reserve(num_elems);
-	    
+
       if (ply.is_valid_property("vertex", vert_prop_x.name) &&
 	  ply.is_valid_property("vertex", vert_prop_y.name) &&
 	  ply.is_valid_property("vertex", vert_prop_z.name)) {
@@ -557,7 +556,7 @@ Mesh::readPlyFile(const char *filename)
 	ply.get_property(elem_name, &vert_prop_y);
 	ply.get_property(elem_name, &vert_prop_z);
       }
-  
+
       if (ply.is_valid_property("vertex", vert_prop_nx.name) &&
 	  ply.is_valid_property("vertex", vert_prop_ny.name) &&
 	  ply.is_valid_property("vertex", vert_prop_nz.name) ) {
@@ -567,24 +566,24 @@ Mesh::readPlyFile(const char *filename)
 	hasVertNormals = 1;
 	nrm.reserve(num_elems * 3);
       }
-  
+
       if (ply.is_valid_property("vertex", vert_prop_intens.name)) {
 	ply.get_property(elem_name, &vert_prop_intens);
 	//hasIntensity = 1;
       }
-    
+
       if (ply.is_valid_property("vertex", vert_prop_std_dev.name)){
 	ply.get_property(elem_name, &vert_prop_std_dev);
 	//hasStdDev = 1;
       }
-    
-      if (ply.is_valid_property("vertex", 
+
+      if (ply.is_valid_property("vertex",
 				vert_prop_confidence.name)) {
 	ply.get_property(elem_name, &vert_prop_confidence);
 	hasConfidence = 1;
 	vertConfidence = new float[num_elems];
       }
-    
+
       if (ply.is_valid_property("vertex", "diffuse_red") &&
 	  ply.is_valid_property("vertex", "diffuse_green") &&
 	  ply.is_valid_property("vertex", "diffuse_blue")) {
@@ -594,7 +593,7 @@ Mesh::readPlyFile(const char *filename)
 	hasDiffuseColors = 1;
 	vertMatDiff = new vec3uc[num_elems];
       }
-    
+
       if (!skipTexture) {
 	if (ply.is_valid_property("vertex", "texture_u") &&
 	    ply.is_valid_property("vertex", "texture_v")) {
@@ -654,7 +653,7 @@ Mesh::readPlyFile(const char *filename)
 	ply.get_property(elem_name, &face_prop_from_voxel_z);
 	hasVoxels = 1;
       } else printf("No voxel information stored...\n");
-      
+
       if (num_elems == 0)
 	continue;
 
@@ -662,7 +661,7 @@ Mesh::readPlyFile(const char *filename)
       tris.reserve (num_elems * 3);
       Progress progress (num_elems, "%s: read tris", filename);
 
-      for (j = 0; j < num_elems; j++) {		
+      for (j = 0; j < num_elems; j++) {
 	if ((j & progress_update) == progress_update)
 	  progress.update (j);
 
@@ -678,7 +677,7 @@ Mesh::readPlyFile(const char *filename)
 		 plyFace.fromVoxelX, plyFace.fromVoxelY,
 		 plyFace.fromVoxelZ); */
 	  /* store voxel here - for voxel display feature */
-	  
+
 	  addVoxelInfo(plyFace.verts[0], plyFace.verts[1],
 		       plyFace.verts[2],
 		       plyFace.fromVoxelX, plyFace.fromVoxelY,
@@ -744,7 +743,7 @@ Mesh::readPlyFile(const char *filename)
 }
 
 int
-Mesh::writePlyFile (const char *filename, int useColorNotTexture, 
+Mesh::writePlyFile (const char *filename, int useColorNotTexture,
 		    int writeNormals)
 {
 #if 1
@@ -827,18 +826,18 @@ Mesh::writePlyFile (const char *filename, int useColorNotTexture,
   if (hasIntensity) {
     vert_props.push_back(vert_prop_intens);
   }
-    
+
   if (hasConfidence) {
     vert_props.push_back(vert_prop_confidence);
     hasConfidence = 1;
   }
-    
+
   if (hasColor || (hasTexture && useColorNotTexture)) {
     vert_props.push_back(vert_prop_diff_r);
     vert_props.push_back(vert_prop_diff_g);
     vert_props.push_back(vert_prop_diff_b);
   }
-    
+
   if (hasTexture && !useColorNotTexture) {
     vert_props.push_back(vert_prop_texture_u);
     vert_props.push_back(vert_prop_texture_v);
@@ -847,12 +846,12 @@ Mesh::writePlyFile (const char *filename, int useColorNotTexture,
   // count offset
   face_props[0].offset = offsetof(PlyFace, verts);
   face_props[0].count_offset = offsetof(PlyFace, nverts);
-  
-  ply.describe_element("vertex", vtx.size(), 
+
+  ply.describe_element("vertex", vtx.size(),
 		       vert_props.size(), &vert_props[0]);
   ply.describe_element("face", tris.size()/3, 1, face_props);
   ply.header_complete();
-    
+
     // set up and write the vertex elements
   PlyVertex plyVert;
 
@@ -864,10 +863,10 @@ Mesh::writePlyFile (const char *filename, int useColorNotTexture,
     plyVert.z = vtx[i][2];
     if (hasIntensity)
       plyVert.intensity = vertIntensity[i];
-	    
+
     if (hasConfidence)
       plyVert.confidence = vertConfidence[i];
-	    
+
     if (hasColor) {
       plyVert.diff_r = vertMatDiff[i][0];
       plyVert.diff_g = vertMatDiff[i][1];
@@ -884,7 +883,7 @@ Mesh::writePlyFile (const char *filename, int useColorNotTexture,
     if (hasTexture && !useColorNotTexture) {
       plyVert.tex_u = texture[i][0];
       plyVert.tex_v = texture[i][1];
-    } 
+    }
     else if (hasTexture && useColorNotTexture) {
       float texU = texture[i][0];
       float texV = texture[i][1];
@@ -914,7 +913,7 @@ Mesh::writePlyFile (const char *filename, int useColorNotTexture,
     ply.put_element_static_strg((void *) &plyFace);
   }
 
-  return 1;  
+  return 1;
 #endif
 }
 
@@ -957,7 +956,7 @@ Mesh::subsample_points(int n, vector<Pnt3> &pts)
 
 
 bool
-Mesh::subsample_points(int n, vector<Pnt3> &pts, 
+Mesh::subsample_points(int n, vector<Pnt3> &pts,
 		       vector<Pnt3> &nrms)
 {
   pts.clear(); pts.reserve(n);
@@ -969,7 +968,7 @@ Mesh::subsample_points(int n, vector<Pnt3> &pts,
   for (int i = 0; i<end; i++) {
     if (rnd(nv) <= np) {
       pts.push_back(vtx[i]);    // save point
-      pushNormalAsPnt3 (nrms, nrm.begin(), i);
+      pushNormalAsPnt3 (nrms, nrm.data(), i);
       np--;
     }
     nv--;
@@ -984,7 +983,7 @@ Mesh::remove_unused_vtxs(void)
 {
   // prepare vertex index map
   vector<int> vtx_ind(vtx.size(), -1);
-  
+
   // march through the triangles
   // and mark the vertices that are actually used
   int n = getTris().size();
@@ -997,18 +996,18 @@ Mesh::remove_unused_vtxs(void)
   // also keep tab on how the indices change
   int cnt = 0;
   n = vtx.size();
-  for (i=0; i<n; i++) {
+  for (int i=0; i<n; i++) {
     if (vtx_ind[i] != -1) {
       vtx_ind[i] = cnt;
       copyVertFrom (this, i, cnt);
       cnt++;
     }
   }
-  vtx.erase(&vtx[cnt], vtx.end());
-  if (nrm.size()) nrm.erase(&nrm[cnt*3], nrm.end());
+  vtx.erase(vtx.begin() + cnt, vtx.end());
+  if (nrm.size()) nrm.erase(nrm.begin() + 3 * cnt, nrm.end());
   // march through triangles and correct the indices
   n = tris.size();
-  for (i=0; i<n; i++) {
+  for (int i=0; i<n; i++) {
     tris[i] = vtx_ind[tris[i]];
     assert (tris[i] >=0 && tris[i] < vtx.size());
   }
@@ -1063,13 +1062,13 @@ Mesh::Warp()
   for ( vector<Pnt3>::iterator i = vtx.begin();
 	i != vtx.end();
 	i++ ) {
-    (*i)[2] += 7 * cos(0.017674205 * (*i)[1]) + 
+    (*i)[2] += 7 * cos(0.017674205 * (*i)[1]) +
       5 * cos(0.030921161  * (*i)[0]);
   }
 }
 
 /***************************************************************************
-               D E Q U A N T I Z A T I O N S M O O T H I N G 
+               D E Q U A N T I Z A T I O N S M O O T H I N G
 ***************************************************************************/
 void Mesh::dequantizationSmoothing(double maxDisplacement)
 {
@@ -1077,7 +1076,7 @@ void Mesh::dequantizationSmoothing(double maxDisplacement)
 
   // Make sure we have the inverse table
   calcTriLists();
-  
+
   // Get a structure for new points of appropriate size
   vector<Pnt3> nvtx;
   nvtx=vtx;
@@ -1085,20 +1084,20 @@ void Mesh::dequantizationSmoothing(double maxDisplacement)
 
   // print info every how many tris? (mod count)
   int mc= 100000;
-  
+
   // Loop over every vtx, blurring
   for (int i=0;i<vtx.size();i++)
     {
       if (i%mc==0) printf("Vertex Number %d tri count %ld\n ",
 			  i,vtxTris[i].size());
-      
+
       Pnt3 pnt(0,0,0);
       double w=0;
       // Loop over all tris touching this vert
       for (TriListI j=vtxTris[i].begin();j!=vtxTris[i].end();j++)
 	{
 	  if (i%mc==0) printf("  Tri Number: %d\n",(*j));
-	  
+
 	  // Loop over all verts in adjacent tri
 	  // note that we end up double counting verts
 	  for (int k=0;k<3;k++)
@@ -1115,13 +1114,13 @@ void Mesh::dequantizationSmoothing(double maxDisplacement)
       pnt= pnt / w;
 
       // Check the distance, so that we constrain.
-      
+
       // Assign the new value
       nvtx[i]=pnt;
     }
 
   printf ("size nvtx %ld\n",nvtx.size());
-  
+
   // Copy new points to main store
   vtx=nvtx;
 
@@ -1129,7 +1128,7 @@ void Mesh::dequantizationSmoothing(double maxDisplacement)
 }
 
 /***************************************************************************
-                      R E S T O R E O R I G V E R T S 
+                      R E S T O R E O R I G V E R T S
 ***************************************************************************/
 void Mesh::restoreOrigVerts()
 {
@@ -1145,7 +1144,7 @@ void Mesh::restoreOrigVerts()
 }
 
 /***************************************************************************
-                         S A V E O R I G V E R T S 
+                         S A V E O R I G V E R T S
 ***************************************************************************/
 void Mesh::saveOrigVerts()
 {
@@ -1153,14 +1152,14 @@ void Mesh::saveOrigVerts()
 }
 
 /***************************************************************************
-                          C A L C T R I L I S T S 
+                          C A L C T R I L I S T S
 ***************************************************************************/
 void Mesh::calcTriLists()
 {
 
   // Don't bother if we already did it
   if (vtxTris.size()==vtx.size()) return;
-  
+
   // Insure that we have the tris structure
 
   // Size the vtxTris structure correctly
@@ -1176,16 +1175,16 @@ void Mesh::calcTriLists()
 
   int triSize=ltris.size()/3;
   int vtxSize=vtx.size();
-  
-  
+
+
   cout << "Number of tris " << triSize << endl;
-  
+
   // Fill in the structure
   for (int i=0;i<triSize*3;i++)
     {
       int curtri=i/3;
       assert(curtri<triSize);
-      
+
       int curvert=ltris[i];
       assert(curvert<vtxSize);
 

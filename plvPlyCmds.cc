@@ -1,7 +1,7 @@
 #include <stdlib.h>
-#include <vector.h>
+#include <vector>
 #include <ctype.h>
-#include <fstream.h>
+#include <fstream>
 
 #include "plvImageCmds.h"
 #include "plvGlobals.h"
@@ -61,11 +61,11 @@ PlvReadGroupMembersCmd(ClientData clientData, Tcl_Interp *interp,
   }
   char buf[1000];
   ifstream fin (argv[1]);
-  crope names = crope("");
+  string names = string("");
   
   while (!fin.fail()) {
     fin.getline(buf, 1000);
-    names += crope(buf) + crope(" ");
+    names += string(buf) + string(" ");
   }
   if (!strcmp(names.c_str(), "")) {
     interp->result = "Cannot load group";

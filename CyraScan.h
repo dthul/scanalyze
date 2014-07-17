@@ -50,10 +50,10 @@ public:
   void computeBBox (void);
   void flipNormals (void);
 
-  bool read(const crope &fname);
-  bool write(const crope &fname);
-  bool ReadPts(const crope &fname);	// Read a .pts file
-  bool WritePts(const crope &fname);	// Write a .pts file
+  bool read(const string &fname);
+  bool write(const string &fname);
+  bool ReadPts(const string &fname);	// Read a .pts file
+  bool WritePts(const string &fname);	// Write a .pts file
 
   RigidScan* filtered_copy(const VertexFilter& filter);
   bool filter_inplace(const VertexFilter& filter);

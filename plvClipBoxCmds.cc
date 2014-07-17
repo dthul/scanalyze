@@ -1,5 +1,5 @@
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <string>
 #ifdef WIN32
 #	include "winGLdecs.h"
@@ -70,7 +70,7 @@ static int findSelectionLine (Selection::Pt pt, const Selection& sel);
 static DisplayableMesh* Renamer (DisplayableMesh *mesh);
 
 int
-PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   if (argc < 2) {
@@ -106,7 +106,7 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
   vector<DisplayableMesh*> clippees;
   if (bClipMulti) {
     // push all meshes with sufficient visibility
-    for (DisplayableMesh** pdm = theScene->meshSets.begin();
+    for (vector<DisplayableMesh*>::iterator pdm = theScene->meshSets.begin();
 	 pdm != theScene->meshSets.end();
 	 pdm++) {
       if (bClipInvisible || (*pdm)->getVisible())
@@ -122,7 +122,7 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
   char* error = NULL;
   Progress* progress = new Progress (clippees.size(), "Clipping scans", true);
   cout << "Clipping " << clippees.size() << " scans..." << endl;
-  for (DisplayableMesh** clippee = clippees.begin();
+  for (vector<DisplayableMesh*>::iterator clippee = clippees.begin();
        clippee != clippees.end();
        clippee++) {
 
@@ -140,11 +140,11 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
       bSuccess = false;
       break;
     }
-    
+
     if (!bKeepInside) {
       filter->invert();
     }
-    
+
     if (bClipInPlace) {
       // inplace mode -- no creating new mesh, just munge the existing one
       // Do it by saving the mesh's name and then making a
@@ -154,42 +154,42 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
       RigidScan* meshTo = meshFrom->filtered_copy(*filter);
       GroupScan *groupResult = dynamic_cast<GroupScan*>(meshTo);
       if (meshTo) {
-	
+
 	if (meshTo->num_resolutions() > 0) {
-	
+
 	  char *name = strdup(meshFrom->get_name().c_str());
 	  // get the old theMesh
 	  char *theMeshOld = GetTclGlobal("theMesh");
-	  
+
 	  char tclCmdBuff[256];
 	  sprintf(tclCmdBuff, "confirmDeleteMesh %s", oldDisp->getName());
 	  if (Tcl_Eval (interp, tclCmdBuff) != TCL_OK)
 	    cerr << "confirmDelete failed " << endl;
-	  
-	  
+
+
 	  DisplayableMesh* newDisp;
 	  if(!groupResult) {
 	    meshTo->set_name(name);
 	    newDisp = theScene->addMeshSet (meshTo, false);
-	  } else {	    
-	    // clipping a group in place means that we need to 
-	    // rename the group and all its members using 
+	  } else {
+	    // clipping a group in place means that we need to
+	    // rename the group and all its members using
 	    // the Renamer routine.
-	  	    
+
 	    newDisp = FindMeshDisplayInfo(meshTo);
-	  
+
 	    newDisp = Renamer(newDisp);
 	  }
-	  
-	  sprintf(tclCmdBuff, "clipInplaceHelper %s %s", newDisp->getName(), 
+
+	  sprintf(tclCmdBuff, "clipInplaceHelper %s %s", newDisp->getName(),
 		  theMeshOld);
 	  Tcl_Eval (interp, tclCmdBuff);
-	  
+
 	  free(name);
-	  
+
 	} else {
 	  // scan supports clipping, but had no data
-	  	  
+
 	  Tcl_VarEval (interp, "changeVis ", oldDisp->getName(), " 0", NULL);
 	}
       } else {
@@ -198,30 +198,30 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 	     << " failed filtered_inplace" << endl;
 	bSuccess = false;
       }
-      
+
     } else {
       // newmesh mode... makes a new mesh and adds it to Mesh Controls
       // filtered_copy will return NULL if not supported; will return
       // valid pointer to scan with no resolutions if the clip excludes
       // all data.
       RigidScan* meshTo = meshFrom->filtered_copy(*filter);
-      
+
       if (meshTo) {
 	if (meshTo->num_resolutions() > 0) {
 	  // set name, same as old with clip appended before extension
 	  GroupScan *group = dynamic_cast<GroupScan*>(meshTo);
 	  if (!group) {
-	    crope name = meshFrom->get_basename()
+	    string name = meshFrom->get_basename()
 	      + "Clip." + meshFrom->get_nameending();
 	    meshTo->set_name(name);
-	    
+
 	    DisplayableMesh* newDisp = theScene->addMeshSet (meshTo, false);
 	    Tcl_VarEval (interp, "clipMeshCreateHelper ",
 			 oldDisp->getName(), " ", newDisp->getName(), NULL);
-	  } else { 
+	  } else {
 	    // since it is a group, it has already been named + added to the scene
 	    Tcl_VarEval (interp, "clipMeshCreateHelper ",
-			 oldDisp->getName(), " ", 
+			 oldDisp->getName(), " ",
 			 FindMeshDisplayInfo(meshTo)->getName(), NULL);
 	  }
 	} else {
@@ -240,7 +240,7 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 
     // update progress; check for cancel
     if (!progress->updateInc()) {
-      cerr << "Clip operation cancelled (" 
+      cerr << "Clip operation cancelled ("
 	   << (clippee - clippees.begin() + 1)
 	   << " down; " << (clippees.end() - clippee - 1)
 	   << " to go)" << endl;
@@ -270,7 +270,7 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 // it as a filtered_copy.
 
 static char*
-my_clip_strrstr (char** haystack) 
+my_clip_strrstr (char** haystack)
 {
   char *str = *haystack;
   char *oldstr = str;
@@ -296,10 +296,10 @@ my_clip_strrstr (char** haystack)
 // "Clip" in the name and getting rid of it, so as to disguise
 // the clip as the original mesh.
 // (Due to complications with the hashtable/meshSets data
-// structures, the renaming must take place after the 
+// structures, the renaming must take place after the
 // entire group has been created, not while it is being
 // built from its constituents).
-static DisplayableMesh * 
+static DisplayableMesh *
 Renamer (DisplayableMesh *mesh) {
   vector<DisplayableMesh*>children;
   vector<DisplayableMesh*>vec;
@@ -311,16 +311,16 @@ Renamer (DisplayableMesh *mesh) {
   *(my_clip_strrstr(&tmp)) = '\0'; // removes "Clip" from end of string
 
   //cerr << "oldname is now " << oldname << endl;
-  crope newname;
-  newname = crope(oldname) + "." + mesh->getMeshData()->get_nameending();
+  string newname;
+  newname = string(oldname) + "." + mesh->getMeshData()->get_nameending();
   char newbuf [PATH_MAX];
   sprintf (newbuf, "%s", newname.c_str());
 
   GroupScan *g = dynamic_cast<GroupScan*>(scan);
   if (g) {
     if (g->get_children_for_display(children)) {
-      ungroupScans(mesh);    
-      for (DisplayableMesh** it = children.begin(); it < children.end(); it++)
+      ungroupScans(mesh);
+      for (vector<DisplayableMesh*>::iterator it = children.begin(); it < children.end(); it++)
 	vec.push_back(Renamer (*it)); // rename the descendants of the group first
       mesh = groupScans(vec, newbuf, true);
       return mesh;
@@ -329,7 +329,7 @@ Renamer (DisplayableMesh *mesh) {
   } else {
     // rename rigid scan
     mesh->getMeshData()->set_name(newname);
-    
+
     // rename displayable mesh
     char buf[PATH_MAX];
     sprintf(buf, "%s",  mesh->getName());
@@ -338,7 +338,7 @@ Renamer (DisplayableMesh *mesh) {
     MeshSetHashDelete(strdup(mesh->getName()));
     mesh->setName(buf);
     AddMeshSetToHash(mesh);
-    
+
     return mesh;
   }
 }
@@ -351,8 +351,8 @@ Renamer (DisplayableMesh *mesh) {
 //   cerr << "Old group name " << oldGroupName << endl;
 //   VertexFilter *childfilter;
 //   DisplayableMesh *groupMeshTo, *clippedGroup;
-  
-//   vector<DisplayableMesh*>kids = 
+
+//   vector<DisplayableMesh*>kids =
 //     ungroupScans(FindMeshDisplayInfo(oldGroupName));
 //   for (DisplayableMesh** it = kids.begin(); it < kids.end(); it++) {
 //     RigidScan *from = (*it)->getMeshData();
@@ -362,19 +362,19 @@ Renamer (DisplayableMesh *mesh) {
 //     if (g) {
 //       clippedGroup = ClipGroupHelper (g, *childfilter);
 //       newkids.push_back(clippedGroup);
-//     } else {      
+//     } else {
 //       RigidScan *to = from->filtered_copy(*childfilter, true);
 //       char *name = strdup(from->get_name().c_str());
 //       DisplayableMesh *disp = FindMeshDisplayInfo((*it)->getName());
 //       theScene->deleteMeshSet(disp);
 //       if (to) {
 // 	if (to->num_resolutions() > 0) {
-	  
+
 // 	  //	  char *theMeshOld = "back1"; //GetTclGlobal("theMesh");
 // 	  to->set_name(name);
-	  
+
 // 	  DisplayableMesh *newkid = theScene->addMeshSet(to,false);
-	  
+
 // 	  newkids.push_back(newkid);
 // 	}
 //       }
@@ -386,9 +386,9 @@ Renamer (DisplayableMesh *mesh) {
 
 /* This function is called from interactors.tcl when the user
    selects the Print Voxel Info command from the right-click
-   menu after specifying a rectangular box region 
+   menu after specifying a rectangular box region
    - for display voxel feature */
-int PlvPrintVoxelsCmd(ClientData clientData, Tcl_Interp *interp, 
+int PlvPrintVoxelsCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
   printf("Getting voxel information...\n");
@@ -434,7 +434,7 @@ int PlvPrintVoxelsCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 int
-PlvClearSelectionCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvClearSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
   struct Togl* togl = toglHash.FindTogl (argv[1]);
@@ -442,14 +442,14 @@ PlvClearSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 
   theSel.clear();
   Togl_PostOverlayRedisplay (togl);
-  
+
   return TCL_OK;
 }
 
 
 
 int
-PlvDrawLineSelectionCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvDrawLineSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   // args are %x %y start
@@ -480,7 +480,7 @@ PlvDrawLineSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 	ptRelativeTo = pt;
       }
     }
-    
+
     if (!bChangeExisting)
     {
       // start new line
@@ -510,7 +510,7 @@ PlvDrawLineSelectionCmd(ClientData clientData, Tcl_Interp *interp,
       if (argc > 4 && !strcmp (argv[4], "constrain")) {
 	int dx = abs (pt.x - theSel[0].x);
 	int dy = abs (pt.y - theSel[0].y);
-	
+
 	if (dx > 2 * dy)   // strongly x-oriented -- x only
 	  pt.y = theSel[0].y;
 	else if (dy > 2 * dx) // strongly y-oriented -- y only
@@ -536,7 +536,7 @@ PlvDrawLineSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvDrawShapeSelectionCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvDrawShapeSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 			 int argc, char *argv[])
 {
   // args are %x %y start
@@ -569,7 +569,7 @@ PlvDrawShapeSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 	}
       }
     }
-    
+
     if (bChangeExisting) {
       if (iChangeExisting >= 0)
 	theSel[iChangeExisting] = pt;
@@ -626,20 +626,20 @@ PlvDrawShapeSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 	// insert new point between iLine and iLine+1
 	iChangeExisting = iLine + 1;
 	bChangeExisting = true;
-	theSel.pts.insert (&theSel[iChangeExisting], pt);
+	theSel.pts.insert (theSel.pts.begin() + iChangeExisting, pt);
       }
     }
   } else if (!strcmp (argv[3], "remove")) {
     // if this was a click and not a drag, remove selected pt
     if (iDelete >= 0 && ptOnHandle (pt, theSel[iDelete])) {
-      theSel.pts.erase (&theSel[iDelete]);
-    }    
+      theSel.pts.erase (theSel.pts.begin() + iDelete);
+    }
   }
- 
+
 #ifndef no_overlay_support
   Togl_PostOverlayRedisplay (toglCurrent);
 #else
-  drawOverlayAndSwap(toglCurrent); 
+  drawOverlayAndSwap(toglCurrent);
 #endif
 
   return TCL_OK;
@@ -647,7 +647,7 @@ PlvDrawShapeSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvDrawBoxSelectionCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvDrawBoxSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   if (argc < 5)
@@ -656,13 +656,13 @@ PlvDrawBoxSelectionCmd(ClientData clientData, Tcl_Interp *interp,
   Selection::Pt pt;
   pt.x = atoi(argv[2]);
   pt.y = theHeight - atoi(argv[3]);
-  
+
   struct Togl* togl = toglHash.FindTogl (argv[1]);
   assert (togl);
 
   // rect is stored as 4 points, corners, so that area selection
   // iterators actually work with it
-  
+
   if (argc > 4 && !strcmp (argv[4], "start")) {
     bChangeExisting = false;
     bManipulatingSel = true;
@@ -686,7 +686,7 @@ PlvDrawBoxSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 	}
       }
     }
-    
+
     if (!bChangeExisting) {
       theSel.clear();
       theSel.type = Selection::rect;
@@ -721,11 +721,11 @@ PlvDrawBoxSelectionCmd(ClientData clientData, Tcl_Interp *interp,
       theSel[2] = pt;
     }
   }
-  
+
 #ifndef no_overlay_support
   Togl_PostOverlayRedisplay (togl);
 #else
-  drawOverlayAndSwap(togl); 
+  drawOverlayAndSwap(togl);
 #endif
 
   return TCL_OK;
@@ -733,7 +733,7 @@ PlvDrawBoxSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvGetSelectionCursorCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvGetSelectionCursorCmd(ClientData clientData, Tcl_Interp *interp,
 			 int argc, char *argv[])
 {
   if (argc < 3)
@@ -742,7 +742,7 @@ PlvGetSelectionCursorCmd(ClientData clientData, Tcl_Interp *interp,
   Selection::Pt pt;
   pt.x = atoi(argv[1]);
   pt.y = theHeight - atoi(argv[2]);
-  
+
   // cursors: default = tcross, handle = dotbox, border = fleur
   // check handles
   if (findSelectionHandle (pt, theSel) >= 0)
@@ -760,7 +760,7 @@ PlvGetSelectionCursorCmd(ClientData clientData, Tcl_Interp *interp,
 // Gets a string for the info of the current selection object
 // ------------------------------------------------------------
 int
-PlvGetSelectionInfoCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvGetSelectionInfoCmd(ClientData clientData, Tcl_Interp *interp,
 			  int argc, char *argv[])
 {
   char buff[256];
@@ -771,9 +771,9 @@ PlvGetSelectionInfoCmd(ClientData clientData, Tcl_Interp *interp,
     return TCL_ERROR;
     //    break;
   case Selection::line:
-    sprintf(buff, "line %i %i %i %i", theSel[0].x, theSel[0].y, 
+    sprintf(buff, "line %i %i %i %i", theSel[0].x, theSel[0].y,
 	    theSel[1].x, theSel[1].y);
-    break; 
+    break;
   case Selection::rect:
     /*
     sprintf(buff, "rect %i %i %i %i %i %i %i %i", theSel[0].x, theSel[0].y,
@@ -800,7 +800,7 @@ PlvGetSelectionInfoCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvMeshIntersectSelectionCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvMeshIntersectSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 			     int argc, char *argv[])
 {
   if (argc < 2) {
@@ -846,25 +846,25 @@ void
 drawSelection (struct Togl* togl)
 {
   int width, height;
-  
+
   width = Togl_Width (togl);
   height = Togl_Height (togl);
-  
-  glViewport(0, 0, width, height); 
+
+  glViewport(0, 0, width, height);
   glMatrixMode(GL_PROJECTION);
   glPushMatrix(); // kberg - needed when overlay planes not available
   glLoadIdentity();
   gluOrtho2D(-0.5, width+0.5, -0.5, height+0.5);
-				   
+
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix(); // kberg - needed for when overlay planes not available
   glLoadIdentity();
-  
+
   int nPts = theSel.pts.size();
   if (nPts) {
     glPushAttrib (GL_LIGHTING_BIT);
     glDisable (GL_LIGHTING);
-    
+
     // draw handles, if it's not currently being dragged
     if (!bManipulatingSel) {
       for (int i = 0; i < nPts; i++)
@@ -872,8 +872,8 @@ drawSelection (struct Togl* togl)
 		    theSel.type == Selection::shape
 		    && ((i==0) || (i==(nPts-1))));
     }
-  
-    // now draw the selection itself as a line loop   
+
+    // now draw the selection itself as a line loop
 #ifdef no_overlay_support
     glColor3f(1,0,0);
 #else
@@ -886,7 +886,7 @@ drawSelection (struct Togl* togl)
 
     glPopAttrib();
   }
-  
+
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
@@ -898,7 +898,7 @@ drawSelection (struct Togl* togl)
 static void drawHandle (Selection::Pt pt, bool bSelected)
 {
   glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
- 
+
 #ifndef no_overlay_support
   glIndexi (bSelected ? handleSelColor : handleColor);
 
@@ -973,7 +973,7 @@ static int findSelectionLine (Selection::Pt pt, const Selection& sel)
   for (int i = 0; i < nPts; i++)
     if (ptOnLine (pt, sel[i], sel[(i+1)%nPts]))
       return i;
-  
+
   return -1;
 }
 
@@ -1057,14 +1057,14 @@ unsigned char* filledPolyPixels (int& width, int& height,
     coords[3*i+2] = 0;
     gluTessVertex (tess, coords + 3*i, coords + 3*i);
   }
-  
+
   gluTessEndContour (tess);
   gluTessEndPolygon (tess);
   gluDeleteTess (tess);
   delete coords;
 
   // free memory used by combine-created vertices
-  for (i = 0; i < hack_vert_alloc.size(); i++)
+  for (int i = 0; i < hack_vert_alloc.size(); i++)
     delete hack_vert_alloc[i];
   hack_vert_alloc.clear();
 #endif // GLU_VERSION_1_2
@@ -1103,7 +1103,7 @@ unsigned char* filledPolyPixels (int& width, int& height,
 
 
 int
-PlvGetSelectedMeshesCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvGetSelectedMeshesCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   bool bIncludeHidden = false;
@@ -1132,7 +1132,7 @@ PlvGetSelectedMeshesCmd(ClientData clientData, Tcl_Interp *interp,
     return TCL_ERROR;
   }
 
-  for (i = 0; i < theScene->meshSets.size(); i++) {
+  for (int i = 0; i < theScene->meshSets.size(); i++) {
     DisplayableMesh *displayMesh = theScene->meshSets[i];
     if (!bIncludeHidden && !displayMesh->getVisible())
       continue;
@@ -1152,7 +1152,7 @@ PlvGetSelectedMeshesCmd(ClientData clientData, Tcl_Interp *interp,
     }
     delete filter;
   }
-  
+
   return TCL_OK;
 }
 
@@ -1167,8 +1167,8 @@ void resizeSelectionToWindow (struct Togl* togl)
   float oldhyp = sqrt (theWidth*theWidth + theHeight*theHeight);
   float scale = newhyp / oldhyp;
 
-  int cx = 0, cy = 0;
-  for (int i = 0; i < nPts; i++) {
+  int cx = 0, cy = 0, i = 0;
+  for (i = 0; i < nPts; i++) {
     cx += theSel[i].x;
     cy += theSel[i].y;
   }
@@ -1178,7 +1178,7 @@ void resizeSelectionToWindow (struct Togl* togl)
   int ncx = cx * Togl_Width (togl) / theWidth;
   int ncy = cy * Togl_Height (togl) / theHeight;
 
-  for (i = 0; i < nPts; i++) {
+  for (int i = 0; i < nPts; i++) {
     theSel[i].x = ncx + scale * (theSel[i].x - cx);
     theSel[i].y = ncy + scale * (theSel[i].y - cy);
   }

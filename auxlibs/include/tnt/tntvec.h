@@ -12,7 +12,7 @@
 #define TVECTOR_H
 
 #include <stdlib.h>
-#include <iostream.h>
+#include <iostream>
 #include <strstream.h>
 #include <assert.h>
 
@@ -222,7 +222,7 @@ class TNT_Vector
 
 };
 
-#include <iostream.h>
+#include <iostream>
 
 template <class BBVec>
 ostream& operator<<(ostream &s, const TNT_Vector<BBVec> &A)

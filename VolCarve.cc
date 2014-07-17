@@ -11,15 +11,12 @@
 //
 //############################################################
 
-#include <map.h>
-#include <stack.h>
-#include <deque.h>
+#include <map>
+#include <stack>
+#include <deque>
 #ifdef WIN32
 #	include <float.h>
 #	define isnanf _isnan
-#endif
-#ifdef sgi
-#	include <ieeefp.h>
 #endif
 #include "VolCarve.h"
 #include "MCEdgeTable.h"
@@ -80,7 +77,7 @@ private:
 public:
 
   CTL_memhandler(void) : blockSize(0) {}
-  ~CTL_memhandler(void) 
+  ~CTL_memhandler(void)
     {
       //SHOW(free.size());
       //SHOW(count);
@@ -90,7 +87,7 @@ public:
       }
     }
 
-  void set_blocksize(int bs) 
+  void set_blocksize(int bs)
     {
       if (bs != blockSize) {
 	while (!free.empty()) {
@@ -105,10 +102,10 @@ public:
   CubeTreeLeafData *operator()(void)
     {
       CubeTreeLeafData *ret;
-      if (!free.empty()) { 
-	ret = free.top(); 
-	free.pop(); 
-	return ret; 
+      if (!free.empty()) {
+	ret = free.top();
+	free.pop();
+	return ret;
       } else {
 	count++;
 	return new CubeTreeLeafData[blockSize];
@@ -186,13 +183,13 @@ CubeTreeBase::is_neighbor_cell (int face, int& iChild)
   int sign = face % 2;
 
   // neighbor will be in same position as we are, except
-  // the bit representing the axis we're moving along will be 
+  // the bit representing the axis we're moving along will be
   // flipped
   iChild = parIdx ^ (1 << axis);
 
   // if we have the bit for that axis set and the direction of
-  // movement is negative, it's a sibling, but if the direction 
-  // of movement is positive, it's not a sibling.  
+  // movement is negative, it's a sibling, but if the direction
+  // of movement is positive, it's not a sibling.
   // Vice-versa if our child index does
   // not have the bit for the movement axis set.
   int haveSign = (0 < (parIdx & (1 << axis)));
@@ -216,7 +213,7 @@ view_query_status (vector<RigidScan*> &views,
 		   const Pnt3 &ctr, float size,
 		   OccSt type = INDETERMINATE)
 {
-  vector<RigidScan*>::iterator vit; 
+  vector<RigidScan*>::iterator vit;
   for (vit = views.begin(); vit != views.end(); vit++) {
     OccSt t = (*vit)->carve_cube(ctr, size);
     // OccSt types listed in descending precedence order
@@ -253,7 +250,7 @@ view_query_distance (vector<RigidScan*> &views, const Pnt3& ctr,
   float thr  = 15.0;
   float ramp = 30.0;
 
-  vector<RigidScan*>::iterator vit; 
+  vector<RigidScan*>::iterator vit;
   for (vit = views.begin(); vit != views.end(); vit++) {
     float conf = (*vit)->closest_along_line_of_sight (ctr, closest, occ);
     //float conf = (*vit)->closest_point_on_mesh(ctr, closest, occ);
@@ -288,18 +285,18 @@ view_query_distance (vector<RigidScan*> &views, const Pnt3& ctr,
 //
 ///////////////////////////////////////////////////////////////////////////
 
-void 
+void
 CubeTree::delete_children (void)
-{ 
+{
   for (int i = 0; i < 8; i++) {
-    delete child[i]; 
+    delete child[i];
     child[i] = NULL;
   }
 }
 
 
 CubeTreeBase*
-CubeTree::recursive_find(int face, stack<int>& path, 
+CubeTree::recursive_find(int face, stack<int>& path,
 			 bool bReachedTop)
 {
   if (path.empty()) {
@@ -328,7 +325,7 @@ CubeTree::recursive_find(int face, stack<int>& path,
       return NULL;
     bool sibling = is_neighbor_cell (face, iChild);
     if (sibling) {
-      // if we have a sibling, we can traverse 
+      // if we have a sibling, we can traverse
       // (and we've reached the top!)
       CubeTreeBase* sibling = parent->child[iChild];
       if (!sibling) return NULL;
@@ -381,7 +378,7 @@ CubeTree::CubeTree (Pnt3 c, float s, CubeTree* _par, int _i)
   : CubeTreeBase (c, s, _par, _i)
 {
   for (int i = 0; i < 8; i++)
-    child[i] = NULL; 
+    child[i] = NULL;
 }
 
 
@@ -428,18 +425,18 @@ CubeTree::keep_walls(bool x, bool y, bool z)
 	}
       }
     }
-  }    
+  }
 }
 
 
-void 
+void
 CubeTree::carve_help(vector<RigidScan*> &views, int levels,
 		     vector<int> &tri_inds,
 		     float perc_min, float perc_max)
 {
   // When checking status inflate size by the size of a leaf
-  // so if the surface goes close to the  CubeTreeLeaf block boundary, 
-  // its neighbors exist in the tree. 
+  // so if the surface goes close to the  CubeTreeLeaf block boundary,
+  // its neighbors exist in the tree.
   vector<RigidScan*> remaining_views;
   type = ::view_query_status (views, remaining_views,
 			      mCtr, mSize+leafSize, type);
@@ -481,7 +478,7 @@ CubeTree::carve_help(vector<RigidScan*> &views, int levels,
       ctl->extract_faces(tri_inds);
     }
 
-    /*    
+    /*
     // release unneeded parts of the tree
     if (i&1) child[i-1]->keep_walls(0,1,1);
     else {
@@ -504,7 +501,7 @@ CubeTree::carve_help(vector<RigidScan*> &views, int levels,
   if (allChildrenOut) {
     delete_children();
     type = OUTSIDE;
-  } 
+  }
   if (allChildrenIn) {
     delete_children();
     type = INSIDE;
@@ -520,7 +517,7 @@ CubeTree::carve_help(vector<RigidScan*> &views, int levels,
 
 // first split, then
 // extract the boundary between outsides and the rest
-void 
+void
 CubeTree::carve(vector<RigidScan*> &views, int levels,
 		vector<Pnt3> &coords, vector<int> &tri_inds)
 {
@@ -531,7 +528,7 @@ CubeTree::carve(vector<RigidScan*> &views, int levels,
 #endif
 
   // Figure out the size of the leaves.
-  leafSize = mSize; 
+  leafSize = mSize;
   for (int j = 0; j<levels; j++) leafSize *= .5;
   nVoxels  = 1<<3*leafDepth;
   mem_handler.set_blocksize(nVoxels);
@@ -575,8 +572,8 @@ CubeTreeLeaf::CubeTreeLeaf (const Pnt3 &c, float s,
   : CubeTreeBase (c, s, _par, _i), data(NULL)
 {
   // When checking status inflate size by the size of a leaf
-  // so if the surface goes close to the  CubeTreeLeaf block boundary, 
-  // it's neighbors exist in the tree. 
+  // so if the surface goes close to the  CubeTreeLeaf block boundary,
+  // it's neighbors exist in the tree.
   vector<RigidScan*> remaining_views;
   type = ::view_query_status (views, remaining_views,
 			      c, s+leafSize);
@@ -631,8 +628,8 @@ CubeTreeLeaf::CubeTreeLeaf (const Pnt3 &c, float s,
 
 	float &dist = data[i].distance;
 
-	lCtr.set(base[0] + leafSize*x, 
-		 base[1] + leafSize*y, 
+	lCtr.set(base[0] + leafSize*x,
+		 base[1] + leafSize*y,
 		 base[2] + leafSize*z);
 	data[i].confidence = view_query_distance(views, lCtr,dist);
 
@@ -696,7 +693,7 @@ CubeTreeLeaf::~CubeTreeLeaf (void)
 
 
 static void
-cube_bdry(const Pnt3 &ctr, float size, 
+cube_bdry(const Pnt3 &ctr, float size,
 	  vector<Pnt3> &p, vector<int> &i)
 {
   float w = .5 * size;
@@ -715,7 +712,7 @@ cube_bdry(const Pnt3 &ctr, float size,
   };
 
   int   s = vertex_list.size();
-  for (int j=0; j<36; j++) 
+  for (int j=0; j<36; j++)
     i.push_back(s+triinds[j]);
 }
 
@@ -794,7 +791,7 @@ CubeTreeLeaf::extract_faces(vector<int> &tri_inds)
 	continue; // no neighbor, skip
       }
     }
-    
+
     if (z == 0) {
       nborZ = find_neighbor (face_negZ);
       if (nborZ && nborZ->data) {
@@ -836,7 +833,7 @@ CubeTreeLeaf::extract_faces(vector<int> &tri_inds)
 	continue; // no neighbor, skip
       }
     }
-    
+
     if (nborXY && nborZ) {
       CubeTreeLeaf* nborXYZ = nborXY->find_neighbor (face_negZ);
       if (nborXYZ && nborXYZ->data) {
@@ -846,9 +843,9 @@ CubeTreeLeaf::extract_faces(vector<int> &tri_inds)
       }
     }
 
-    for (j=0; j<8; j++) 
+    for (j=0; j<8; j++)
       assert(vp[j]->distance > -1e22 && vp[j]->distance < 1e22);
-    
+
     if (vp[0]->distance > 0.0) edgeTableIndex |=   1;
     if (vp[1]->distance > 0.0) edgeTableIndex |=   2;
     if (vp[2]->distance > 0.0) edgeTableIndex |=   4;
@@ -919,7 +916,7 @@ CubeTreeLeaf::neighbor_status (int face, int child)
 
 
 CubeTreeBase*
-CubeTreeLeaf::recursive_find(int face, 
+CubeTreeLeaf::recursive_find(int face,
 			     stack<int>& path, bool bReachedTop)
 {
   return this;

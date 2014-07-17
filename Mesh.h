@@ -2,14 +2,14 @@
 #define _MESH_
 
 #include <limits.h>
-#include <vector.h>
+#include <vector>
 #include "ResolutionCtrl.h"
 #include "defines.h"
 #include "Bbox.h"
-#include <set.h>
+#include <unordered_set>
 
-typedef set<int, less<int> > TriList; // List of triangles attached to a single vtx
-typedef set<int, less<int> >::iterator TriListI;
+typedef unordered_set<int> TriList; // List of triangles attached to a single vtx
+typedef unordered_set<int>::iterator TriListI;
 
 class Mesh {
 private:
@@ -21,16 +21,16 @@ private:
                             // to lie near the original noisy surface
 
   vector<TriList> vtxTris;  // The list of tris attached to each vtx
-  
+
   vec3uc *vertMatDiff;
   vec2f *texture;
   float *vertIntensity;
   float *vertConfidence;
   int hasVertNormals;
   vector<char> bdry; // 1 for boundary vtx, used for registration
-  
+
   char texFileName[PATH_MAX];
-  
+
   vector<int> tris;
   /* store voxels each tri is from - for display voxel feature */
   vector<float> fromVoxels;
@@ -44,12 +44,12 @@ private:
 
   Pnt3  center;
   float radius;
-  
+
   void subsample_points(float rate, vector<Pnt3> &pts);
   void subsample_points(float rate, vector<Pnt3> &pts,
 			vector<Pnt3> &nrms);
   bool subsample_points(int n, vector<Pnt3> &pts);
-  bool subsample_points(int n, vector<Pnt3> &pts, 
+  bool subsample_points(int n, vector<Pnt3> &pts,
 			vector<Pnt3> &nrms);
   void remove_unused_vtxs(void);
   void init (void);
@@ -61,10 +61,10 @@ public:
   Mesh();
   Mesh (const vector<Pnt3>& _vtx, const vector<int>& _tris);
   ~Mesh();
-  
+
   void flipNormals();
   void initNormals(int useArea = FALSE);
-  
+
   vector<int>& getTris();
   vector<int>& getTstrips();
   const Pnt3& Vtx (int v) { return vtx[v]; }
@@ -73,13 +73,13 @@ public:
 
   void freeTris (void);
   void freeTStrips (void);
-  
+
   void updateScale();
-  void showBBox(void) 
+  void showBBox(void)
     { cout << bbox.min() << " " << bbox.max() << endl; }
 
   bool bNeedsSave;
-  
+
   int  num_tris(void);
   int  num_verts(void)  { return vtx.size(); }
 
@@ -91,14 +91,14 @@ public:
   void saveOrigVerts();
   void calcTriLists();
   // -----------
-  
+
   Mesh *Decimate (int numFaces, int optLevel,
 		  float errLevel, float boundWeight,
 		  ResolutionCtrl::Decimator dec = ResolutionCtrl::decQslim);
   void remove_stepedges(int percentile = 50, int factor = 4);
 
   int  readPlyFile (const char *filename);
-  int  writePlyFile (const char *filename, int useColorNotTexture, 
+  int  writePlyFile (const char *filename, int useColorNotTexture,
 		     int writeNormals);
 
   void addTri(int v1, int v2, int v3)
@@ -157,7 +157,7 @@ public:
  */
 
 //typedef enum {
-//  PLACE_ENDPOINTS, PLACE_ENDORMID, PLACE_LINE, PLACE_OPTIMAL 
+//  PLACE_ENDPOINTS, PLACE_ENDORMID, PLACE_LINE, PLACE_OPTIMAL
 //} optLevelT;
 
 

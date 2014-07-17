@@ -1,9 +1,9 @@
 
 //############################################################
-// 
+//
 // CyraSubsample.cc
 //     (Extra functions for CyraScan.cc)
-//   
+//
 // Lucas Pereira
 // Thu Jul 16 15:20:47 1998
 //
@@ -18,16 +18,16 @@
 #include "KDindtree.h"
 #include "ColorUtils.h"
 #include <stdio.h>
-#include <iostream.h>
-#include <fstream.h>
-#include <stack.h>
+#include <iostream>
+#include <fstream>
+#include <stack>
 
-
+using namespace std;
 
 // This function, given an original mesh, does mxn subsampling,
 // using the given filter
 bool
-CyraResLevel::Subsample(CyraResLevel &original, int m, int n, 
+CyraResLevel::Subsample(CyraResLevel &original, int m, int n,
 			CyraFilter filter)
 {
   // Make width, height the ceilings of dividing by mxn
@@ -113,14 +113,14 @@ CyraResLevel::PointFilter(CyraResLevel &original, int m, int n)
       // and stick it into this guy
       points.push_back(samp);
       if (samp.confidence) numpoints++;
-    }	
+    }
   }
   return true;
 }
 
 
 // This function first selects the median 50%, and then does a mean
-// filter on those samples. 
+// filter on those samples.
 //
 // Note:  For now, it will only take into account the first 64 samples.
 // if max is larger than that, samples will be ignored...
@@ -131,8 +131,8 @@ CyraResLevel::Mean50Filter(CyraResLevel &original, int m, int n)
 {
   CyraSample samp;
   // pointer array to first 64 valid samples...
-  CyraSample *validSamp[MAX_VALID_SAMPS];  
-  
+  CyraSample *validSamp[MAX_VALID_SAMPS];
+
   cerr << "Running Mean50 filter, " << m << " x " << n << endl;
 
   for (int xx=0; xx < width; xx++) {
@@ -157,7 +157,7 @@ CyraResLevel::Mean50Filter(CyraResLevel &original, int m, int n)
       // Special case 0, 1, 2, 3, 4 valid samples....
       // Set samp, and then we'll push it on the list later...
       switch (nvalid) {
-      case 0:	
+      case 0:
 	// If no valid samples, set to empty. E.g., just copy
 	// the first point, since it's empty, too...
 	samp = original.point(origxx, origyy);
@@ -170,7 +170,7 @@ CyraResLevel::Mean50Filter(CyraResLevel &original, int m, int n)
 	// Average the two samples together...
 	samp.interp(*(validSamp[0]), *(validSamp[1]));
 	break;
-      case 3: 
+      case 3:
 	{ // open scope for local vars...
 	  // Compute the range of depth values in valid samples...
 	  CyraSample *bigz = validSamp[0];
@@ -184,7 +184,7 @@ CyraResLevel::Mean50Filter(CyraResLevel &original, int m, int n)
 	  }
 	  // Set midz to be the middle sample...
 	  CyraSample *midz = validSamp[0];
-	  for (i=1; i < 3; i++) {
+	  for (int i=1; i < 3; i++) {
 	    if (validSamp[i] != bigz && validSamp[i] != litz) {
 	      midz = validSamp[i];
 	    }
@@ -215,9 +215,9 @@ CyraResLevel::Mean50Filter(CyraResLevel &original, int m, int n)
 	      litn = i;
 	    }
 	  }
-	
+
 	  // now find the other two...  Basically, since switch is
-	  // fast, this computes, based on the values of the big/little 
+	  // fast, this computes, based on the values of the big/little
 	  // z values, which two other samples to interpolate...
 	  switch (bign*4 + litn) {
 	  case 1:
@@ -279,7 +279,7 @@ CyraResLevel::Mean50Filter(CyraResLevel &original, int m, int n)
 	break;
       default:
 	{ // open scope for local vars...
-	  // more than 3 samples.... 
+	  // more than 3 samples....
 	  // throw out biggest/smallest pairs until we're down to halfway
 	  assert(nvalid > 3);
 	  int nvalidleft = nvalid;
@@ -314,7 +314,7 @@ CyraResLevel::Mean50Filter(CyraResLevel &original, int m, int n)
       // Add it to the list...
       points.push_back(samp);
       if (samp.confidence) numpoints++;
-    }	
+    }
   }
 
   return true;

@@ -16,7 +16,7 @@
 #ifndef FCSCMAT_H
 #define FCSCMAT_H
 
-#include <iostream.h>
+#include <iostream>
 #include <assert.h>
 #include "tnt.h"
 #include "vec.h"

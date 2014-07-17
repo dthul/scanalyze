@@ -10,10 +10,10 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
-#include <fstream.h>
+#include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifndef linux
+#ifndef __linux
 #       include <ifl/iflFile.h>
 #endif
 #ifdef WIN32
@@ -108,7 +108,7 @@ ProjectiveTexture::loadImage(	const char *filename,
 	int width, height;
 	unsigned char *image=NULL;
 	
-#ifndef linux
+#ifndef __linux
 	if (actuallyLoadImage) {
 	  // Load the image
 	  iflStatus sts;

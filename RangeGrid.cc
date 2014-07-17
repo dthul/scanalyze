@@ -5,14 +5,14 @@
 #include "plvGlobals.h"
 #include "RangeGrid.h"
 #include "Mesh.h"
-#include <iostream.h>
+#include <iostream>
 #ifdef WIN32
 #include <io.h>
 #endif
 #include <malloc.h>
 #include <math.h>
 #include <fcntl.h>
-#ifndef linux
+#ifndef __linux
 #    include <stdexcept.h>
 #endif
 #include "cyfile.h"
@@ -63,12 +63,12 @@ RangeGrid::RangeGrid()
   intensity = NULL;
   matDiff = NULL;
   indices = NULL;
-  
+
   hasColor = FALSE;
   hasConfidence = FALSE;
   hasIntensity = FALSE;
   hasTexture = FALSE;
-  
+
   obj_info = NULL;
   num_obj_info = 0;
   isModelMakerScan = FALSE;
@@ -78,27 +78,27 @@ RangeGrid::RangeGrid()
 RangeGrid::~RangeGrid()
 {
   delete [] coords;
-  
+
   delete [] indices;
-  
+
   if (num_obj_info > 0) {
     for (int i = 0; i < num_obj_info; i++)
       delete [] obj_info[i];
     delete [] obj_info;
   }
-  
+
   if (hasConfidence)
     delete [] confidence;
-  
+
   if (hasColor)
     delete [] matDiff;
-  
+
   if (hasIntensity)
     delete [] intensity;
 }
 
 
-int 
+int
 is_range_grid_file(const char *filename)
 {
   int nelems;
@@ -107,7 +107,7 @@ is_range_grid_file(const char *filename)
   PlyFile ply;
   if (ply.open_for_reading(filename, &nelems, &elist) == 0)
     return 0;
-  
+
   for (int i = 0; i < nelems; i++) {
     if (!strcmp(elist[i], "range_grid"))
       return 1;
@@ -283,11 +283,11 @@ RangeGrid::readRangeGrid(const char *name)
       ply.get_property ("vertex", &vert_std_props[0]);
       ply.get_property ("vertex", &vert_std_props[1]);
       ply.get_property ("vertex", &vert_std_props[2]);
-      if (get_confidence)     
+      if (get_confidence)
         ply.get_property ("vertex", &vert_std_props[3]);
-      if (get_intensity)             
+      if (get_intensity)
         ply.get_property ("vertex", &vert_std_props[4]);
-      if (get_color) {    
+      if (get_color) {
         ply.get_property ("vertex", &vert_std_props[5]);
         ply.get_property ("vertex", &vert_std_props[6]);
         ply.get_property ("vertex", &vert_std_props[7]);
@@ -306,11 +306,11 @@ RangeGrid::readRangeGrid(const char *name)
 	matDiff = new vec3uc[numSamples];
 
       for (j = 0; j < num_elems; j++) {
-        __STL_TRY {
+    try {
 	  ply.get_element ((void *) &vert);
 	}
-	__STL_CATCH_ALL {
-	  
+	catch (exception const& e) {
+
 	  return NULL;
 	}
 
@@ -334,8 +334,8 @@ RangeGrid::readRangeGrid(const char *name)
           else
 	    conf = (max_std - std) / (max_std - avg_std);
 
-	  // Unsafe to use vertex intensity, as aperture 
-	  // settings may change between scans.  
+	  // Unsafe to use vertex intensity, as aperture
+	  // settings may change between scans.
 	  // Instead, use std_dev confidence * orientation.
 	  // conf *= vert.intensity;
 
@@ -362,10 +362,10 @@ RangeGrid::readRangeGrid(const char *name)
       ply.get_element_setup(elem_name, 1, range_props);
       for (j = 0; j < num_elems; j++) {
 
-	__STL_TRY {	  
+	try {
 	  ply.get_element((void *) &range_pnt);
 	}
-	__STL_CATCH_ALL {
+	catch (exception const& e) {
 	  return NULL;
 	}
 
@@ -389,7 +389,7 @@ RangeGrid::readRangeGrid(const char *name)
 	  }
 	  index = best_index;
 	  if (get_confidence || get_std_dev) {
-	    if (confidence[index] > 0.0)  
+	    if (confidence[index] > 0.0)
 	      indices[j] = index;
 	    else
 	      indices[j] = -1;
@@ -436,7 +436,7 @@ RangeGrid::toMesh(int subSamp, int hasTexture)
   Mesh *mesh = new Mesh;
 
   int _ltMin = ltMax - (ltMax/subSamp)*subSamp;
-  
+
   // create a list saying whether a vertex is going to be used
 
   int *vert_index = new int[numSamples];
@@ -618,7 +618,7 @@ RangeGrid::toMesh(int subSamp, int hasTexture)
       }
     }
   }
-  
+
 
   // Do the wrap around for cylindrical scans
   if (!isLinearScan) {
@@ -652,7 +652,7 @@ RangeGrid::toMesh(int subSamp, int hasTexture)
 	// compute lengths of cross-edges
 	float len1 = dist(mesh->vtx[vin1], mesh->vtx[vin3]);
 	float len2 = dist(mesh->vtx[vin2], mesh->vtx[vin4]);
-	
+
 	if (len1 < len2) {
 	  mesh->addTri(vin2, vin1, vin3);
 	  mesh->addTri(vin1, vin4, vin3);
@@ -713,11 +713,11 @@ RangeGrid::toMesh(int subSamp, int hasTexture)
 
 
 void
-RangeGrid::addTriangleCheckNormal(Mesh *mesh, 
-				  int vin1, int vin2, int vin3, 
+RangeGrid::addTriangleCheckNormal(Mesh *mesh,
+				  int vin1, int vin2, int vin3,
 				  Pnt3 &viewDir, float minDot)
 {
-  float _dot = fabs(dot(viewDir, 
+  float _dot = fabs(dot(viewDir,
 			normal(mesh->Vtx(vin1), mesh->Vtx(vin2),
 			       mesh->Vtx(vin3))));
   int tooGrazing = _dot < minDot;
@@ -729,8 +729,8 @@ RangeGrid::addTriangleCheckNormal(Mesh *mesh,
 
 
 void
-RangeGrid::addTriangleCheckLength(Mesh *mesh, 
-				  int vin1, int vin2, int vin3, 
+RangeGrid::addTriangleCheckLength(Mesh *mesh,
+				  int vin1, int vin2, int vin3,
 				  float maxLength)
 {
   const Pnt3 &c1 = mesh->Vtx(vin1);
@@ -789,13 +789,13 @@ RangeGrid::readCyfile(const char *name)
   int range1, range2;
 
   if (!isLinearScan) {
-	
+
     /* For moving targets (like heads), the begin and
        end points will differ noticably.  This is an attempt
        to counteract that motion by shifting the range data
        by an average amount of discrepancy.  A better job
        would be to find a more complex rigid or even
-       non-rigid deformation that would match the points. 
+       non-rigid deformation that would match the points.
        Even better, find new matches iteratively as in Besl
        and McKay. */
 
@@ -843,13 +843,13 @@ RangeGrid::readCyfile(const char *name)
 	  //range -= int(diff*float(xx)/gs->nlg);
 	  theta = xx*lgincr + M_PI;
 	  x = -range*1e-6*sin(theta);
-	  z = range*1e-6*cos(theta);		    
+	  z = range*1e-6*cos(theta);
 	}
 	coords[count].set(x,y,z);
 	count++;
       }
     }
-  }    
+  }
 
   if (!isLinearScan) {
     ltMax = yymax;

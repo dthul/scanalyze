@@ -17,7 +17,7 @@
 #include "vec.h"
 #include <stdlib.h>
 #include <assert.h>
-#include <iostream.h>
+#include <iostream>
 #include <strstream.h>
 #ifdef TNT_USE_REGIONS
 #include "region2d.h"

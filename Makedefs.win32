@@ -66,8 +66,8 @@ INCLUDES += -I$(IFL)/include \
 
 
 # STL: included copy on VC6; downloaded SGI version, because a lot of
-# the code includes <vector.h>, etc. and the new version
-# with MSVC6 only includes <vector>, not <vector.h>.
+# the code includes <vector>, etc. and the new version
+# with MSVC6 only includes <vector>, not <vector>.
 # We could probably change all the code to the new style,
 # but it compiles and runs the way it is if you include
 # both stl's on the include search path (Microsoft's first

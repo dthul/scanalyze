@@ -8,7 +8,9 @@
 #define _Image_h
 
 /*** includes ***/
-#include <iostream.h>
+#include <iostream>
+
+using namespace std;
 
 typedef unsigned char uchar;
 
@@ -41,19 +43,19 @@ public:
   int width(void)     const { return xsize; }
   int height(void)    const { return ysize; }
 
-  uchar getR(int x, int y) const 
+  uchar getR(int x, int y) const
     { return at(x,y)[0]; }
-  uchar getG(int x, int y) const 
+  uchar getG(int x, int y) const
     { return (dim>1) ? at(x,y)[1] : at(x,y)[0]; }
-  uchar getB(int x, int y) const 
+  uchar getB(int x, int y) const
     { return (dim>1) ? at(x,y)[2] : at(x,y)[0]; }
-  uchar getValue(int x, int y) 
+  uchar getValue(int x, int y)
     { return *at(x,y); }
-  uchar *getValues(int x, int y) 
+  uchar *getValues(int x, int y)
     { return at(x,y); }
   const uchar *getValuesConst(int x, int y) const
     { return at(x,y); }
-  void setValue(int x, int y, uchar a, 
+  void setValue(int x, int y, uchar a,
 		uchar b=0, uchar c=0, uchar d=0);
 
   operator const uchar *(void) const   { return _data; }
@@ -78,7 +80,7 @@ public:
   void  shrink_by_half(Image &simg) const;
   Image warp(float m[3][3]) const;
   Image crop(int x, int y, int dx, int dy);
-  
+
   Image &fill(uchar a, uchar b=0, uchar c=0, uchar d=0);
 
   friend ostream &operator <<(ostream &out, Image &im);

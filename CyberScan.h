@@ -116,7 +116,7 @@ public:
 
   void computeBBox();
   void flipNormals();
-  virtual crope getInfo(void);
+  virtual string getInfo(void);
 
   unsigned int get_scanner_config(void);
   float get_scanner_vertical(void);
@@ -125,8 +125,8 @@ public:
   bool worldCoordToSweepCoord(const Pnt3 &wc, int *sweepIndex, Pnt3 &sc);
   void sweepCoordToWorldCoord(int sweepIndex, const Pnt3 &sc, Pnt3 &wc);
 
-  bool read(const crope &fname);
-  bool write(const crope &fname);
+  bool read(const string &fname);
+  bool write(const string &fname);
   bool is_modified (void);
 
   bool load_resolution (int iRes);
@@ -203,8 +203,8 @@ public:
   void computeBBox();
   void flipNormals();
 
-  bool read (const crope &fname);
-  bool write (const crope &fname);
+  bool read (const string &fname);
+  bool write (const string &fname);
 
   bool load_resolution (int iRes);
 
@@ -234,7 +234,7 @@ public:
     { return sd.vrip_reorientation_frame(); }
 
   // debugging accessor
-  crope get_description (void) const;
+  string get_description (void) const;
 
   virtual float 
   closest_along_line_of_sight(const Pnt3 &p, Pnt3 &cp, 

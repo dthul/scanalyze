@@ -4,8 +4,8 @@
 #endif
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <algo.h>
-#include <vector.h>
+#include <algorithm>
+#include <vector>
 #include "plvDraw.h"
 #include "plvScene.h"
 #include "plvGlobals.h"
@@ -60,7 +60,7 @@ initDrawing()
   thePowers = new float[NUM_POWERS*NUM_POWER_ARGS];
   for (int i = 0; i < NUM_POWERS; i++) {
     for (int j = 0; j < NUM_POWER_ARGS; j++) {
-      thePowers[j + i*NUM_POWER_ARGS] = 
+      thePowers[j + i*NUM_POWER_ARGS] =
 	pow(float(j)/(NUM_POWER_ARGS-1), i);
     }
   }
@@ -99,7 +99,7 @@ initRenderParams()
     theRenderParams->colorMode = grayColor;
     theRenderParams->useEmissive = false;
     theRenderParams->twoSidedLighting = false;
-    
+
     // taken care of by two sided lighting
     // kberg - 6/5/01
     //theRenderParams->backFaceEmissive = false;
@@ -112,7 +112,7 @@ initRenderParams()
     theRenderParams->lineWidth = 1.0;
 
     theRenderParams->blend = 0;
-    
+
     theRenderParams->shininess = 20;
 
     theRenderParams->specular[0] = 128;
@@ -132,12 +132,12 @@ initRenderParams()
     theRenderParams->backDiffuse[1] = 25;
     theRenderParams->backDiffuse[2] = 25;
     theRenderParams->backDiffuse[3] = 255;
-    
+
     theRenderParams->backSpecular[0] = 18;
     theRenderParams->backSpecular[1] = 18;
     theRenderParams->backSpecular[2] = 18;
     theRenderParams->backSpecular[3] = 255;
-    
+
     theRenderParams->backShininess = 20;
 
     theRenderParams->background[0] = 0;
@@ -186,11 +186,11 @@ initRenderParams()
     theRenderParams->bRenderManipsLores = false;
     theRenderParams->bRenderManipsSkipDlist = true;
     theRenderParams->iFastManipsThreshold = 0;
-    
+
 #ifdef no_overlay_support
     // RGBA being read back in
     theRenderParams->savedImage = new char[4 * theWidth * theHeight];
-    
+
     theRenderParams->savedImageWidth = theWidth;
     theRenderParams->savedImageHeight = theHeight;
 #endif
@@ -211,7 +211,7 @@ setupViewing (bool bFirstPass)
   }
 
   glViewport((theWidth - width) / 2, (theHeight - height) / 2, width, height);
-  
+
   // Prepare projection
   tbView->applyProjection();
 
@@ -226,12 +226,12 @@ setupViewing (bool bFirstPass)
       // zFocus = lerp (dofCenter, znear, zfar)
       float zFocus = gRP->dofCenter * zfar + (1 - gRP->dofCenter) * znear;
       // this doesn't actually work; I think to get true depth of field
-      // you have to call accFrustum a bunch of times as depth of what you 
+      // you have to call accFrustum a bunch of times as depth of what you
       // draw changes?  I can get this to draw things blurry as the scene
       // approaches the camera, but a) not as they recede from the camera,
       // and b) it draws the whole scene with the same blurriness, regardless
       // of how far individual objects are from camera.
-      
+
       accFrustum (left, right, top, bottom, znear, zfar,
 		  gRP->jitterX, gRP->jitterY,
 		  gRP->jitterX * gRP->dofJitterX,
@@ -241,9 +241,9 @@ setupViewing (bool bFirstPass)
       // orthographic
       // have to modify projection matrix with jitter code
       float heightAngle, aspectRatio, nearDistance, farDistance;
-      tbView->getProjection(heightAngle, 
+      tbView->getProjection(heightAngle,
 			    aspectRatio,
-			    nearDistance, 
+			    nearDistance,
 			    farDistance);
 
       float cameraHeight = tbView->getOrthoHeight();
@@ -252,7 +252,7 @@ setupViewing (bool bFirstPass)
 		   0.0);
     }
   }
-    
+
   // Prepare viewing orientation/trans
   if (bFirstPass)    tbView->applyXform();   // apply spin()
   else               tbView->reapplyXform(); // no spin
@@ -269,7 +269,7 @@ setupLighting()
     // Enable lighting
     glEnable (GL_LIGHTING);
     glEnable (GL_LIGHT0);
-    
+
     glMatrixMode (GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
@@ -277,7 +277,7 @@ setupLighting()
     // if rendering with "flipped" normals, actually flip light dir
     if (theRenderParams->flipnorm)
       glRotatef (180, 0, 1, 0);
-    
+
     glLightfv (GL_LIGHT0, GL_POSITION, theRenderParams->lightPosition);
     glLightfv (GL_LIGHT0, GL_AMBIENT, theRenderParams->lightAmbient);
     glLightfv (GL_LIGHT0, GL_DIFFUSE, theRenderParams->lightDiffuse);
@@ -337,7 +337,7 @@ setupSceneDrawing()
 
   // Viewing
   setupViewing (true);
-  
+
   // clear buffer
   if (theRenderParams->clearBeforeRender) {
     glClearColor(theRenderParams->background[0] / 255.,
@@ -375,18 +375,19 @@ drawScene()
   if (theRenderParams->antiAlias) {
 
     glClear(GL_ACCUM_BUFFER_BIT);
-    for (int i = 0; i < theRenderParams->numAntiAliasSamps; i++) {
+    int i;
+    for (i = 0; i < theRenderParams->numAntiAliasSamps; i++) {
       printf("\rRender pass %d of %d...", i+1,
 	     theRenderParams->numAntiAliasSamps);
       fflush(stdout);
-      
+
       theRenderParams->jitterX = theRenderParams->jitterArray[i].x;
       theRenderParams->jitterY = theRenderParams->jitterArray[i].y;
-      
+
       // Viewing
       setupViewing (i == 0);
       drawShadowedMeshes();
-      
+
       glAccum(GL_ACCUM, 1.0/theRenderParams->numAntiAliasSamps);
       if (GetTclGlobalBool ("aaswap"))
 	Togl_SwapBuffers (toglCurrent);
@@ -407,25 +408,25 @@ drawScene()
     if (theScene->wantMeshBBox()) {
       drawBoundingBox (theScene->worldBbox());
     }
-    
+
     // bugnote, do this last b/c it hoses render modes
     drawCenterOfRotation();
   }
- 
+
 #ifdef no_overlay_support
   // only allocate new memory if the window has been resized
-  if (theRenderParams->savedImageWidth != theWidth || 
+  if (theRenderParams->savedImageWidth != theWidth ||
       theRenderParams->savedImageHeight != theHeight) {
     delete [] theRenderParams->savedImage;
-    
+
     theRenderParams->savedImageWidth = theWidth;
     theRenderParams->savedImageHeight = theHeight;
-  
+
     theRenderParams->savedImage = new char[theWidth*theHeight*4];
   }
 
   glReadBuffer(GL_BACK);
-  glReadPixels(0,0,theWidth, theHeight, GL_RGBA, GL_UNSIGNED_BYTE, 
+  glReadPixels(0,0,theWidth, theHeight, GL_RGBA, GL_UNSIGNED_BYTE,
 	       theRenderParams->savedImage);
 
   drawOverlay(toglCurrent);
@@ -435,7 +436,7 @@ drawScene()
 }
 
 
-static void 
+static void
 initTextureParmsForShadowMap(void)
 {
 #ifdef GL_SGIX_shadow
@@ -443,10 +444,10 @@ initTextureParmsForShadowMap(void)
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  
+
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  
+
   glTexParameterf(GL_TEXTURE_2D, GL_SHADOW_AMBIENT_SGIX, 0.3);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_OPERATOR_SGIX,
 		  GL_TEXTURE_LEQUAL_R_SGIX);
@@ -489,7 +490,7 @@ static float lightview_proj_mat[16] = {0};
 static bool
 drawMeshesFromLightView (void)
 {
-  // may need to render to back buffer to get info about where to position 
+  // may need to render to back buffer to get info about where to position
   // "light-cam" and have relevant area onscreen
   bool bReadFromFront = true;
   if (theRenderParams->fromLightPOV
@@ -547,7 +548,7 @@ drawMeshesFromLightView (void)
     Pnt3 corner;
     if (findZBufferNeighborExt (x, y, corner, toglCurrent, tbView, 100,
 				NULL, false, bReadFromFront)) {
-      //cerr << "accept screen corner " << x << ", " << y 
+      //cerr << "accept screen corner " << x << ", " << y
       //   << ": " << corner << endl;
       cornerPos.push_back (corner);
     }
@@ -555,13 +556,13 @@ drawMeshesFromLightView (void)
   // and toss in any corners of the scene bbox that fall onscreen
   ScreenBox screen (NULL, 0, curWidth-1, 0, curHeight-1);
   const Bbox& bb = theScene->worldBbox();
-  for (i = 0; i < 8; i++) {
+  for (int i = 0; i < 8; i++) {
     if (screen.accept (bb.corner(i))) {
       cornerPos.push_back (bb.corner (i));
       //cerr << "accept bb corner " << i << endl;
     }
   }
-  
+
   // now start setting matrices the way we need them
   glMatrixMode (GL_MODELVIEW);
   glPushMatrix();
@@ -607,7 +608,7 @@ drawMeshesFromLightView (void)
   // centered and fills the new viewport.
   Projector proj;
   int x1 = 1e6, x2 = -1e6, y1 = 1e6, y2 = -1e6;
-  for (i = 0; i < cornerPos.size(); i++) {
+  for (int i = 0; i < cornerPos.size(); i++) {
     cornerPos[i] = proj (cornerPos[i]);
     x1 = MIN (x1, cornerPos[i][0]);
     x2 = MAX (x2, cornerPos[i][0]);
@@ -622,12 +623,12 @@ drawMeshesFromLightView (void)
   float scale = MIN ((float)curWidth / dx, (float)curHeight / dy);
   scale *= .9; // slightly conservative
   scale *= shadScale;
-  cerr << "Using " << scale 
+  cerr << "Using " << scale
        << " as shadow scale factor; set shadowZoom to change" << endl;
-  
+
   // apply scale, translate on right
   glGetFloatv (GL_MODELVIEW_MATRIX, lightview_mat);
-  glLoadIdentity(); 
+  glLoadIdentity();
   glScalef (scale, scale, 1.0); // z=1 b/c ortho, so doesn't matter, and
 				// we don't want to hose clipping planes
   if (!GetTclGlobalBool ("shadowHackTranslate", false)) {
@@ -713,7 +714,7 @@ drawShadowedMeshes (void)
     // also Tom McReynolds' shadowmap.c sample
     if (!generateShadowMap())
       return false;
-    
+
     // Now render the normal scene using projective textures to get the depth
     // value from the light's point of view into the r-cood of the texture.
     glEnable(GL_TEXTURE_2D);
@@ -855,7 +856,7 @@ drawSceneThicknessColored (void)
   glLoadIdentity();
   glDisable (GL_DEPTH_TEST);
   glRasterPos2f (-1, -1);
-  glDrawPixels (theWidth, theHeight, GL_RGBA, GL_UNSIGNED_BYTE, depth.begin());
+  glDrawPixels (theWidth, theHeight, GL_RGBA, GL_UNSIGNED_BYTE, depth.data());
   while (int err = glGetError()) {
     cerr << "Error: " << err << endl;
   }
@@ -884,7 +885,7 @@ drawScanHilites (void)
 #endif
 
     for (int i = 0; i < nToHilite; i++) {
-   
+
       if (bInvis || g_hilitedScans[i]->getVisible()) {
 	glMatrixMode (GL_MODELVIEW);
 	glPushMatrix();
@@ -947,26 +948,26 @@ drawMeshes (bool bDrawAnnotations)
   } else {
     // two passes, draw opaque meshes then transparent ones
     for (k = 0; k < nMeshes; k++) {
-      
+
       if (!theScene->meshSets[k]->transparent()) {
 	theScene->meshSets[k]->drawSelf();
 	//int g = 255 * ++i / nMeshes;
 	//sprintf (cmd, "redrawStatus #%02x%02x00", 255 - g, g);
 	//Tcl_Eval (g_tclInterp, cmd);
-	
+
 	if (bail())
 	  break;
       }
     }
-    
+
     for (k = 0; k < nMeshes; k++) {
-      
+
       if (theScene->meshSets[k]->transparent()) {
 	theScene->meshSets[k]->drawSelf();
 	//int g = 255 * ++i / nMeshes;
 	//sprintf (cmd, "redrawStatus #%02x%02x00", 255 - g, g);
 	//Tcl_Eval (g_tclInterp, cmd);
-	
+
 	if (bail())
 	  break;
       }
@@ -976,7 +977,7 @@ drawMeshes (bool bDrawAnnotations)
   if (bDrawAnnotations) {
     draw_other_things();
   }
-  
+
   return true;
 }
 
@@ -994,7 +995,7 @@ drawBoundingBox (const Bbox& box, bool bUseDefaultColor)
   vector<Pnt3> bbox_edges(24);
 
   // don't draw the bounding box if the max is less than the min
-  if (box.max()[0] < box.min()[0] && 
+  if (box.max()[0] < box.min()[0] &&
       box.max()[1] < box.min()[1] &&
       box.max()[2] < box.min()[2])
     return;
@@ -1102,13 +1103,13 @@ texLightDiff(MeshSet *meshSet)
 	    *newBuf++=  255;
 	 else
 	    *newBuf++ = color;
-      } 
+      }
       else {
 	 *newBuf++ = 0;
       }
    }
 }
-	    
+
 
 void
 texLightAll(MeshSet *meshSet)
@@ -1164,7 +1165,7 @@ texLightAll(MeshSet *meshSet)
   diffFactor = 2 * theRenderParams->diffuse[0];
 
   if (theRenderParams->shininess < NUM_POWERS) {
-    powerPtr = thePowers + 
+    powerPtr = thePowers +
       int(theRenderParams->shininess) * NUM_POWER_ARGS;
   }
   else {
@@ -1174,7 +1175,7 @@ texLightAll(MeshSet *meshSet)
   lx *= diffFactor;
   ly *= diffFactor;
   lz *= diffFactor;
-   
+
   for (int i=start; i < stop; i++) {
     nx = int(*buf++ - 128);
     ny = int(*buf++ - 128);
@@ -1184,7 +1185,7 @@ texLightAll(MeshSet *meshSet)
     if (diff > 0) {
       hn = nx*hx + ny*hy + nz*hz;
       if (hn > 0) {
-	//spec = pow(hn, theRenderParams->shininess) * 
+	//spec = pow(hn, theRenderParams->shininess) *
 	//   specFactor;
 	if (hn >= NUM_POWER_ARGS)
 	  spec = specFactor;

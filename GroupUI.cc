@@ -2,7 +2,7 @@
 // created 1/30/99        magi@cs
 
 
-#include <vector.h>
+#include <vector>
 #include "DisplayMesh.h"
 #include "GroupScan.h"
 #include "plvScene.h"
@@ -12,7 +12,7 @@
 DisplayableMesh*
 groupScans (vector<DisplayableMesh*>& scans, char* nameToUse, bool bDirty)
 {
-  for (DisplayableMesh** pdm = scans.begin(); pdm != scans.end(); pdm++) {
+  for (vector<DisplayableMesh*>::iterator pdm = scans.begin(); pdm != scans.end(); pdm++) {
     (*pdm)->invalidateCachedData();    // memory won't be used for a while
     (*pdm)->setVisible (false);
   }
@@ -27,16 +27,16 @@ groupScans (vector<DisplayableMesh*>& scans, char* nameToUse, bool bDirty)
   // meshes, and then calling get_children_for_display etc. to
   // get the remaining meshes if necessary.
   vector <DisplayableMesh *>children;
-  crope names;
+  string names;
 
   GroupScan *g = dynamic_cast<GroupScan *>(group);
   if (group) {
     if (g->get_children_for_display (children)) {
       for (int i = 0; i < children.size(); i++) {
-	for (DisplayableMesh** scan = theScene->meshSets.begin(); 
+	for (vector<DisplayableMesh*>::iterator scan = theScene->meshSets.begin();
 	     scan != theScene->meshSets.end(); scan++) {
 	  if (!strcmp((*scan)->getName(), children[i]->getName())) {
-	    names += crope (" ") + (*scan)->getName();
+	    names += string (" ") + (*scan)->getName();
 	    theScene->meshSets.erase(scan);
 	    scan--;
 	  }
@@ -44,7 +44,7 @@ groupScans (vector<DisplayableMesh*>& scans, char* nameToUse, bool bDirty)
       }
     }
   }
-  return dm; 
+  return dm;
 }
 
 
@@ -58,7 +58,7 @@ ungroupScans (DisplayableMesh* group)
   vector<DisplayableMesh*> scans = BreakScanGroup (scanGroup);
 
   if (scans.size()) {
-    for (DisplayableMesh** scan = scans.begin(); scan != scans.end(); scan++) {
+    for (vector<DisplayableMesh*>::iterator scan = scans.begin(); scan != scans.end(); scan++) {
       (*scan)->setVisible (wasVis);
       // add children back
       theScene->meshSets.push_back(*scan);
@@ -75,12 +75,12 @@ char *
 getNextUnusedGroupName ()
 {
   char buf[256];
-  
+
   sprintf(buf, "group%d", iGroups++);
 
   return (strdup(buf));
 }
-  
+
 
 bool
 addToGroup (DisplayableMesh* group, DisplayableMesh* scan)

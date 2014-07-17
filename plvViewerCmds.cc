@@ -1,4 +1,4 @@
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <limits.h>
 #include "plvGlobals.h"
@@ -24,7 +24,7 @@
 
 static bool s_bManipulatingLocked = false;
 static bool s_bForceOnscreen = false;
-static crope s_autoResetScript;
+static string s_autoResetScript;
 static int  s_iAutoResetTime;
 static void rescheduleAutoReset (void);
 
@@ -37,7 +37,7 @@ static void lastActionTrackball (void)
 
 
 int
-PlvSelectScanCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvSelectScanCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if (argc < 2) {
@@ -71,7 +71,7 @@ PlvSelectScanCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 int
-PlvSetVisibleCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvSetVisibleCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
   if (argc < 3) {
@@ -89,15 +89,15 @@ PlvSetVisibleCmd(ClientData clientData, Tcl_Interp *interp,
   bool bVisible;
   SetBoolFromArgIndex (2, bVisible);
   meshSet->setVisible (bVisible);
-  
+
   theScene->computeBBox();
   redraw (true);
-  
+
   return TCL_OK;
 }
 
 int
-PlvGetVisibleCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvGetVisibleCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if (argc < 2) {
@@ -120,14 +120,14 @@ static void
 PlvListScansHelper (Tcl_Interp *interp, vector<DisplayableMesh*> meshes, bool bLeaf);
 // NEW! IMPROVED!!
 int
-PlvListScansCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvListScansCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[])
 {
   // options:
   // default,roots = only meshes with no parent
   // leaves = all meshes with no children
   // groups = all groups (i.e. "meshes" with children)
-  
+
   bool bRoot = false;
   bool bLeaf = false;
 
@@ -135,7 +135,7 @@ PlvListScansCmd(ClientData clientData, Tcl_Interp *interp,
     interp->result = "Too many arguments to PlvListScansCmd";
     return TCL_ERROR;
   }
-  
+
   if (argc == 1) bRoot = true; // i.e. default mode
 
   else {
@@ -150,26 +150,26 @@ PlvListScansCmd(ClientData clientData, Tcl_Interp *interp,
       return TCL_ERROR;
     }
   }
-  
+
   if (bRoot) {
-    for (DisplayableMesh** pdm = theScene->meshSets.begin();
+    for (vector<DisplayableMesh*>::iterator pdm = theScene->meshSets.begin();
 	 pdm < theScene->meshSets.end(); pdm++) {
-      
+
       // Thus, since theScene->meshSets only stores the roots,
       // all we need to do by default is append
       Tcl_AppendElement (interp, (char*)(*pdm)->getName());
     }
-  } else 
+  } else
     PlvListScansHelper (interp, theScene->meshSets, bLeaf);
   return TCL_OK;
 }
 
 static void
-PlvListScansHelper (Tcl_Interp *interp, vector<DisplayableMesh*> meshes, bool bLeaf) 
+PlvListScansHelper (Tcl_Interp *interp, vector<DisplayableMesh*> meshes, bool bLeaf)
 {
-  for (DisplayableMesh** pdm = meshes.begin(); pdm < meshes.end(); pdm++) {
+  for (vector<DisplayableMesh*>::iterator pdm = meshes.begin(); pdm < meshes.end(); pdm++) {
     vector<DisplayableMesh*>children;
-    
+
     GroupScan *gp = dynamic_cast<GroupScan*>((*pdm)->getMeshData());
     if (gp) {
       bool bGroup = gp->get_children_for_display(children);
@@ -185,7 +185,7 @@ PlvListScansHelper (Tcl_Interp *interp, vector<DisplayableMesh*> meshes, bool bL
 
 
 int
-PlvLightCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvLightCmd(ClientData clientData, Tcl_Interp *interp,
 	    int argc, char *argv[])
 {
     char result[PATH_MAX];
@@ -212,7 +212,7 @@ PlvLightCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvRotateLightCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvRotateLightCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
   float x, y, z;
@@ -243,7 +243,7 @@ PlvRotateLightCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvOrthographicCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvOrthographicCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
   tbView->setOrthographic (true);
@@ -255,7 +255,7 @@ PlvOrthographicCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvPerspectiveCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvPerspectiveCmd(ClientData clientData, Tcl_Interp *interp,
 		  int argc, char *argv[])
 {
   tbView->setOrthographic (false);
@@ -266,7 +266,7 @@ PlvPerspectiveCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvZoomAngleCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvZoomAngleCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[])
 {
   tbView->changeFOV(atof(argv[1]));
@@ -277,7 +277,7 @@ PlvZoomAngleCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvObliqueCameraCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvObliqueCameraCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[])
 {
   if (argc > 2)
@@ -290,7 +290,7 @@ PlvObliqueCameraCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvViewAllCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvViewAllCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
   redraw (true);
@@ -299,7 +299,7 @@ PlvViewAllCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvResetXformCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvResetXformCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   DisplayableMesh* meshDisp = NULL;
@@ -312,7 +312,7 @@ PlvResetXformCmd(ClientData clientData, Tcl_Interp *interp,
     } else if (!strcmp (argv[1], "allmesh")) {
       bMeshesOnly = true; bAllMeshes = true;
     }
-    
+
     if (bAllMeshes) {
       for (int i = 0; i < theScene->meshSets.size(); i++)
 	theScene->meshSets[i]->getMeshData()->resetXform();
@@ -329,8 +329,8 @@ PlvResetXformCmd(ClientData clientData, Tcl_Interp *interp,
       theScene->centerCamera();
     }
   }
-  
-  redraw (true);  
+
+  redraw (true);
   return TCL_OK;
 }
 
@@ -404,7 +404,7 @@ passesOnscreenTest (int oldSize = -1, bool bOnlyQuery = false)
     Pnt3 corner = bb.corner (i);
     if (sb.accept (corner))
       onscreen = true;
-    
+
     Pnt3 screen = sb.getProjector() (corner);
     minx = MIN (minx, screen[0]);
     maxx = MAX (maxx, screen[0]);
@@ -426,11 +426,11 @@ passesOnscreenTest (int oldSize = -1, bool bOnlyQuery = false)
     int minsize = theWidth * theHeight * .01;
     if (oldSize == -1)
       oldSize = minsize;
-    
+
     if (tbView->isZooming() || !tbView->isManipulating()) {
       // don't let them zoom out too far.
       if (area < MIN (oldSize, minsize)) {
-	cerr << "onscreen test fails: bbox covers only " << area 
+	cerr << "onscreen test fails: bbox covers only " << area
 	     << " and it was " << oldSize << endl;
 	return false;
       }
@@ -464,14 +464,14 @@ passMoveToTrackball (int x, int y, int t) {
 
 
 int
-PlvRotateXYViewMouseCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvRotateXYViewMouseCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
   if (!strcmp (argv[2], "stopspin")) {
     tbView->stop();
     return TCL_OK;
   }
-  
+
   int x = atoi(argv[2]);
   int y = atoi(argv[3]);
   int t = atoi(argv[4]);
@@ -500,7 +500,7 @@ PlvRotateXYViewMouseCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvTransXYViewMouseCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvTransXYViewMouseCmd(ClientData clientData, Tcl_Interp *interp,
 		  int argc, char *argv[])
 {
   //cout << "transxyview" << endl;
@@ -536,7 +536,7 @@ PlvTransXYViewMouseCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvTranslateInPlaneCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvTranslateInPlaneCmd(ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   if (argc < 3) {
@@ -560,7 +560,7 @@ PlvTranslateInPlaneCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvUndoXformCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvUndoXformCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[])
 {
   //tbView->undo_last();
@@ -573,7 +573,7 @@ PlvUndoXformCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvRedoXformCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvRedoXformCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[])
 {
   //tbView->undo_last();
@@ -586,7 +586,7 @@ PlvRedoXformCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvGetScreenToWorldCoords(ClientData clientData, Tcl_Interp *interp, 
+PlvGetScreenToWorldCoords(ClientData clientData, Tcl_Interp *interp,
 			     int argc, char *argv[])
 {
   if (argc != 3) {
@@ -608,14 +608,14 @@ PlvGetScreenToWorldCoords(ClientData clientData, Tcl_Interp *interp,
     strcpy (answer, "Hit background");
   }
 
-  
+
   Tcl_SetResult (interp, answer, TCL_VOLATILE);
   return TCL_OK;
 }
 
 
 int
-PlvSetThisAsCenterOfRotation(ClientData clientData, Tcl_Interp *interp, 
+PlvSetThisAsCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
 			     int argc, char *argv[])
 {
   if (argc != 3) {
@@ -630,7 +630,7 @@ PlvSetThisAsCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
   if (findZBufferNeighbor (x, y, newcenter))
   {
     tbView->newRotationCenter(newcenter, MeshData(theActiveScan));
-    return TCL_OK;  
+    return TCL_OK;
   }
   else
   {
@@ -642,7 +642,7 @@ PlvSetThisAsCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvResetCenterOfRotation(ClientData clientData, Tcl_Interp *interp, 
+PlvResetCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
 			 int argc, char *argv[])
 {
   Pnt3 center;
@@ -679,7 +679,7 @@ PlvResetCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvCameraInfoCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvCameraInfoCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   char transform[100];
@@ -707,7 +707,7 @@ PlvCameraInfoCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvSetHomeCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvSetHomeCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
   if (argc != 2) {
@@ -737,7 +737,7 @@ PlvSetHomeCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvGoHomeCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvGoHomeCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
   if (argc != 2) {
@@ -768,7 +768,7 @@ PlvGoHomeCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvSetOverallResCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvSetOverallResCmd(ClientData clientData, Tcl_Interp *interp,
 		    int argc, char *argv[])
 {
   if (argc != 2) {
@@ -800,7 +800,7 @@ PlvSetOverallResCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvFlattenCameraXformCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvFlattenCameraXformCmd(ClientData clientData, Tcl_Interp *interp,
 			 int argc, char *argv[])
 {
   if (argc != 1) {
@@ -816,7 +816,7 @@ PlvFlattenCameraXformCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvSpaceCarveCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvSpaceCarveCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   // space-carve all visible scans and display the result as a mesh
@@ -890,7 +890,7 @@ PlvSpaceCarveCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvConstrainRotationCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvConstrainRotationCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   TbConstraint constraint = CONSTRAIN_NONE;
@@ -911,7 +911,7 @@ PlvConstrainRotationCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvSetManipRenderModeCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvSetManipRenderModeCmd(ClientData clientData, Tcl_Interp *interp,
 			 int argc, char *argv[])
 {
   if (argc == 2) { // better be lock/unlock
@@ -940,7 +940,7 @@ PlvSetManipRenderModeCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 int
-PlvManualRotateCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvManualRotateCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
   Pnt3 axis;
@@ -953,23 +953,23 @@ PlvManualRotateCmd(ClientData clientData, Tcl_Interp *interp,
   //  tbView->saveUndoPos(MeshData(theActiveScan));
 
   axis[0] = 1; axis[1] = axis[2] = 0;
-  tbView->rotateAroundAxis(axis, atof(argv[1]) * M_PI/180.0, 
+  tbView->rotateAroundAxis(axis, atof(argv[1]) * M_PI/180.0,
 			   MeshData(theActiveScan));
 
   axis[0] = 0; axis[1] = 1;
-  tbView->rotateAroundAxis(axis, atof(argv[2]) * M_PI/180.0, 
+  tbView->rotateAroundAxis(axis, atof(argv[2]) * M_PI/180.0,
 			   MeshData(theActiveScan));
 
   axis[1] = 0; axis[2] = 1;
 
-  tbView->rotateAroundAxis(axis, atof(argv[3]) * M_PI/180.0, 
+  tbView->rotateAroundAxis(axis, atof(argv[3]) * M_PI/180.0,
 			   MeshData(theActiveScan));
 
   return TCL_OK;
 }
 
 int
-PlvManualTranslateCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvManualTranslateCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   Pnt3 tp;
@@ -985,14 +985,14 @@ PlvManualTranslateCmd(ClientData clientData, Tcl_Interp *interp,
 
   //tbView->saveUndoPos(MeshData(theActiveScan));
   tbView->translateInEyeCoords(tp, MeshData(theActiveScan));
-  
+
 
   return TCL_OK;
 }
 
 
 int
-PlvPickScanFromPointCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvPickScanFromPointCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   if (argc < 2) {
@@ -1040,11 +1040,11 @@ PlvPickScanFromPointCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 int
-PlvGetVisiblyRenderedScans(ClientData clientData, Tcl_Interp *interp, 
+PlvGetVisiblyRenderedScans(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
 
- 
+
   static vector<DisplayableMesh*> ptMeshMap;
    int w;
    int h;
@@ -1090,13 +1090,13 @@ PlvGetVisiblyRenderedScans(ClientData clientData, Tcl_Interp *interp,
    // cerr << "Building map from screen points to meshes ... " << flush;
   GetPtMeshVector (startx,starty,w, h, fullx, fully, ptMeshMap);
   //cerr << "done." << endl;
- 
+
 
   for (int i=0; i<theScene->meshSets.size(); i++) {
     DisplayableMesh* dm = ptMeshMap[i];
     if (dm) {
       Tcl_AppendResult(interp,(char*)dm->getName()," ", (char *) NULL);
-    }      
+    }
   }
 
   ptMeshMap.clear();
@@ -1105,7 +1105,7 @@ PlvGetVisiblyRenderedScans(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvPositionCameraCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvPositionCameraCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
   Pnt3 c, o, t;
@@ -1167,7 +1167,8 @@ PlvPositionCameraCmd(ClientData clientData, Tcl_Interp *interp,
 
     delete cam;
   } else if (argc >= 15) {
-    for (int i = 1; i < 4; i++)
+    int i;
+    for (i = 1; i < 4; i++)
       c[i-1] = atof (argv[i]);
     for (; i < 7; i++)
       o[i-4] = atof (argv[i]);
@@ -1197,7 +1198,7 @@ PlvPositionCameraCmd(ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvSortScanListCmd (ClientData clientData, Tcl_Interp *interp, 
+PlvSortScanListCmd (ClientData clientData, Tcl_Interp *interp,
 		    int argc, char *argv[])
 {
   vector<DisplayableMesh*> sortedList;
@@ -1238,7 +1239,7 @@ PlvSortScanListCmd (ClientData clientData, Tcl_Interp *interp,
 			     bDictionary, bListInvisible);
 
   int size = 0;
-  for (i = 0; i < sortedList.size(); i++) {
+  for (int i = 0; i < sortedList.size(); i++) {
     size += strlen (sortedList[i]->getName()) + 1;
   }
 
@@ -1247,13 +1248,13 @@ PlvSortScanListCmd (ClientData clientData, Tcl_Interp *interp,
   } else {
     char* list = (char*)malloc (size);
     char* end = list;
-    for (i = 0; i < sortedList.size(); i++) {
+    for (int i = 0; i < sortedList.size(); i++) {
       strcpy (end, sortedList[i]->getName());
       end += strlen (end);
       *end++ = ' ';
     }
     end[-1] = 0;  // then terminate the whole shebang
-    
+
     Tcl_SetResult (interp, list, (Tcl_FreeProc*)free);
   }
 
@@ -1262,7 +1263,7 @@ PlvSortScanListCmd (ClientData clientData, Tcl_Interp *interp,
 
 
 int
-PlvZoomToRectCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvZoomToRectCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   int x1,x2,y1,y2;
@@ -1296,7 +1297,7 @@ PlvZoomToRectCmd(ClientData clientData, Tcl_Interp *interp,
   // unproject everything in the selection, and average it.
 	resetTranslationScale ((x1 + x2) / 2, (y1 + y2) / 2);
   tbView->zoomToRect (x1, y1, x2, y2);
-	
+
   // attempt to update selection rectangle...
   int rectW = x2 - x1;
   int rectH = y2 - y1;
@@ -1305,7 +1306,7 @@ PlvZoomToRectCmd(ClientData clientData, Tcl_Interp *interp,
   x1 = (theWidth / 2) - (rectW * zoom / 2);
   x2 = (theWidth / 2) + (rectW * zoom / 2);
   y1 = (theHeight / 2) - (rectH * zoom / 2);
-  y2 = (theHeight / 2) + (rectH * zoom / 2);	
+  y2 = (theHeight / 2) + (rectH * zoom / 2);
 	// update selection info only if we zoomed to a rect
 	if (argc!=5) {
 		theSel[0].x = x1; theSel[0].y = y1;
@@ -1395,7 +1396,7 @@ rescheduleAutoReset (void)
 
 
 int
-PlvForceKeepOnscreenCmd(ClientData clientData, Tcl_Interp *interp, 
+PlvForceKeepOnscreenCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   if (argc < 2) {
@@ -1416,7 +1417,7 @@ PlvForceKeepOnscreenCmd(ClientData clientData, Tcl_Interp *interp,
 
     if (argc > 3) {
       // 3nd arg is script to run on auto-reset.
-      s_autoResetScript = crope (argv[3]);
+      s_autoResetScript = string (argv[3]);
     }
 
     // force message to pop up right away
@@ -1426,7 +1427,7 @@ PlvForceKeepOnscreenCmd(ClientData clientData, Tcl_Interp *interp,
 
   } else {
     s_iAutoResetTime = 0;
-    s_autoResetScript = crope();
+    s_autoResetScript = string();
     rescheduleAutoReset();
   }
 
@@ -1434,7 +1435,7 @@ PlvForceKeepOnscreenCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 
-void 
+void
 SpinTrackballs (ClientData clientData)
 {
   if (tbView->isSpinning()) {

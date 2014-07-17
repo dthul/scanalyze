@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // MMScan.h
 //
 // Jeremy Ginsberg
@@ -63,12 +63,12 @@ public:
 
     mmResLevel(void)
       {
-	tris.clear(); tstrips.clear(); 
+	tris.clear(); tstrips.clear();
 	vtx.clear(); nrm.clear(); intensity.clear(); confidence.clear();
       }
     ~mmResLevel(void)
       {
-	tris.clear(); tstrips.clear(); 
+	tris.clear(); tstrips.clear();
 	vtx.clear(); nrm.clear(); intensity.clear(); confidence.clear();
       }
     int num_tris(void)
@@ -143,10 +143,10 @@ typedef uchar vec3uc[3];
 			      ColorSource  color = colorNone,
 			      int          colorSize = 3);
 
-  bool read(const crope &fname);
-  bool write(const crope &fname);
+  bool read(const string &fname);
+  bool write(const string &fname);
 
-  crope getInfo(void);
+  string getInfo(void);
   int num_vertices();
   int num_vertices(int resNum);
 
@@ -156,7 +156,7 @@ typedef uchar vec3uc[3];
   bool filter_vertices (const VertexFilter& filter, vector<Pnt3>& p);
 
   void subsample_points(float rate, vector<Pnt3> &p, vector<Pnt3> &n);
-  bool closest_point(const Pnt3 &p, const Pnt3 &n, 
+  bool closest_point(const Pnt3 &p, const Pnt3 &n,
 		     Pnt3 &cp, Pnt3 &cn,
 		     float thr = 1e33, bool bdry_ok = 0);
 
@@ -177,14 +177,14 @@ typedef uchar vec3uc[3];
   int num_tris(int res = 0);
   int num_stripes();
   int num_scans(void) { return scans.size(); };
-  int num_resolutions(void) { 
+  int num_resolutions(void) {
     // assume that each scan has the same number of resolutions
     if (scans.size() == 0) return 0;
     return scans[0].meshes.size();
   };
-  
+
   int write_xform_ply(int whichRes, char *dir,
-		      crope &confLines, bool applyXform = true);
+		      string &confLines, bool applyXform = true);
 
   void flipNormals (int scanNum);
 
@@ -211,13 +211,13 @@ typedef uchar vec3uc[3];
     {
       if (scanNum < 0) return;
       if (scanNum >= num_scans()) return;
-      
-      scans.erase(&scans[0] + scanNum);
-      
+
+      scans.erase(scans.begin() + scanNum);
+
       isDirty_mem = isDirty_disk = true;
       computeBBox();
     }
-  
+
 
 private:
 
@@ -250,8 +250,8 @@ private:
 
   //--- PRIVATE HELPERS FNS
 
-  bool read_mms(const crope &fname);
-  bool read_cta(const crope &fname);
+  bool read_mms(const string &fname);
+  bool read_cta(const string &fname);
   mmResLevel *currentRes(int scanNum);
   bool isValidPoint(int scanNum, int stripeNum, int colNum);
   void triangulate(mmScanFrag *scan, mmResLevel *res, int subSamp = 1);
