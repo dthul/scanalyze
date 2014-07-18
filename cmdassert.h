@@ -27,14 +27,14 @@ extern void __cmdassert(const char *, const char *, int);
 #ifdef __ANSI_CPP__
 #define cmdassert(EX)  if (!(EX)) { \
          __cmdassert( # EX , __FILE__, __LINE__); \
-         interp->result = "Non-fatal assertion error in command!"; \
+         Tcl_SetResult(interp, "Non-fatal assertion error in command!", TCL_STATIC); \
          return TCL_ERROR; \
 }
          
 #else
 #define cmdassert(EX)  if (!(EX)) { \
          __cmdassert("EX", __FILE__, __LINE__); \
-         interp->result = "Non-fatal assertion error in command!"; \
+         Tcl_SetResult(interp, "Non-fatal assertion error in command!", TCL_STATIC); \
          return TCL_ERROR; \
 }
 #endif

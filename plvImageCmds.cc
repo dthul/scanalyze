@@ -21,7 +21,7 @@ PlvWriteIrisCmd(ClientData clientData, Tcl_Interp *interp,
 {
   struct Togl* togl = toglHash.FindTogl (argv[1]);
   if (!togl) {
-    interp->result = "Missing togl in PlvWriteIrisCmd";
+    Tcl_SetResult(interp, "Missing togl in PlvWriteIrisCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -39,9 +39,9 @@ PlvWriteIrisCmd(ClientData clientData, Tcl_Interp *interp,
 #ifdef __linux
 		// give an error message alerting that IFL is not supported under
 		// Linux
-		interp->result = "Image saving not supported under Linux";
+		Tcl_SetResult(interp, "Image saving not supported under Linux", TCL_STATIC);
 #else
-		interp->result = "file creation error";
+		Tcl_SetResult(interp, "file creation error", TCL_STATIC);
 #endif
 
     return TCL_ERROR;
@@ -335,7 +335,7 @@ int PlvCountPixelsCmd (ClientData clientData, Tcl_Interp *interp,
 	}
       else
 	{
-	  interp->result="Need to have a rectangle selected";
+	  Tcl_SetResult(interp, "Need to have a rectangle selected", TCL_STATIC);
 	  return TCL_ERROR;
 	}
 
@@ -388,7 +388,7 @@ int PlvCountPixelsCmd (ClientData clientData, Tcl_Interp *interp,
 
   int count = countPixInRange(x,y,w,h,Rmin,Gmin,Bmin,Rmax,Gmax,Bmax);
 
-  sprintf(interp->result,"%d",count);
+  sprintf(Tcl_GetStringResult(interp), "%d", count);
 
   return TCL_OK;
 }

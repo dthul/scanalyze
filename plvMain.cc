@@ -166,7 +166,7 @@ main(int argc, char **argv)
       sprintf (szGlobCmd, "glob \"%s\"", argv[i]);
       if (TCL_OK == Tcl_Eval (interp, szGlobCmd))
       {
-         char* base = interp->result;
+         char* base = Tcl_GetStringResult(interp);
 	 while (base != NULL)
 	 {
             char* end = find_token_end (base);
@@ -265,7 +265,7 @@ main(int argc, char **argv)
  *
  * Results:
  *	Returns a standard Tcl completion code, and leaves an error
- *	message in interp->result if an error occurs.
+ *	message in Tcl_GetStringResult(interp) if an error occurs.
  *
  * Side effects:
  *	Depends on the startup script.
@@ -313,7 +313,7 @@ puts ("Console...");
 
       if (Togl_Init(interp) != TCL_OK) {
 	fprintf(stderr, "Togl initialization failed: %s\n",
-		interp->result);
+		Tcl_GetStringResult(interp));
 	return TCL_ERROR;
       }
 puts ("Togl...");
@@ -322,7 +322,7 @@ puts ("Togl...");
 puts ("about to plvinit");
     if (Plv_Init(interp) != TCL_OK) {
 	fprintf(stderr, "Scanalyze initialization failed:\n\n%s\n",
-		interp->result);
+		Tcl_GetStringResult(interp));
 	fprintf(stderr, "\nThings will probably not work as expected.\n");
     }
 

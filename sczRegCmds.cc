@@ -292,8 +292,10 @@ AlignmentOverviewInfo::GetSelectedCorrespondenceId (void)
   // figure out which correspondence is selected
   Tcl_Eval (interp, "getListboxSelection .reg.lines.list");
   int iCorresp = 0;
-  if (strlen(interp->result) > 3)
-    iCorresp = atoi (interp->result + 1);
+  char * result = Tcl_GetStringResult(interp);
+  if (strlen(result) > 3) {
+    iCorresp = atoi (result + 1);
+  }
 
   return iCorresp;
 }
@@ -498,13 +500,13 @@ PlvBindToglToAlignmentOverviewCmd(ClientData clientData, Tcl_Interp *interp,
 				  int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Bad arguments to PlvBindToglToAlignmentOverviewCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvBindToglToAlignmentOverviewCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   struct Togl* togl = toglHash.FindTogl (argv[1]);
   if (togl == NULL) {
-    interp->result = "Missing togl widget in PlvBindToglToAlignmentViewCmd";
+    Tcl_SetResult(interp, "Missing togl widget in PlvBindToglToAlignmentViewCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   assert (0 == strcmp (argv[1], Togl_Ident (togl)));
@@ -527,13 +529,13 @@ PlvCorrespRegParmsCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "Bad arguments to PlvCorrespRegParmsCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvCorrespRegParmsCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   struct Togl* togl = toglHash.FindTogl (argv[1]);
   if (togl == NULL) {
-    interp->result = "Missing togl widget in PlvCorrespRegParmsCmd";
+    Tcl_SetResult(interp, "Missing togl widget in PlvCorrespRegParmsCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   AlignmentOverviewInfo* aoi =
@@ -543,7 +545,7 @@ PlvCorrespRegParmsCmd(ClientData clientData, Tcl_Interp *interp,
     if (argc > 2) {
       aoi->bColorPoints = atoi (argv[3]);
     } else {
-      interp->result = aoi->bColorPoints ? "1" : "0";
+      Tcl_SetResult(interp, aoi->bColorPoints ? "1" : "0", TCL_STATIC);
     }
   }
 
@@ -556,20 +558,20 @@ PlvBindToglToAlignmentViewCmd(ClientData clientData, Tcl_Interp *interp,
 			      int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "Bad arguments to PlvBindToglToAlignmentViewCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvBindToglToAlignmentViewCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   struct Togl* togl = toglHash.FindTogl (argv[1]);
   if (togl == NULL) {
-    interp->result = "Missing togl widget in PlvBindToglToAlignmentViewCmd";
+    Tcl_SetResult(interp, "Missing togl widget in PlvBindToglToAlignmentViewCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   assert (0 == strcmp (argv[1], Togl_Ident (togl)));
 
   DisplayableMesh* mesh = FindMeshDisplayInfo (argv[2]);
   if (mesh == NULL && strcmp (argv[2], "")) {
-    interp->result = "Missing mesh in PlvBindToglToAlignmentViewCmd";
+    Tcl_SetResult(interp, "Missing mesh in PlvBindToglToAlignmentViewCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -598,13 +600,13 @@ PlvRegUIMouseCmd (ClientData clientData, Tcl_Interp *interp,
 {
   // argument string: togl button x y time [start|stop]
   if (argc < 6) {
-    interp->result = "Bad arguments to PlvRegUIMouseCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvRegUIMouseCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   struct Togl* togl = toglHash.FindTogl (argv[1]);
   if (togl == NULL) {
-    interp->result = "Missing togl widget in PlvRegUIMouseCmd";
+    Tcl_SetResult(interp, "Missing togl widget in PlvRegUIMouseCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -636,7 +638,7 @@ PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 {
   //argument string: togl overviewTogl x y
   if (argc < 5) {
-    interp->result = "Bad arguments to PlvAddPartialRegCorrespondenceCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvAddPartialRegCorrespondenceCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -644,7 +646,7 @@ PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
   struct Togl* toglOV = toglHash.FindTogl (argv[2]);
 
   if (togl == NULL) {
-    interp->result = "Missing togl widget in PlvCreateRegCorrespondenceCmd";
+    Tcl_SetResult(interp, "Missing togl widget in PlvCreateRegCorrespondenceCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -670,7 +672,7 @@ PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
                "{Delete meshset ",
                ati->meshDisplay->getName(),
                " from correspondence?} {} 0 No Yes", NULL);
-          if (atoi (interp->result) != 0) {
+          if (atoi (Tcl_GetStringResult(interp)) != 0) {
             clSelected->DeletePoint (cpOld);
             Tcl_Eval (interp, "rebuildSelectedCorrespondenceString");
             DrawAlignmentMesh (togl);
@@ -684,7 +686,7 @@ PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
     }
 
 
-    interp->result = "";
+    Tcl_SetResult(interp, "", TCL_STATIC);
     return TCL_OK;
   }
 
@@ -700,7 +702,7 @@ PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
   DrawAlignmentPoints (togl);
   Togl_SwapBuffers (togl);
 
-  interp->result = (char*)ati->meshDisplay->getName();
+  Tcl_SetResult(interp, (char*)ati->meshDisplay->getName(), TCL_STATIC);
   return TCL_OK;
 }
 
@@ -710,13 +712,13 @@ PlvDeleteRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 			       int argc, char *argv[])
 {
   if (argc != 3) {
-    interp->result = "Bad arguments to PlvDeleteRegCorrespondenceCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvDeleteRegCorrespondenceCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   struct Togl* toglOV = toglHash.FindTogl (argv[1]);
   if (!toglOV) {
-    interp->result = "Missing overview togl widget in DeleteRegCorrespondence";
+    Tcl_SetResult(interp, "Missing overview togl widget in DeleteRegCorrespondence", TCL_STATIC);
     return TCL_ERROR;
   }
   AlignmentOverviewInfo* aoi =
@@ -734,7 +736,7 @@ PlvDeleteRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
     }
   }
 
-  interp->result = "Index not found in PlvDeleteRegCorrespondenceCmd";
+  Tcl_SetResult(interp, "Index not found in PlvDeleteRegCorrespondenceCmd", TCL_STATIC);
   return TCL_ERROR;
 }
 
@@ -744,13 +746,13 @@ PlvConfirmRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
 				int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Bad arguments to PlvConfirmRegCorrespondenceCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvConfirmRegCorrespondenceCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   struct Togl* toglOV = toglHash.FindTogl (argv[1]);
   if (!toglOV) {
-    interp->result = "Missing overview togl widget in CreateRegCorrespondence";
+    Tcl_SetResult(interp, "Missing overview togl widget in CreateRegCorrespondence", TCL_STATIC);
     return TCL_ERROR;
   }
   AlignmentOverviewInfo* aoi =
@@ -774,19 +776,19 @@ PlvGetCorrespondenceInfoCmd (ClientData clientData, Tcl_Interp *interp,
 			     int argc, char *argv[])
 {
   if (argc != 3) {
-    interp->result = "Bad arguments to PlvGetCorrespondenceInfoCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvGetCorrespondenceInfoCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   struct Togl* toglOV = toglHash.FindTogl (argv[1]);
   if (toglOV == NULL) {
-    interp->result = "Missing overlay togl in PlvGetCorrespondenceInfoCmd";
+    Tcl_SetResult(interp, "Missing overlay togl in PlvGetCorrespondenceInfoCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   int idCorresp = atoi (argv[2]);
   if (idCorresp == 0) {
-    interp->result = "Bad correspondence id in PlvGetCorrespondenceInfoCmd";
+    Tcl_SetResult(interp, "Bad correspondence id in PlvGetCorrespondenceInfoCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -795,7 +797,7 @@ PlvGetCorrespondenceInfoCmd (ClientData clientData, Tcl_Interp *interp,
   assert (aoi != NULL);
   CorrespondenceList* cl = aoi->GetCorrespondenceById (idCorresp);
   if (cl == NULL) {
-    interp->result = "Missing correspondence in PlvGetCorrespondenceInfoCmd";
+    Tcl_SetResult(interp, "Missing correspondence in PlvGetCorrespondenceInfoCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -821,14 +823,14 @@ PlvCorrespondenceRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
   // arguments are: overviewTogl mode from to
   // from and to are irrelevant for all2all mode, but must exist
   if (argc != 5) {
-    interp->result = "Bad arguments to PlvCorrespondenceRegistrationCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvCorrespondenceRegistrationCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   // get correspondence list
   struct Togl* toglOV = toglHash.FindTogl (argv[1]);
   if (toglOV == NULL) {
-    interp->result = "Missing overview togl in PlvCorrespRegistrationCmd";
+    Tcl_SetResult(interp, "Missing overview togl in PlvCorrespRegistrationCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   AlignmentOverviewInfo* aoi = (AlignmentOverviewInfo*)
@@ -854,7 +856,7 @@ PlvCorrespondenceRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     {
       DisplayableMesh* meshFrom = FindMeshDisplayInfo (argv[3]);
       if (!meshFrom) {
-	interp->result = "Missing 'from' mesh in PlvCorrespRegistrationCmd";
+	Tcl_SetResult(interp, "Missing 'from' mesh in PlvCorrespRegistrationCmd", TCL_STATIC);
 	return TCL_ERROR;
       }
 
@@ -863,7 +865,7 @@ PlvCorrespondenceRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
       else {
 	DisplayableMesh* meshTo = FindMeshDisplayInfo (argv[4]);
 	if (!meshTo) {
-	  interp->result = "Missing 'to' mesh in PlvCorrespRegistrationCmd";
+	  Tcl_SetResult(interp, "Missing 'to' mesh in PlvCorrespRegistrationCmd", TCL_STATIC);
 	  return TCL_ERROR;
 	}
 	return CorrespRegOneMesh (aoi, meshFrom, meshTo);
@@ -871,7 +873,7 @@ PlvCorrespondenceRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     }
   }
 
-  interp->result = "Bad mode passed to PlvCorrespRegistrationCmd";
+  Tcl_SetResult(interp, "Bad mode passed to PlvCorrespRegistrationCmd", TCL_STATIC);
   return TCL_ERROR;
 }
 
@@ -1001,13 +1003,13 @@ PlvDragRegisterCmd (ClientData clientData, Tcl_Interp *interp,
 {
   // argument: name of mesh being registered (to all visible meshes)
   if (argc < 2) {
-    interp->result = "Bad arguments to PlvDragRegisterCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvDragRegisterCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* ms = FindMeshDisplayInfo (argv[1]);
   if (ms == NULL) {
-    interp->result = "Missing meshset in PlvDragRegisterCmd";
+    Tcl_SetResult(interp, "Missing meshset in PlvDragRegisterCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1375,7 +1377,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 			  int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Bad argument to PlvGlobalRegistrationCmd";
+    Tcl_SetResult(interp, "Bad argument to PlvGlobalRegistrationCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1391,7 +1393,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     gr->perform_import();
   } else if (!strcmp (argv[1], "register")) {
     if (argc < 3) {
-      interp->result = "Bad argument to PlvGlobalRegistrationCmd";
+      Tcl_SetResult(interp, "Bad argument to PlvGlobalRegistrationCmd", TCL_STATIC);
       return TCL_ERROR;
     }
     TbObj* scanToMove = NULL;   // default to registering all scans
@@ -1403,8 +1405,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
       }
       if (scanToMove == NULL) {
 	cerr << "Scan " << argv[3] << " does not exist." << endl;
-	interp->result =
-	  "Bad mesh passed to GlobalReg 1->all align";
+      Tcl_SetResult(interp, "Bad mesh passed to GlobalReg 1->all align", TCL_STATIC);
 	return TCL_ERROR;
       }
     }
@@ -1416,8 +1417,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
       }
       if (scanToMoveTo == NULL) {
 	cerr << "Scan " << argv[4] << " does not exist." << endl;
-	interp->result =
-	  "Bad mesh passed to GlobalReg 1->2 align";
+      Tcl_SetResult(interp, "Bad mesh passed to GlobalReg 1->2 align", TCL_STATIC);
 	return TCL_ERROR;
       }
     }
@@ -1432,15 +1432,15 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 
   } else if (!strcmp (argv[1], "pairstatus")) {
     if (argc < 4) {
-      interp->result = "Bad # args";
+      Tcl_SetResult(interp, "Bad # args", TCL_STATIC);
       return TCL_ERROR;
     }
     DisplayableMesh* dm1 = FindMeshDisplayInfo (argv[2]);
     DisplayableMesh* dm2 = FindMeshDisplayInfo (argv[3]);
     if (!dm1 || !dm2) {
-      //interp->result = "Bad mesh specified - sczRegCmds.cc:PlvGlobalRegistrationCmd pairstatus";
+      //Tcl_SetResult(interp, "Bad mesh specified - sczRegCmds.cc:PlvGlobalRegistrationCmd pairstatus", TCL_STATIC);
       //      rihan 7/9/01
-      interp->result = "0";
+      Tcl_SetResult(interp, "0", TCL_STATIC);
     } else {
       bool bTrans = false;
       if (argc > 4 && !strcmp (argv[4], "transitive"))
@@ -1450,16 +1450,16 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 				     dm2->getMeshData(),
 				     manual,
 				     bTrans);
-      interp->result = reg ? "1" : "0";
+      Tcl_SetResult(interp, reg ? "1" : "0", TCL_STATIC);
     }
   } else if (!strcmp (argv[1], "listpairsfor")) {
     if (argc < 3) {
-      interp->result = "Bad # args";
+      Tcl_SetResult(interp, "Bad # args", TCL_STATIC);
       return TCL_ERROR;
     }
     DisplayableMesh* dm = FindMeshDisplayInfo (argv[2]);
     if (!dm) {
-      interp->result = "Bad mesh specified - sczRegCmds.cc:PlvGlobalRegistrationCmd listpairsfor";
+      Tcl_SetResult(interp, "Bad mesh specified - sczRegCmds.cc:PlvGlobalRegistrationCmd listpairsfor", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1482,12 +1482,12 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 
   } else if (!strcmp (argv[1], "getpaircount")) {
     if (argc < 3) {
-      interp->result = "bad # args";
+      Tcl_SetResult(interp, "bad # args", TCL_STATIC);
       return TCL_ERROR;
     }
     DisplayableMesh* dm = FindMeshDisplayInfo (argv[2]);
     if (!dm) {
-      interp->result = "Bad mesh specified - sczRegCmds.cc:PlvGlobalRegistrationCmd getpaircount";
+      Tcl_SetResult(interp, "Bad mesh specified - sczRegCmds.cc:PlvGlobalRegistrationCmd getpaircount", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1501,8 +1501,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 
   } else if (!strcmp (argv[1], "killpair")) {
     if (argc < 4) {
-      interp->result =
-	"Bad args to PlvGlobalRegistrationCmd killpair";
+      Tcl_SetResult(interp, "Bad args to PlvGlobalRegistrationCmd killpair", TCL_STATIC);
       return TCL_ERROR;
     }
     DisplayableMesh* dm1 = FindMeshDisplayInfo (argv[2]);
@@ -1510,8 +1509,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     // "mesh *" is allowed to leave dm2 NULL and delete
     // all involving mesh
     if (!dm1 || (!dm2 && argv[3][0] != '*')) {
-      interp->result =
-	"Bad mesh in PlvGlobalRegistrationCmd killpair";
+      Tcl_SetResult(interp, "Bad mesh in PlvGlobalRegistrationCmd killpair", TCL_STATIC);
       return TCL_ERROR;
     }
     if (dm2)
@@ -1522,8 +1520,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 
   } else if (!strcmp (argv[1], "point_pair_count")) {
     if (argc < 4) {
-      interp->result =
-	"Bad args to PlvGlobalRegistrationCmd point_pair_count";
+      Tcl_SetResult(interp, "Bad args to PlvGlobalRegistrationCmd point_pair_count", TCL_STATIC);
       return TCL_ERROR;
     }
     DisplayableMesh* dm1 = FindMeshDisplayInfo (argv[2]);
@@ -1531,8 +1528,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     // "mesh *" is allowed to leave dm2 NULL and deals with
     // all involving meshes
     if (!dm1 || (!dm2 && argv[3][0] != '*')) {
-      interp->result =
-	"Bad mesh in PlvGlobalRegistrationCmd point_pair_count";
+      Tcl_SetResult(interp, "Bad mesh in PlvGlobalRegistrationCmd point_pair_count", TCL_STATIC);
       return TCL_ERROR;
     }
     if (dm2)  gr->showPointpairCount(dm1->getMeshData(),
@@ -1541,16 +1537,14 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
 
   } else if (!strcmp (argv[1], "deleteautopairs")) {
     if (argc < 3 || argc > 4) {
-      interp->result =
-	"Bad args to PlvGlobalRegistrationCmd deleteautopairs";
+      Tcl_SetResult(interp, "Bad args to PlvGlobalRegistrationCmd deleteautopairs", TCL_STATIC);
       return TCL_ERROR;
     }
     TbObj* tb = NULL;
     if (argc == 4) {
       DisplayableMesh* dm = FindMeshDisplayInfo (argv[3]);
       if (!dm) {
-	interp->result =
-	  "Bad mesh in PlvGlobalRegistrationCmd deleteautopairs";
+      Tcl_SetResult(interp, "Bad mesh in PlvGlobalRegistrationCmd deleteautopairs", TCL_STATIC);
 	return TCL_ERROR;
       }
       tb = dm->getMeshData();
@@ -1564,7 +1558,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
       dm2 = FindMeshDisplayInfo (argv[3]);
     }
     if (!dm1 || !dm2) {
-      interp->result = "Bad mesh passed to getstats";
+      Tcl_SetResult(interp, "Bad mesh passed to getstats", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1574,7 +1568,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     float errs[5];
     if (!gr->getPairingStats (dm1->getMeshData(), dm2->getMeshData(),
 			      bManual, iQuality, nPoints, date, errs)) {
-      interp->result = "Can't get stats for given mesh";
+      Tcl_SetResult(interp, "Can't get stats for given mesh", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1597,7 +1591,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     if (argc > 2)
       dm = FindMeshDisplayInfo (argv[2]);
     if (!dm && 0 != strcmp (argv[2], "*")) {
-      interp->result = "Bad mesh passed to getstatsummary";
+      Tcl_SetResult(interp, "Bad mesh passed to getstatsummary", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1607,7 +1601,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     GlobalReg::ERRMETRIC metric = GlobalReg::errmetric_pnt;
 
     if (!gr->getPairingSummary (tb, metric, count, err, qual)) {
-      interp->result = "Can't get summary for given mesh";
+      Tcl_SetResult(interp, "Can't get summary for given mesh", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1619,7 +1613,7 @@ PlvGlobalRegistrationCmd (ClientData clientData, Tcl_Interp *interp,
     Tcl_SetResult (interp, szStats, TCL_VOLATILE);
 
   } else {
-    interp->result = "Bad argument to PlvGlobalRegistrationCmd";
+    Tcl_SetResult(interp, "Bad argument to PlvGlobalRegistrationCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1641,7 +1635,8 @@ PlvRegIcpCmd(ClientData clientData, Tcl_Interp *interp,
 	  int argc, char *argv[])
 {
   if (argc != 14) {
-    interp->result = "Usage: plv_icpregister \n"
+    Tcl_SetResult(interp,
+      "Usage: plv_icpregister \n"
       "\t<sampling density [0,1]>\n"
       "\t<normal-space sampling {0|1}>\n"
       "\t<number of iterations [1,20]>\n"
@@ -1654,7 +1649,8 @@ PlvRegIcpCmd(ClientData clientData, Tcl_Interp *interp,
       "\t<edge threshold value>\n"
       "\t<save results for globalreg {0|1}>\n"
       "\t<save at most n pairs [0,a_big_number]>\n"
-      "\t<quality rating [0..3]>\n";
+      "\t<quality rating [0..3]>\n",
+      TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1709,7 +1705,7 @@ PlvRegIcpMarkQualityCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   if (argc != 4) {
-    interp->result = "Bad args to PlvRegIcpMarkQualityCmd";
+    Tcl_SetResult(interp, "Bad args to PlvRegIcpMarkQualityCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1724,12 +1720,12 @@ PlvRegIcpMarkQualityCmd(ClientData clientData, Tcl_Interp *interp,
   int quality = atoi (argv[3]);
 
   if (quality < 0 || quality > 3) {
-    interp->result = "Quality out of range in PlvRegIcpMarkQualityCmd";
+    Tcl_SetResult(interp, "Quality out of range in PlvRegIcpMarkQualityCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   if (!theScene->globalReg->markPairQuality (mSrc, mTrg, quality)) {
-    interp->result = "General failure in PlvRegIcpMarkQualityCmd";
+    Tcl_SetResult(interp, "General failure in PlvRegIcpMarkQualityCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1742,7 +1738,7 @@ PlvShowIcpLinesCmd(ClientData clientData, Tcl_Interp *interp,
 	  int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Bad arguments to PlvShowIcpLinesCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvShowIcpLinesCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1761,9 +1757,11 @@ SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   if (argc < 7) {
-    interp->result = "Usage: scz_auto_register \n"
+    Tcl_SetResult(interp,
+      "Usage: scz_auto_register \n"
       "\t[visible | current] [visible | all] [name_of_curr_mesh] "
-      "[error_thresh] [nTargetPairs] [bPreserveExisting] [bNormSSample]\n";
+      "[error_thresh] [nTargetPairs] [bPreserveExisting] [bNormSSample]\n",
+      TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1775,7 +1773,7 @@ SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
   float final_error_thresh = atof(argv[4]);
 
   if (final_error_thresh <= 0) {
-    interp->result = "Error threshold has to be positive!\n";
+    Tcl_SetResult(interp, "Error threshold has to be positive!\n", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1800,8 +1798,7 @@ SczAutoRegisterCmd(ClientData clientData, Tcl_Interp *interp,
 
   DisplayableMesh *currMesh = FindMeshDisplayInfo (argv[3]);
   if (!currMesh) {
-    interp->result =
-      "Couldn't find the current mesh!";
+    Tcl_SetResult(interp, "Couldn't find the current mesh!", TCL_STATIC);
     return TCL_ERROR;
   }
 

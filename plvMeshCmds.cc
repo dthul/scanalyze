@@ -71,7 +71,7 @@ PlvMeshResolutionCmd(ClientData clientData, Tcl_Interp *interp,
   dm->invalidateCachedData();
   redraw (true);
 
-  interp->result = ok ? "1" : "0";
+  Tcl_SetResult(interp, ok ? "1" : "0", TCL_STATIC);
   return TCL_OK;
 }
 
@@ -152,7 +152,7 @@ PlvSetMeshResPreloadCmd(ClientData clientData, Tcl_Interp *interp,
   if (theSet->set_load_desired (nRes, bPreload))
     return TCL_OK;
 
-  interp->result = "Specified resolution does not exist";
+  Tcl_SetResult(interp, "Specified resolution does not exist", TCL_STATIC);
   return TCL_ERROR;
 }
 
@@ -166,13 +166,13 @@ PlvCurrentResCmd(ClientData clientData, Tcl_Interp *interp,
   RigidScan* meshSet = GetMeshFromCmd (interp, argc, argv, 2);
   if (!meshSet)
   {
-    interp->result = "Unable to find mesh in PlvCurrentResCmd";
+    Tcl_SetResult(interp, "Unable to find mesh in PlvCurrentResCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   if (!meshSet->num_resolutions())
   {
-    interp->result = "Given mesh has no data in PlvCurrentResCmd";
+    Tcl_SetResult(interp, "Given mesh has no data in PlvCurrentResCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -209,7 +209,7 @@ PlvMeshDeleteResCmd(ClientData clientData, Tcl_Interp *interp,
     return TCL_ERROR;
 
   if (scan->num_resolutions() == 1) {
-    interp->result = "Scan has only 1 resolution; can't be deleted";
+    Tcl_SetResult(interp, "Scan has only 1 resolution; can't be deleted", TCL_STATIC);
     return TCL_ERROR;
   }
   int resLevel = atoi(argv[2]);
@@ -332,7 +332,7 @@ PlvScanColorCodeCmd(ClientData clientData, Tcl_Interp *interp,
   if (!strcmp (argv[1], "set")) {
     unsigned int r, g, b;
     if (argc != 4 || 3 != sscanf (argv[3], "#%02x%02x%02x", &r, &g, &b)) {
-      interp->result = "Bad color args.";
+      Tcl_SetResult(interp, "Bad color args.", TCL_STATIC);
       return TCL_ERROR;
     }
     vec3uc color = {r, g, b};
@@ -396,7 +396,7 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "Bad args to PlvGroupScansCmd";
+    Tcl_SetResult(interp, "Bad args to PlvGroupScansCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -408,7 +408,7 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
       DisplayableMesh* dm = FindMeshDisplayInfo (argv[i]);
       if (!dm) {
 	cerr << "No such mesh: " << argv[i] << endl;
-	interp->result = "Missing scan in PlvGroupScansCmd";
+	Tcl_SetResult(interp, "Missing scan in PlvGroupScansCmd", TCL_STATIC);
 	return TCL_ERROR;
       }
       members.push_back (dm);
@@ -417,10 +417,10 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
     DisplayableMesh* group = groupScans (members, argv[2], dirty);
 
     if (!group) {
-      interp->result = "The group could not be created.";
+      Tcl_SetResult(interp, "The group could not be created.", TCL_STATIC);
       return TCL_ERROR;
     }
-    interp->result = (char*)group->getName();
+    Tcl_SetResult(interp, (char*)group->getName(), TCL_STATIC);
 
   } else if (!strcmp (argv[1], "list")) {
 
@@ -448,8 +448,8 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
 
     members = ungroupScans (mesh);
     if (!members.size()) {
-      interp->result = "The scan could not be ungrouped -- perhaps "
-	"it's not a group in the first place?";
+      Tcl_SetResult(interp, "The scan could not be ungrouped -- perhaps "
+        "it's not a group in the first place?", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -463,20 +463,20 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
 
       DisplayableMesh* dm = FindMeshDisplayInfo (argv[2]);
       if (!dm) {
-	interp->result = "Missing scan in PlvGroupScansCmd";
+	Tcl_SetResult(interp, "Missing scan in PlvGroupScansCmd", TCL_STATIC);
 	return TCL_ERROR;
       }
       RigidScan* scan = dm->getMeshData();
       vector<RigidScan*> children;
       if (scan->get_children (children)) {
-	interp->result = "1";
+	Tcl_SetResult(interp, "1", TCL_STATIC);
       } else {
-	interp->result= "0";
+    Tcl_SetResult(interp, "0", TCL_STATIC);
       }
       return TCL_OK;
 
   } else {
-    interp->result = "Unrecognized option to PlvGroupScansCmd";
+    Tcl_SetResult(interp, "Unrecognized option to PlvGroupScansCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -505,7 +505,7 @@ PlvHiliteScanCmd(ClientData clientData, Tcl_Interp *interp,
     DisplayableMesh* dispMesh = FindMeshDisplayInfo (argv[i]);
     if (!dispMesh) {
       cerr << argv[0] << " can't find " << argv[i] << endl;
-      interp->result = "Bad scan in PlvHiliteScanCmd";
+      Tcl_SetResult(interp, "Bad scan in PlvHiliteScanCmd", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -537,7 +537,7 @@ SczXformScanCmd (ClientData clientData, Tcl_Interp *interp,
     return TCL_ERROR;
 
   if (argc < 3) {
-    interp->result = "Missing command in SczXformScanCmd";
+    Tcl_SetResult(interp, "Missing command in SczXformScanCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -545,18 +545,18 @@ SczXformScanCmd (ClientData clientData, Tcl_Interp *interp,
     if (!scan->readXform (scan->get_basename())) {
       cerr << "Scan " << scan->get_name()
 	   << " failed to read xform." << endl;
-      interp->result = "Xform read failed!";
+      Tcl_SetResult(interp, "Xform read failed!", TCL_STATIC);
       return TCL_ERROR;
     }
   } else if (!strcmp (argv[2], "matrix")) {
     if (argc < 4) {
-      interp->result = "Missing matrix!";
+      Tcl_SetResult(interp, "Missing matrix!", TCL_STATIC);
       return TCL_ERROR;
     }
 
     Xform<float> xfTo;
     if (!matrixFromString (argv[3], xfTo)) {
-      interp->result = "Bad matrix!";
+      Tcl_SetResult(interp, "Bad matrix!", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -565,7 +565,7 @@ SczXformScanCmd (ClientData clientData, Tcl_Interp *interp,
       if (!strcmp (argv[4], "relative"))
 	xfTo = xfTo * scan->getXform();
       else if(!matrixFromString (argv[4], xfRelTo)) {
-	interp->result = "Bad matrix!";
+	Tcl_SetResult(interp, "Bad matrix!", TCL_STATIC);
 	return TCL_ERROR;
       }
     }
@@ -593,7 +593,7 @@ int SczGetScanXformCmd(ClientData clientData, Tcl_Interp *interp,
     return TCL_ERROR;
 
   if (argc < 3) {
-    interp->result = "Missing command in SczXformScanCmd";
+    Tcl_SetResult(interp, "Missing command in SczXformScanCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -623,7 +623,7 @@ int SczGetScanXformCmd(ClientData clientData, Tcl_Interp *interp,
 	     phi * 180 / M_PI, ax, ay, az,
 	     t[0], t[1], t[2]);
   } else {
-    interp->result = "Bad command in SczGetScanXformCmd!";
+    Tcl_SetResult(interp, "Bad command in SczGetScanXformCmd!", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -636,7 +636,7 @@ PlvSmoothMesh(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
   if (argc < 4) {
-    interp->result = "plvSmoothMesh <meshName> <iterations> <maxMotion_mm>";
+    Tcl_SetResult(interp, "plvSmoothMesh <meshName> <iterations> <maxMotion_mm>", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -703,8 +703,8 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
   GLdouble mvmatrix[16], projmatrix[16];
 
   if (argc != 5) {
-    interp->result = "plvRunExternalProgram <command> <name> "
-                     "<output> <incBox>";
+    Tcl_SetResult(interp, "plvRunExternalProgram <command> <name> "
+                     "<output> <incBox>", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -716,14 +716,14 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
 
   // parameter error checking
   if (!strlen(command) || !strlen(inputMesh) || !strlen(outputMesh)) {
-    interp->result = "Please enter a command, inputMesh or outputMesh name";
+    Tcl_SetResult(interp, "Please enter a command, inputMesh or outputMesh name", TCL_STATIC);
     return TCL_ERROR;
   }
 
   if (writeCBox) {
     clipBoxCoord[0] = '\0';
     if (theSel.pts.size() < 3) {
-      interp->result = "At least 3 points are needed for clipping information";
+      Tcl_SetResult(interp, "At least 3 points are needed for clipping information", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -830,7 +830,7 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
     sprintf(cmdBuffer, "%s %s %s ", command, inTName.c_str(), outTName.c_str());
 
   if (system (cmdBuffer)) {
-    interp->result = "Command failed.";
+    Tcl_SetResult(interp, "Command failed.", TCL_STATIC);
 
     // delete the temporary files
     sprintf(cmdBuffer, "rm -f %s", inTName.c_str());
@@ -854,7 +854,7 @@ int PlvRunExternalProgram(ClientData clientData, Tcl_Interp *interp,
     sprintf(cmdBuffer, "clipMeshCreateHelper %s %s", inputMesh, outputMesh);
     Tcl_Eval(interp, cmdBuffer);
   } else {
-    interp->result = "A filtered scan could not be created";
+    Tcl_SetResult(interp, "A filtered scan could not be created", TCL_STATIC);
 
     // delete the temporary files
     sprintf(cmdBuffer, "rm -f %s", inTName.c_str());

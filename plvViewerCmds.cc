@@ -41,7 +41,7 @@ PlvSelectScanCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Wrong number of args";
+    Tcl_SetResult(interp, "Wrong number of args", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -49,7 +49,7 @@ PlvSelectScanCmd(ClientData clientData, Tcl_Interp *interp,
   DisplayableMesh* scan = FindMeshDisplayInfo (argv[1]);
 
   if (strlen(argv[1]) && scan == NULL) {
-    interp->result = "Could not find mesh";
+    Tcl_SetResult(interp, "Could not find mesh", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -75,14 +75,14 @@ PlvSetVisibleCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "Wrong number of args";
+    Tcl_SetResult(interp, "Wrong number of args", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh *meshSet = FindMeshDisplayInfo (argv[1]);
 
   if (meshSet == NULL) {
-    interp->result = "Could not find mesh";
+    Tcl_SetResult(interp, "Could not find mesh", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -101,18 +101,18 @@ PlvGetVisibleCmd(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Wrong number of args";
+    Tcl_SetResult(interp, "Wrong number of args", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh *meshSet = FindMeshDisplayInfo (argv[1]);
 
   if (meshSet == NULL) {
-    interp->result = "Could not find mesh";
+    Tcl_SetResult(interp, "Could not find mesh", TCL_STATIC);
     return TCL_ERROR;
   }
 
-  interp->result = meshSet->getVisible() ? "1" : "0";
+  Tcl_SetResult(interp, meshSet->getVisible() ? "1" : "0", TCL_STATIC);
   return TCL_OK;
 }
 
@@ -132,7 +132,7 @@ PlvListScansCmd(ClientData clientData, Tcl_Interp *interp,
   bool bLeaf = false;
 
   if (argc > 2) {
-    interp->result = "Too many arguments to PlvListScansCmd";
+    Tcl_SetResult(interp, "Too many arguments to PlvListScansCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -146,7 +146,7 @@ PlvListScansCmd(ClientData clientData, Tcl_Interp *interp,
     else if (!strcmp (argv[1], "groups"))
       bLeaf = false;
     else {
-      interp->result = "Bad option to PlvListScansCmd";
+      Tcl_SetResult(interp, "Bad option to PlvListScansCmd", TCL_STATIC);
       return TCL_ERROR;
     }
   }
@@ -191,7 +191,7 @@ PlvLightCmd(ClientData clientData, Tcl_Interp *interp,
     char result[PATH_MAX];
 
     if (argc != 1 && argc != 4) {
-	interp->result = "Wrong number of args";
+	Tcl_SetResult(interp, "Wrong number of args", TCL_STATIC);
 	return TCL_ERROR;
     }
 
@@ -540,7 +540,7 @@ PlvTranslateInPlaneCmd(ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "Bad args to PlvTranslateInPlaneCmd";
+    Tcl_SetResult(interp, "Bad args to PlvTranslateInPlaneCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -590,7 +590,7 @@ PlvGetScreenToWorldCoords(ClientData clientData, Tcl_Interp *interp,
 			     int argc, char *argv[])
 {
   if (argc != 3) {
-    interp->result = "Bad arguments to PlvGetScreenToWorldCoords";
+    Tcl_SetResult(interp, "Bad arguments to PlvGetScreenToWorldCoords", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -619,7 +619,7 @@ PlvSetThisAsCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
 			     int argc, char *argv[])
 {
   if (argc != 3) {
-    interp->result = "Bad arguments to PlvSetThisAsCenterOfRotation";
+    Tcl_SetResult(interp, "Bad arguments to PlvSetThisAsCenterOfRotation", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -634,8 +634,7 @@ PlvSetThisAsCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
   }
   else
   {
-    interp->result =
-      "We hit a background pixel.  You must click on the mesh.\n";
+    Tcl_SetResult(interp, "We hit a background pixel. You must click on the mesh.\n", TCL_STATIC);
     return TCL_ERROR;
   }
 }
@@ -650,7 +649,7 @@ PlvResetCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
   if (!strcmp (argv[1], "screen")) {
 
     if (theActiveScan != NULL) {
-      interp->result = "Don't use screen-centered rotation for moveMesh";
+      Tcl_SetResult(interp, "Don't use screen-centered rotation for moveMesh", TCL_STATIC);
       return TCL_ERROR;
     }
     center = screenRotationCenter();
@@ -667,7 +666,7 @@ PlvResetCenterOfRotation(ClientData clientData, Tcl_Interp *interp,
 
   } else {
 
-    interp->result = "Must specify object|screen to PlvResetCoR";
+    Tcl_SetResult(interp, "Must specify object|screen to PlvResetCoR", TCL_STATIC);
     return TCL_ERROR;
 
   }
@@ -711,7 +710,7 @@ PlvSetHomeCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
   if (argc != 2) {
-    interp->result = "Bad arguments to PlvSetHomeCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvSetHomeCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -721,7 +720,7 @@ PlvSetHomeCmd(ClientData clientData, Tcl_Interp *interp,
   } else {
     ms = FindMeshDisplayInfo (argv[1]);
     if (ms == NULL) {
-      interp->result = "Missing meshset in PlvSetHomeCmd";
+      Tcl_SetResult(interp, "Missing meshset in PlvSetHomeCmd", TCL_STATIC);
       return TCL_ERROR;
     }
   }
@@ -741,7 +740,7 @@ PlvGoHomeCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
   if (argc != 2) {
-    interp->result = "Bad arguments to PlvGoHomeCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvGoHomeCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -751,7 +750,7 @@ PlvGoHomeCmd(ClientData clientData, Tcl_Interp *interp,
   } else {
     ms = FindMeshDisplayInfo (argv[1]);
     if (ms == NULL) {
-      interp->result = "Missing meshset in PlvGoHomeCmd";
+      Tcl_SetResult(interp, "Missing meshset in PlvGoHomeCmd", TCL_STATIC);
       return TCL_ERROR;
     }
   }
@@ -772,7 +771,7 @@ PlvSetOverallResCmd(ClientData clientData, Tcl_Interp *interp,
 		    int argc, char *argv[])
 {
   if (argc != 2) {
-    interp->result = "Bad argument to PlvSetOverallResCmd";
+    Tcl_SetResult(interp, "Bad argument to PlvSetOverallResCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -804,7 +803,7 @@ PlvFlattenCameraXformCmd(ClientData clientData, Tcl_Interp *interp,
 			 int argc, char *argv[])
 {
   if (argc != 1) {
-    interp->result = "Bad argument to PlvFlattenCameraXformCmd";
+    Tcl_SetResult(interp, "Bad argument to PlvFlattenCameraXformCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -821,12 +820,12 @@ PlvSpaceCarveCmd(ClientData clientData, Tcl_Interp *interp,
 {
   // space-carve all visible scans and display the result as a mesh
   if (argc < 2) {
-    interp->result = "Bad argument to PlvSpaceCarveCmd";
+    Tcl_SetResult(interp, "Bad argument to PlvSpaceCarveCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   int levels = atoi (argv[1]);
   if (levels <= 0) {
-    interp->result = "Bad levels in PlvSpaceCarveCmd";
+    Tcl_SetResult(interp, "Bad levels in PlvSpaceCarveCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -925,7 +924,7 @@ PlvSetManipRenderModeCmd(ClientData clientData, Tcl_Interp *interp,
   }
 
   if (argc != 7) {
-    interp->result = "Bad args to PlvSetManipRenderModeCmd";
+    Tcl_SetResult(interp, "Bad args to PlvSetManipRenderModeCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -946,7 +945,7 @@ PlvManualRotateCmd(ClientData clientData, Tcl_Interp *interp,
   Pnt3 axis;
 
   if (argc < 4) {
-    interp->result = "Bad args to PlvManualRotateCmd";
+    Tcl_SetResult(interp, "Bad args to PlvManualRotateCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -975,7 +974,7 @@ PlvManualTranslateCmd(ClientData clientData, Tcl_Interp *interp,
   Pnt3 tp;
 
   if (argc < 4) {
-    interp->result = "Bad args to PlvManualTranslateCmd";
+    Tcl_SetResult(interp, "Bad args to PlvManualTranslateCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1030,9 +1029,9 @@ PlvPickScanFromPointCmd(ClientData clientData, Tcl_Interp *interp,
 
     DisplayableMesh* dm = ptMeshMap[y*w + x];
     if (dm)
-      interp->result = (char*)dm->getName();
+      Tcl_SetResult(interp, (char*)dm->getName(), TCL_STATIC);
     else
-      interp->result = "";
+      Tcl_SetResult(interp, "", TCL_STATIC);
   } else
     return TCL_ERROR;
 
@@ -1071,7 +1070,7 @@ PlvGetVisiblyRenderedScans(ClientData clientData, Tcl_Interp *interp,
 	}
       else
 	{
-	  interp->result="Need to have a rectangle selected";
+      Tcl_SetResult(interp, "Need to have a rectangle selected", TCL_STATIC);
 	  return TCL_ERROR;
 	}
    } else if (argc == 5) {
@@ -1127,7 +1126,7 @@ PlvPositionCameraCmd(ClientData clientData, Tcl_Interp *interp,
     // Load camera from a Tsai parameters file
     CameraParams *cam = CameraParams::Read(argv[1]);
     if (!cam) {
-      interp->result = "Can't read camera file";
+      Tcl_SetResult(interp, "Can't read camera file", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1189,7 +1188,7 @@ PlvPositionCameraCmd(ClientData clientData, Tcl_Interp *interp,
     theScene->computeBBox (Scene::sync);
     redraw (true);
   } else {
-    interp->result = "Bad # args";
+    Tcl_SetResult(interp, "Bad # args", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1400,15 +1399,15 @@ PlvForceKeepOnscreenCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Wrong # args";
+    Tcl_SetResult(interp, "Wrong # args", TCL_STATIC);
     return TCL_ERROR;
   }
 
   s_bForceOnscreen = atoi (argv[1]);
   if (s_bForceOnscreen && !passesOnscreenTest()) {
     s_bForceOnscreen = false;
-    interp->result = "Please GET the model onscreen "
-      "before trying to KEEP it there";
+    Tcl_SetResult(interp, "Please GET the model onscreen "
+      "before trying to KEEP it there", TCL_STATIC);
     return TCL_ERROR;
   }
 

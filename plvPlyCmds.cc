@@ -20,9 +20,9 @@ PlvIsRangeGridCmd(ClientData clientData, Tcl_Interp *interp,
 		  int argc, char *argv[])
 {
   if (is_range_grid_file(argv[1]))
-    interp->result = "1";
+    Tcl_SetResult(interp, "1", TCL_STATIC);
   else
-    interp->result = "0";
+    Tcl_SetResult(interp, "0", TCL_STATIC);
   
   return TCL_OK;
 }
@@ -32,7 +32,7 @@ PlvReadFileCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "No filename specified in PlvReadFileCmd!";
+    Tcl_SetResult(interp, "No filename specified in PlvReadFileCmd!", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -45,7 +45,7 @@ PlvReadFileCmd(ClientData clientData, Tcl_Interp *interp,
 
   } else {
 
-    interp->result = "The given scan or set could not be loaded.";
+    Tcl_SetResult(interp, "The given scan or set could not be loaded.", TCL_STATIC);
     return TCL_ERROR;
 
   }
@@ -56,7 +56,7 @@ PlvReadGroupMembersCmd(ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "No filename specified in PlvReadGroupMembersCmd!";
+    Tcl_SetResult(interp, "No filename specified in PlvReadGroupMembersCmd!", TCL_STATIC);
     return TCL_ERROR;
   }
   char buf[1000];
@@ -68,10 +68,10 @@ PlvReadGroupMembersCmd(ClientData clientData, Tcl_Interp *interp,
     names += string(buf) + string(" ");
   }
   if (!strcmp(names.c_str(), "")) {
-    interp->result = "Cannot load group";
+    Tcl_SetResult(interp, "Cannot load group", TCL_STATIC);
     return TCL_ERROR;
   }
-  interp->result = strdup(names.c_str());
+  Tcl_SetResult(interp, strdup(names.c_str()), TCL_STATIC);
   return TCL_OK;
 }
 
@@ -79,7 +79,7 @@ int
 PlvGetNextGroupNameCmd(ClientData clientData, Tcl_Interp *interp, 
 		       int argc, char *argv[])
 {
-  interp->result = getNextUnusedGroupName();
+  Tcl_SetResult(interp, getNextUnusedGroupName(), TCL_STATIC);
   return TCL_OK;
 }
 
@@ -88,13 +88,13 @@ PlvSynthesizeObjectCmd(ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Bad arguments to PlvSynthesizeObjectCmd";
+    Tcl_SetResult(interp, "Bad arguments to PlvSynthesizeObjectCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   float size = atoi (argv[1]);
   if (size <= 0) {
-    interp->result = "Bad size to PlvSynthesizeObjectCmd";
+    Tcl_SetResult(interp, "Bad size to PlvSynthesizeObjectCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -109,7 +109,7 @@ PlvSaveCurrentGroup (ClientData clientData, Tcl_Interp *interp,
 	       int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "Bad args to PlvSaveCurrentGroup";
+    Tcl_SetResult(interp, "Bad args to PlvSaveCurrentGroup", TCL_STATIC);
     return TCL_ERROR;
   }
   
@@ -125,7 +125,7 @@ PlvSaveCurrentGroup (ClientData clientData, Tcl_Interp *interp,
     if (scan->write (argv[2]))
       return TCL_OK;
 
-    interp->result = "Unable to write Group.";
+    Tcl_SetResult(interp, "Unable to write Group.", TCL_STATIC);
   }
   return TCL_ERROR;
 }
@@ -136,13 +136,13 @@ PlvWriteScanCmd(ClientData clientData, Tcl_Interp *interp,
 	       int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Bad args to PlvWriteScanCmd";
+    Tcl_SetResult(interp, "Bad args to PlvWriteScanCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* meshDisp = FindMeshDisplayInfo (argv[1]);    
   if (!meshDisp) {
-    interp->result = "Missing scan in PlvWriteScanCmd";
+    Tcl_SetResult(interp, "Missing scan in PlvWriteScanCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   RigidScan* meshSet = meshDisp->getMeshData();
@@ -152,13 +152,13 @@ PlvWriteScanCmd(ClientData clientData, Tcl_Interp *interp,
     if (meshSet->write())
       return TCL_OK;
 
-    interp->result = "unnamed";
+    Tcl_SetResult(interp, "unnamed", TCL_STATIC);
   } else {
     //printf ("Attempting named write(%s)\n", argv[2]);
     if (meshSet->write (argv[2]))
       return TCL_OK;
 
-    interp->result = "Unable to write scan.";
+    Tcl_SetResult(interp, "Unable to write scan.", TCL_STATIC);
   }
 
   return TCL_ERROR;
@@ -187,13 +187,13 @@ int PlvWriteMetaDataCmd(ClientData clientData, Tcl_Interp *interp,
 			int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "Bad args to PlvWriteMetaDataCmd";
+    Tcl_SetResult(interp, "Bad args to PlvWriteMetaDataCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* meshDisp = FindMeshDisplayInfo (argv[1]);    
   if (!meshDisp) {
-    interp->result = "Missing scan in PlvWriteMetaDataCmd";
+    Tcl_SetResult(interp, "Missing scan in PlvWriteMetaDataCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -201,13 +201,13 @@ int PlvWriteMetaDataCmd(ClientData clientData, Tcl_Interp *interp,
   if (!strcmp (argv[2], "xform")) {
     data = RigidScan::md_xform;
   } else {
-    interp->result = "Unrecognized metadata type";
+    Tcl_SetResult(interp, "Unrecognized metadata type", TCL_STATIC);
     return TCL_ERROR;
   }
 
   RigidScan* scan = meshDisp->getMeshData();
   if (!scan->write_metadata (data)) {
-    interp->result = "Scan was unable to write metadata";
+    Tcl_SetResult(interp, "Scan was unable to write metadata", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -219,13 +219,13 @@ int PlvWriteResolutionMeshCmd(ClientData clientData, Tcl_Interp *interp,
 			      int argc, char *argv[])
 {
   if (argc < 4) {
-    interp->result = "Bad args to PlvWriteResolutionMeshCmd";
+    Tcl_SetResult(interp, "Bad args to PlvWriteResolutionMeshCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* meshDisp = FindMeshDisplayInfo (argv[1]);    
   if (!meshDisp) {
-    interp->result = "Missing scan in PlvWriteResolutionMeshCmd";
+    Tcl_SetResult(interp, "Missing scan in PlvWriteResolutionMeshCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   RigidScan* scan = meshDisp->getMeshData();
@@ -238,7 +238,7 @@ int PlvWriteResolutionMeshCmd(ClientData clientData, Tcl_Interp *interp,
   } else if (argc > 4 && !strncmp (argv[4], "matrix", 6)) {
     Xform<float> mat;
     if (!matrixFromString (argv[4] + 7, mat)) {
-      interp->result = "Bad matrix!";
+      Tcl_SetResult(interp, "Bad matrix!", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -248,7 +248,7 @@ int PlvWriteResolutionMeshCmd(ClientData clientData, Tcl_Interp *interp,
   }
 
   if (!success) {
-    interp->result = "Write failed";
+    Tcl_SetResult(interp, "Write failed", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -260,18 +260,18 @@ int PlvIsScanModifiedCmd(ClientData clientData, Tcl_Interp *interp,
 			 int argc, char *argv[])
 {
   if (argc != 2) {
-    interp->result = "Bad args to PlvIsScanModifiedCmd";
+    Tcl_SetResult(interp, "Bad args to PlvIsScanModifiedCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* meshDisp = FindMeshDisplayInfo (argv[1]);    
   if (!meshDisp) {
-    interp->result = "Missing scan in PlvIsScanModifiedCmd";
+    Tcl_SetResult(interp, "Missing scan in PlvIsScanModifiedCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   RigidScan* scan = meshDisp->getMeshData();
 
-  interp->result = scan->is_modified() ? "1" : "0";
+  Tcl_SetResult(interp, scan->is_modified() ? "1" : "0", TCL_STATIC);
   return TCL_OK;
 }
 
@@ -280,18 +280,18 @@ int PlvGetScanFilenameCmd(ClientData clientData, Tcl_Interp *interp,
 			  int argc, char* argv[])
 {
   if (argc != 2) {
-    interp->result = "Bad args to PlvGetScanFilenameCmd";
+    Tcl_SetResult(interp, "Bad args to PlvGetScanFilenameCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* meshDisp = FindMeshDisplayInfo (argv[1]);    
   if (!meshDisp) {
-    interp->result = "Missing scan in PlvGetScanFilenameCmd";
+    Tcl_SetResult(interp, "Missing scan in PlvGetScanFilenameCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   RigidScan* scan = meshDisp->getMeshData();
 
-  interp->result = (char*)scan->get_name().c_str();
+  Tcl_SetResult(interp, (char*)scan->get_name().c_str(), TCL_STATIC);
   return TCL_OK;
 }
 

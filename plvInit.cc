@@ -231,7 +231,7 @@ Plv_Init(Tcl_Interp *interp)
 
   char *plvDir = getenv("SCANALYZE_DIR");
   if (plvDir == NULL) {
-    interp->result = "Need to set SCANALYZE_DIR environment variable.";
+    Tcl_SetResult(interp, "Need to set SCANALYZE_DIR environment variable.", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -242,7 +242,7 @@ Plv_Init(Tcl_Interp *interp)
   Tcl_SetVar (interp, "noui", g_bNoUI ? "1" : "0", TCL_GLOBAL_ONLY);
   int code = Tcl_EvalFile(interp, plvPath);
   if (code != TCL_OK) {
-    interp->result = Tcl_GetVar (interp, "errorInfo", TCL_GLOBAL_ONLY);
+    Tcl_SetResult(interp, Tcl_GetVar (interp, "errorInfo", TCL_GLOBAL_ONLY), TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -264,7 +264,7 @@ Plv_Init(Tcl_Interp *interp)
     strcpy(rcPath, homeDir);
     strcat(rcPath, "/.scanalyzerc");
     Tcl_VarEval(interp, "file exists ", rcPath, (char *)NULL);
-    if (atoi(interp->result)) {
+    if (atoi(Tcl_GetStringResult(interp))) {
       code = Tcl_EvalFile(interp, rcPath);
       if (code != TCL_OK) {
 	char* errMsg = Tcl_GetVar (interp, "errorInfo", TCL_GLOBAL_ONLY);

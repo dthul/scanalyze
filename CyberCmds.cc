@@ -37,16 +37,16 @@ PlvWriteSDForVripCmd(ClientData clientData,
 		     int argc, char* argv[])
 {
    if (argc < 5) {
-      interp->result =
+      Tcl_SetResult(interp,
 	"Usage: PlvWriteSDForVripCmd <res level, 0=max> <dir> "
-	"<sweeps|subsweeps> <delete-sweeps>";
+	"<sweeps|subsweeps> <delete-sweeps>", TCL_STATIC);
       return TCL_ERROR;
    }
 
    int iRes = atoi (argv[1]);
    char* dir = argv[2];
    if (!check_file_access (dir, true, true, true, false, true)) {
-     interp->result = "Cannot write to output directory";
+     Tcl_SetResult(interp, "Cannot write to output directory", TCL_STATIC);
      return TCL_ERROR;
    }
 
@@ -283,22 +283,20 @@ PlvCyberScanSelfAlignCmd(ClientData clientData,
 {
   // check input
   if (argc < 2) {
-    interp->result =
-      "No scan passed to PlvCyberScanSelfAlignCmd";
+    Tcl_SetResult(interp, "No scan passed to PlvCyberScanSelfAlignCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   // get the actual CyberScan
   DisplayableMesh* dm = FindMeshDisplayInfo (argv[1]);
   if (!dm) {
-    interp->result = "Missing scan in PlvCyberScanSelfAlignCmd";
+    Tcl_SetResult(interp, "Missing scan in PlvCyberScanSelfAlignCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   CyberScan* scan = dynamic_cast<CyberScan*>(dm->getMeshData());
   if (!scan) {
-    interp->result =
-      "PlvCyberScanSelfAlignCmd: that's not a CyberScan!";
+    Tcl_SetResult(interp, "PlvCyberScanSelfAlignCmd: that's not a CyberScan!", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -365,22 +363,22 @@ ScnDumpLaserPntsCmd(ClientData clientData,
 {
   // check input
   if (argc < 4) {
-    interp->result =
-      "Usage: ScnDumpLaserPntsCmd scan_name filename nPts";
+    Tcl_SetResult(interp,
+      "Usage: ScnDumpLaserPntsCmd scan_name filename nPts", TCL_STATIC);
     return TCL_ERROR;
   }
 
   // get the actual CyberScan
   DisplayableMesh* dm = FindMeshDisplayInfo (argv[1]);
   if (!dm) {
-    interp->result = "Missing scan in ScnDumpLaserPntsCmd";
+    Tcl_SetResult(interp, "Missing scan in ScnDumpLaserPntsCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   CyberScan* scan = dynamic_cast<CyberScan*>(dm->getMeshData());
   if (!scan) {
-    interp->result =
-      "ScnDumpLaserPntsCmd: that's not a CyberScan!";
+    Tcl_SetResult(interp,
+        "ScnDumpLaserPntsCmd: that's not a CyberScan!", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -475,7 +473,7 @@ PlvWorkingVolumeCmd(ClientData clientData, Tcl_Interp *interp,
     cwv->bounds(atof(argv[1]), atof(argv[2]), atof(argv[3]), atof(argv[4]),
 		atof(argv[5]), atof(argv[6]), atof(argv[7]), atof(argv[8]));
   } else {
-    interp->result = "Bad arguments to plv_working_volume";
+    Tcl_SetResult(interp, "Bad arguments to plv_working_volume", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -513,10 +511,10 @@ PlvWorldCoordToSweepCoord(ClientData clientData, Tcl_Interp *interp,
 
   // Return results
   if (res) {
-    sprintf(interp->result,"%d %f %f %f",sweepInd, (float)scanPt[0],
+    sprintf(Tcl_GetStringResult(interp), "%d %f %f %f", sweepInd, (float)scanPt[0],
 	    (float)scanPt[1], (float)scanPt[2]);
   } else {
-    Tcl_SetResult(interp,"Did not find a sweep containing the Pt.",TCL_STATIC);
+    Tcl_SetResult(interp, "Did not find a sweep containing the Pt.", TCL_STATIC);
   }
 
   cs->sweepCoordToWorldCoord(sweepInd, scanPt, newWpt);
@@ -556,7 +554,7 @@ PlvSweepCoordToWorldCoord(ClientData clientData, Tcl_Interp *interp,
   // cout << "World::\n" << newWpt << "\nScan:\n" << scanPt << "\n" << flush;
 
   // Return results
-  sprintf(interp->result,"%f %f %f",(float)newWpt[0],
+  sprintf(Tcl_GetStringResult(interp), "%f %f %f", (float)newWpt[0],
 	  (float)newWpt[1],(float)newWpt[2]);
   return TCL_OK;
 }

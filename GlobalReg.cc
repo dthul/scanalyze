@@ -243,7 +243,7 @@ createProxyScanNamed (const string& name)
   // make sure we can find the scan, else it's pointless to try to
   // globalreg it because we won't be able to use the results.
   Tcl_VarEval (g_tclInterp, "file_locateScan ", name.c_str(), NULL);
-  char* filename = g_tclInterp->result;
+  char* filename = Tcl_GetStringResult(g_tclInterp);
   if (!filename[0]) {
     cerr << "Unable to locate scan for " << name << endl;
     return NULL;
