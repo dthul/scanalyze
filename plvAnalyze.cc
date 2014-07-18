@@ -419,13 +419,13 @@ PlvAnalyzeLineModeCmd(ClientData clientData, Tcl_Interp *interp,
 
   // args: analyzeTogl [show linetype bool] | [scale n] | [level bool]
   if (argc < 4) {
-    interp->result = "Bad args to PlvAnalyzeLineModeCmd";
+    Tcl_SetResult(interp, "Bad args to PlvAnalyzeLineModeCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   struct Togl* togl = toglHash.FindTogl (argv[1]);
   if (!togl) {
-    interp->result = "Missing togl in PlvAnalyzeLineModeCmd";
+    Tcl_SetResult(interp, "Missing togl in PlvAnalyzeLineModeCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   ClipLineInfo* cli = (ClipLineInfo*)Togl_GetClientData (togl);
@@ -460,7 +460,7 @@ PlvAnalyzeLineModeCmd(ClientData clientData, Tcl_Interp *interp,
       Tcl_Eval (interp, buf);
     }
   } else {
-    interp->result = "Bad subcommand in PlvAnalyzeModeCmd";
+    Tcl_SetResult(interp, "Bad subcommand in PlvAnalyzeModeCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -491,7 +491,7 @@ PlvExportGraphAsText(ClientData clientData, Tcl_Interp *interp,
   winName = argv[2];
 
   if ( togl == NULL ) {
-    interp->result = "PlvExportGraphAsText: Null togl pointer";
+    Tcl_SetResult(interp, "PlvExportGraphAsText: Null togl pointer", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -715,7 +715,7 @@ PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp,
   char meshNames[1000] = "";
 
   if (theSel.type != Selection::line) {
-    interp->result = "You must first select a line";
+    Tcl_SetResult(interp, "You must first select a line", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -733,7 +733,7 @@ PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp,
   int nPixels = max (abs(dx), abs(dy));
 
   if (nPixels == 0) {
-    interp->result = "You must first select a line";
+    Tcl_SetResult(interp, "You must first select a line", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -828,16 +828,16 @@ PlvAnalyzeClipLineDepth(ClientData clientData, Tcl_Interp *interp,
   PopRenderParams();
 
   if (!bFoundAnyData) {
-    interp->result =
+    Tcl_SetResult(interp,
       "No data found.  To do line analysis, draw a line selection,\n"
-      "and make sure it intersects a scan!";
+      "and make sure it intersects a scan!", TCL_STATIC);
     delete cli;
     return TCL_ERROR;
   }
 
   if (ISBACKGROUND (1 - (cli->zMax - cli->zMin))) {
-    interp->result =
-      "Region under clip line is too uniform to analyze!";
+    Tcl_SetResult(interp,
+      "Region under clip line is too uniform to analyze!", TCL_STATIC);
     delete cli;
     return TCL_ERROR;
   }
@@ -1008,7 +1008,7 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Bad args to PlvAlignToMeshBoxCmd";
+    Tcl_SetResult(interp, "Bad args to PlvAlignToMeshBoxCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1045,13 +1045,13 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
   }
 
   if (!(bAlign || bDumpStats || bCreatePlane)) {
-    interp->result = "PlvAlignToMeshBoxCmd: nothing to do";
+    Tcl_SetResult(interp, "PlvAlignToMeshBoxCmd: nothing to do", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* meshDisp = FindMeshDisplayInfo (argv[1]);
   if (!meshDisp) {
-    interp->result = "PlvAlignToMeshBoxCmd: missing mesh";
+    Tcl_SetResult(interp, "PlvAlignToMeshBoxCmd: missing mesh", TCL_STATIC);
     return TCL_ERROR;
   }
   RigidScan* meshFrom = meshDisp->getMeshData();
@@ -1060,12 +1060,12 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
   if (bDataSourceMesh) {
     VertexFilter* filter = filterFromSelection (meshFrom, theSel);
     if (!filter) {
-      interp->result = "You must first select an area.";
+      Tcl_SetResult(interp, "You must first select an area.", TCL_STATIC);
       return TCL_ERROR;
     }
 
     if (!meshFrom->filter_vertices (*filter, pts)) {
-      interp->result = "This scan does not implement filter_vertices.";
+      Tcl_SetResult(interp, "This scan does not implement filter_vertices.", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1073,7 +1073,7 @@ PlvAlignToMeshBoxCmd(ClientData clientData, Tcl_Interp *interp,
 
   } else {
     if (!ReadZBufferArea (pts, theSel)) {
-      interp->result = "Z-Buffer read failed";
+      Tcl_SetResult(interp, "Z-Buffer read failed", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -1349,7 +1349,7 @@ wsh_WarpMesh(ClientData clientData, Tcl_Interp *interp,
   Mesh *theMesh = new Mesh();
 
   if (argc < 2) {
-    interp->result = "Bad file name";
+    Tcl_SetResult(interp, "Bad file name", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1500,13 +1500,13 @@ int wsh_AlignPointsToPlane(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if ( argc < 8 ) {
-    interp->result = "wsh_AlignPointsToPlane: insufficient args";
+    Tcl_SetResult(interp, "wsh_AlignPointsToPlane: insufficient args", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* meshDisp = FindMeshDisplayInfo (argv[1]);
   if (!meshDisp) {
-    interp->result = "wsh_AlignPointsToPlane: missing mesh";
+    Tcl_SetResult(interp, "wsh_AlignPointsToPlane: missing mesh", TCL_STATIC);
     return TCL_ERROR;
   }
   RigidScan* meshFrom = meshDisp->getMeshData();
@@ -1595,7 +1595,7 @@ PlvDrawAnalyzeLines(ClientData clientData, Tcl_Interp *interp,
 		 int argc, char *argv[])
 {
   if ( argc < 8 ) {
-    interp->result = "wsh_DrawAnalyzeLines: incorrect number of args";
+    Tcl_SetResult(interp, "wsh_DrawAnalyzeLines: incorrect number of args", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1629,7 +1629,7 @@ PlvClearAnalyzeLines(ClientData clientData, Tcl_Interp *interp,
     return TCL_OK;
   }
 
-  interp->result = "Can't clear analyze lines because they are NULL";
+  Tcl_SetResult(interp, "Can't clear analyze lines because they are NULL", TCL_STATIC);
   return TCL_ERROR;
 }
 

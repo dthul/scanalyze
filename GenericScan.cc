@@ -1120,8 +1120,8 @@ PlvWritePlyForVripCmd(ClientData clientData,
 		      int argc, char* argv[])
 {
   if (argc < 3) {
-      interp->result =
-	"Usage: PlvWritePlyForVripCmd <res level, 0=max> <dir> ";
+      Tcl_SetResult(interp,
+	"Usage: PlvWritePlyForVripCmd <res level, 0=max> <dir> ", TCL_STATIC);
       return TCL_ERROR;
   }
 

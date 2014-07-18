@@ -34,7 +34,7 @@ PlvParamCmd(ClientData clientData, Tcl_Interp *interp,
 	  Warn = TRUE;
 	}
 	else {
-	  interp->result = "bad arg to plv_param -warn";
+	  Tcl_SetResult(interp, "bad arg to plv_param -warn", TCL_STATIC);
 	  return TCL_ERROR;
 	}
       }
@@ -51,7 +51,7 @@ PlvParamCmd(ClientData clientData, Tcl_Interp *interp,
 	NumProcs = atoi(argv[i]);
       }
       else {
-	interp->result = "bad args to plv_param";
+	Tcl_SetResult(interp, "bad args to plv_param", TCL_STATIC);
 	return TCL_ERROR;
       }
     }
@@ -103,7 +103,7 @@ PlvUpdateWindowCmd(ClientData clientData, Tcl_Interp *interp,
   // events).
 
   if (argc < 2) {
-    interp->result = "bad args";
+    Tcl_SetResult(interp, "bad args", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -147,42 +147,42 @@ int SczSessionCmd (ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "bad # args";
+    Tcl_SetResult(interp, "bad # args", TCL_STATIC);
     return TCL_ERROR;
   }
 
   if (!strcmp (argv[1], "load")) {
     if (!theScene->readSessionFile (argv[2])) {
-      interp->result = "Session read failed.";
+      Tcl_SetResult(interp, "Session read failed.", TCL_STATIC);
       return TCL_ERROR;
     }
 
   } else if (!strcmp (argv[1], "save")) {
     if (!theScene->writeSessionFile (argv[2])) {
-      interp->result = "Session write failed.";
+      Tcl_SetResult(interp, "Session write failed.", TCL_STATIC);
       return TCL_ERROR;
     }
 
   } else if (!strcmp (argv[1], "activate")) {
     DisplayableMesh* dm = FindMeshDisplayInfo (argv[2]);
     if (!dm) {
-      interp->result = "Scan not in session";
+      Tcl_SetResult(interp, "Scan not in session", TCL_STATIC);
       return TCL_ERROR;
     }
 
     if (argc != 4) {
-      interp->result = "Bad # args";
+      Tcl_SetResult(interp, "Bad # args", TCL_STATIC);
       return TCL_ERROR;
     }
     bool active = atoi (argv[3]);
 
     if (!theScene->setScanLoadedStatus (dm, active)) {
-      interp->result = "Unload/reload failed";
+      Tcl_SetResult(interp, "Unload/reload failed", TCL_STATIC);
       return TCL_ERROR;
     }
 
   } else {
-    interp->result = "bad subcommand";
+    Tcl_SetResult(interp, "bad subcommand", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -195,7 +195,7 @@ SczPseudoGroupCmd(ClientData clientData, Tcl_Interp *interp,
 		  int argc, char *argv[])
 {
   if (argc < 3) {
-    interp->result = "bad # args";
+    Tcl_SetResult(interp, "bad # args", TCL_STATIC);
     return TCL_ERROR;
   }
 

@@ -96,7 +96,7 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
 	theRenderParams->shadeModel = perVertex;
       }
       else {
-	interp->result = "bad arg to plv_drawstyle -shademodel";
+	Tcl_SetResult(interp, "bad arg to plv_drawstyle -shademodel", TCL_STATIC);
 	return TCL_ERROR;
       }
     }
@@ -123,7 +123,7 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
 	theRenderParams->hiddenLine = TRUE;
       }
       else {
-	interp->result = "bad arg to plv_drawstyle -polymode";
+	Tcl_SetResult(interp, "bad arg to plv_drawstyle -polymode", TCL_STATIC);
 	return TCL_ERROR;
       }
     }
@@ -197,7 +197,7 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
     }
     else if (!strcmp(argv[i], "-depthoffield")) {
       if (i + 4 > argc) {
-	interp->result = "bad # args to plv_drawstyle -depthoffield";
+	Tcl_SetResult(interp, "bad # args to plv_drawstyle -depthoffield", TCL_STATIC);
 	return TCL_ERROR;
       }
 
@@ -259,13 +259,13 @@ PlvDrawStyleCmd(ClientData clientData, Tcl_Interp *interp,
 	break;
 
       default:
-	interp->result = "bad args to plv_drawstyle -aasamps"
-	  "  -  should be [2, 3, 4, 8, 15, 24, 66]";
+	Tcl_SetResult(interp, "bad args to plv_drawstyle -aasamps"
+	  "  -  should be [2, 3, 4, 8, 15, 24, 66]", TCL_STATIC);
 	return TCL_ERROR;
       }
     }
     else {
-      interp->result = "bad args to plv_drawstyle";
+      Tcl_SetResult(interp, "bad args to plv_drawstyle", TCL_STATIC);
       return TCL_ERROR;
     }
   }
@@ -282,7 +282,7 @@ PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
   GLint lastBuffer;
 
   if (argc != 3) {
-    interp->result = "Usage: plv_fillphoto <togl-widget> <photo-widget>";
+    Tcl_SetResult(interp, "Usage: plv_fillphoto <togl-widget> <photo-widget>", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -292,7 +292,7 @@ PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
   Tk_PhotoHandle handle = Tk_FindPhoto(argv[2]);
 #endif
   if (handle == NULL) {
-    interp->result = "Could not find photo widget.";
+    Tcl_SetResult(interp, "Could not find photo widget.", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -509,7 +509,7 @@ PlvMaterialCmd(ClientData clientData, Tcl_Interp *interp,
 	  theRenderParams->colorMode = textureColor;
 	}
 	else {
-	  interp->result = "Bad argument to plv_material -color";
+	  Tcl_SetResult(interp, "Bad argument to plv_material -color", TCL_STATIC);
 	  return TCL_ERROR;
 	}
       }
@@ -518,7 +518,7 @@ PlvMaterialCmd(ClientData clientData, Tcl_Interp *interp,
 	theRenderParams->confScale = atof(argv[i]);
       }
       else {
-	interp->result = "bad arg to plv_material";
+	Tcl_SetResult(interp, "bad arg to plv_material", TCL_STATIC);
 	return TCL_ERROR;
       }
     }
@@ -694,7 +694,7 @@ PlvSetSlowPolyCountCmd(ClientData clientData, Tcl_Interp *interp,
 		       int argc, char *argv[])
 {
   if (argc != 2) {
-    interp->result = "Bad args to PlvSetSlowPolyCountCmd";
+    Tcl_SetResult(interp, "Bad args to PlvSetSlowPolyCountCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -837,7 +837,7 @@ PlvLastRenderTime(ClientData clientData, Tcl_Interp *interp,
 {
 
 
-  sprintf(interp->result,"%ld",lastRenderTime());
+  sprintf(Tcl_GetStringResult(interp), "%ld", lastRenderTime());
 
   return TCL_OK;
 }

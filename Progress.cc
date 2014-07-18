@@ -183,7 +183,7 @@ PlvProgressCmd(ClientData clientData, Tcl_Interp *interp,
 	       int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "missing args to plv_progress";
+    Tcl_SetResult(interp, "missing args to plv_progress", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -224,12 +224,12 @@ PlvProgressCmd(ClientData clientData, Tcl_Interp *interp,
 
   } else {
 
-    interp->result = "Bad arg to plv_progress";
+    Tcl_SetResult(interp, "Bad arg to plv_progress", TCL_STATIC);
     return TCL_ERROR;
 
   }
 
-  interp->result = result ? "1" : "0";
+  Tcl_SetResult(interp, result ? "1" : "0", TCL_STATIC);
   return TCL_OK;
 }
 

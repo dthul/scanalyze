@@ -193,8 +193,8 @@ PlvWriteMMForVripCmd(ClientData clientData, Tcl_Interp *interp,
 		     int argc, char *argv[])
 {
    if (argc < 3) {
-      interp->result =
-	 "Usage: plv_write_mm_for_vrip reslevel directory [-noxform]\n";
+      Tcl_SetResult(interp,
+        "Usage: plv_write_mm_for_vrip reslevel directory [-noxform]\n", TCL_STATIC);
       return TCL_ERROR;
    }
 

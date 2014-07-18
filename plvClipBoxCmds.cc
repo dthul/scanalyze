@@ -74,7 +74,7 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 		      int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Bad args to PlvClipToSelectionCmd";
+    Tcl_SetResult(interp, "Bad args to PlvClipToSelectionCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -255,10 +255,12 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
     return TCL_OK;
 
   if (error)
-    interp->result = error;
+    Tcl_SetResult(interp, error, TCL_VOLATILE);
   else
-    interp->result = "At least one scan could not be clipped... "
-      "Perhaps it does not support filtered_copy or filter_inplace?";
+    Tcl_SetResult(interp,
+      "At least one scan could not be clipped... "
+      "Perhaps it does not support filtered_copy or filter_inplace?",
+      TCL_STATIC);
 
   return TCL_ERROR;
 }
@@ -394,39 +396,40 @@ int PlvPrintVoxelsCmd(ClientData clientData, Tcl_Interp *interp,
   printf("Getting voxel information...\n");
 
   if (argc != 2) {
-    interp->result = "Bad args to PlvPrintVoxelsCmd";
+    Tcl_SetResult(interp, "Bad args to PlvPrintVoxelsCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* meshDisp = FindMeshDisplayInfo (argv[1]);
   if (meshDisp == NULL) {
-    interp->result = "Attempting to print voxels for non-existant mesh";
+    Tcl_SetResult(interp, "Attempting to print voxels for non-existant mesh",
+      TCL_STATIC);
     return (TCL_ERROR);
   }
 
   RigidScan* meshFrom = meshDisp->getMeshData();
   if (meshFrom == NULL) {
-    interp->result = "PlvPrintVoxelsCmd: We don't have a mesh";
+    Tcl_SetResult(interp, "PlvPrintVoxelsCmd: We don't have a mesh", TCL_STATIC);
     return (TCL_ERROR);
   }
   //GenericScan* gscanFrom = (GenericScan *) meshFrom;
   GenericScan *gscanFrom = dynamic_cast<GenericScan*> (meshFrom);
   if (!gscanFrom) {
-    interp->result = "Mesh is not a ply file";
+    Tcl_SetResult(interp, "Mesh is not a ply file", TCL_STATIC);
     return (TCL_ERROR);
   }
 
   VertexFilter* filter = filterFromSelection (gscanFrom, theSel);
   // VertexFilter* filter = filterFromSelection (meshFrom, theSel);
   if (!filter) {
-    interp->result = "First you must select an area";
+    Tcl_SetResult(interp, "First you must select an area", TCL_STATIC);
     return (TCL_ERROR);
   }
   RigidScan* meshTo = gscanFrom->filtered_copy(*filter);
   //RigidScan* meshTo = meshFrom->filtered_copy(*filter);
   GenericScan* gscanTo = (GenericScan *) meshTo;
   if (meshTo->num_vertices() == 0) {
-    interp->result = "No vertices selected";
+    Tcl_SetResult(interp, "no vertices selected", TCL_STATIC);
     return (TCL_ERROR);
   } else gscanTo->PrintVoxelInfo();
 
@@ -496,7 +499,7 @@ PlvDrawLineSelectionCmd(ClientData clientData, Tcl_Interp *interp,
       Tcl_Eval (Togl_Interp (toglCurrent), "clearSelection");
   } else if (!strcmp (argv[3], "move")) {
     if (theSel.type != Selection::line) {
-      interp->result = "Internal selection tracking error";
+      Tcl_SetResult(interp, "Internal selection tracking error", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -590,7 +593,7 @@ PlvDrawShapeSelectionCmd(ClientData clientData, Tcl_Interp *interp,
     bManipulatingSel = false;
   } else if (!strcmp (argv[3], "move")) {
     if (theSel.type != Selection::shape) {
-      interp->result = "Internal selection tracking error";
+      Tcl_SetResult(interp, "Internal selection tracking error", TCL_STATIC);
       return TCL_ERROR;
     }
     iDelete = -1;
@@ -607,7 +610,7 @@ PlvDrawShapeSelectionCmd(ClientData clientData, Tcl_Interp *interp,
   } else if (!strcmp (argv[3], "modify")) {
     // attempt to find existing polyline handle
     if (theSel.type != Selection::shape) {
-      interp->result = "Internal selection tracking error";
+      Tcl_SetResult(interp, "Internal selection tracking error", TCL_STATIC);
       return TCL_ERROR;
     }
     int nPts = theSel.pts.size();
@@ -703,7 +706,7 @@ PlvDrawBoxSelectionCmd(ClientData clientData, Tcl_Interp *interp,
       Tcl_Eval (Togl_Interp (togl), "clearSelection");
   } else {
     if (theSel.type != Selection::rect) {
-      interp->result = "Internal selection tracking error";
+      Tcl_SetResult(interp, "Internal selection tracking error", TCL_STATIC);
       return TCL_ERROR;
     }
 
@@ -746,11 +749,11 @@ PlvGetSelectionCursorCmd(ClientData clientData, Tcl_Interp *interp,
   // cursors: default = tcross, handle = dotbox, border = fleur
   // check handles
   if (findSelectionHandle (pt, theSel) >= 0)
-    interp->result = "dotbox";
+    Tcl_SetResult(interp, "dotbox", TCL_STATIC);
   else if (findSelectionLine (pt, theSel) >= 0)
-    interp->result = "fleur";
+    Tcl_SetResult(interp, "fleur", TCL_STATIC);
   else
-    interp->result = "tcross";
+    Tcl_SetResult(interp, "tcross", TCL_STATIC);
 
   return TCL_OK;
 }
@@ -767,7 +770,7 @@ PlvGetSelectionInfoCmd(ClientData clientData, Tcl_Interp *interp,
 
   switch ( theSel.type ) {
   case Selection::none:
-    interp->result = "PlvGetSelectionInfoCmd: error -- nothing selected";
+    Tcl_SetResult(interp, "PlvGetSelectionInfoCmd: error -- nothing selected", TCL_STATIC);
     return TCL_ERROR;
     //    break;
   case Selection::line:
@@ -789,7 +792,7 @@ PlvGetSelectionInfoCmd(ClientData clientData, Tcl_Interp *interp,
 	    theSel[2].x, theSel[2].y, theSel[3].x, theSel[3].y);
     break;
   default:
-    interp->result = "PlvGetSelectionInfoCmd: error -- type not supported";
+    Tcl_SetResult(interp, "PlvGetSelectionInfoCmd: error -- type not supported", TCL_STATIC);
     return TCL_ERROR;
     //    break;
   }
@@ -804,18 +807,18 @@ PlvMeshIntersectSelectionCmd(ClientData clientData, Tcl_Interp *interp,
 			     int argc, char *argv[])
 {
   if (argc < 2) {
-    interp->result = "Missing mesh argument in PlvShowBySelectionCmd";
+    Tcl_SetResult(interp, "Missing mesh argument in PlvShowBySelectionCmd", TCL_STATIC);
     return TCL_ERROR;
   }
 
   if (theSel.type != Selection::rect) {
-    interp->result = "Only rectangle selections supported";
+    Tcl_SetResult(interp, "Only rectangle selections supported", TCL_STATIC);
     return TCL_ERROR;
   }
 
   DisplayableMesh* dm = FindMeshDisplayInfo (argv[1]);
   if (!dm) {
-    interp->result = "Bad mesh argument in PlvShowBySelectionCmd";
+    Tcl_SetResult(interp, "Bad mesh argument in PlvShowBySelectionCmd", TCL_STATIC);
     return TCL_ERROR;
   }
   RigidScan* rs = dm->getMeshData();
@@ -1119,7 +1122,7 @@ PlvGetSelectedMeshesCmd(ClientData clientData, Tcl_Interp *interp,
       bSilent = true;
     else {
       cerr << argv[0] << " doesn't understand " << argv[i] << endl;
-      interp->result = "Bad argument: look at stderr";
+      Tcl_SetResult(interp, "Bad argument: look at stderr", TCL_STATIC);
       return TCL_ERROR;
     }
   }
@@ -1128,7 +1131,7 @@ PlvGetSelectedMeshesCmd(ClientData clientData, Tcl_Interp *interp,
     if (bSilent && theSel.type == Selection::none)
       return TCL_OK;
 
-    interp->result = "First you must select an area";
+    Tcl_SetResult(interp, "First you must select an area", TCL_STATIC);
     return TCL_ERROR;
   }
 
@@ -1140,7 +1143,7 @@ PlvGetSelectedMeshesCmd(ClientData clientData, Tcl_Interp *interp,
     RigidScan *mesh = displayMesh->getMeshData();
     VertexFilter* filter = filterFromSelection (mesh, theSel);
     if (!filter) {
-      interp->result = "First you must select an area";
+      Tcl_SetResult(interp, "First you must select an area", TCL_STATIC);
       return TCL_ERROR;
     }
 

@@ -115,10 +115,10 @@ int PlvBailDetectCmd(ClientData clientData, Tcl_Interp *interp,
 
   int result = Tcl_Eval (interp, argv[1]);
   if (argc > 2) {
-    Tcl_SetVar (interp, argv[2], interp->result, 0);
+    Tcl_SetVar (interp, argv[2], Tcl_GetStringResult(interp), 0);
   }
 
-  interp->result = (bail() ? "1" : "0");
+  Tcl_SetResult(interp, bail() ? "1" : "0", TCL_STATIC);
 
   return result;
 }

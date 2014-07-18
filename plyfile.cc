@@ -53,14 +53,14 @@ using std::length_error;
 #endif
 
 
-char *type_names[] = {
+const char *type_names[] = {
 "invalid",
 "char", "short", "int",
 "uchar", "ushort", "uint",
 "float", "double",
 };
 
-char *new_type_names[] = {
+const char *new_type_names[] = {
 "invalid",
 "int8", "int16", "int32",
 "uint8", "uint16", "uint32",
