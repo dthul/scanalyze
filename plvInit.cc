@@ -242,7 +242,7 @@ Plv_Init(Tcl_Interp *interp)
   Tcl_SetVar (interp, "noui", g_bNoUI ? "1" : "0", TCL_GLOBAL_ONLY);
   int code = Tcl_EvalFile(interp, plvPath);
   if (code != TCL_OK) {
-    Tcl_SetResult(interp, Tcl_GetVar (interp, "errorInfo", TCL_GLOBAL_ONLY), TCL_STATIC);
+    Tcl_SetResult(interp, Tcl_GetVar (interp, "errorInfo", TCL_GLOBAL_ONLY), TCL_VOLATILE);
     return TCL_ERROR;
   }
 

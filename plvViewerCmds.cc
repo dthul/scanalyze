@@ -1029,7 +1029,7 @@ PlvPickScanFromPointCmd(ClientData clientData, Tcl_Interp *interp,
 
     DisplayableMesh* dm = ptMeshMap[y*w + x];
     if (dm)
-      Tcl_SetResult(interp, (char*)dm->getName(), TCL_STATIC);
+      Tcl_SetResult(interp, (char*)dm->getName(), TCL_VOLATILE);
     else
       Tcl_SetResult(interp, "", TCL_STATIC);
   } else

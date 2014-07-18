@@ -702,7 +702,7 @@ PlvAddPartialRegCorrespondenceCmd (ClientData clientData, Tcl_Interp *interp,
   DrawAlignmentPoints (togl);
   Togl_SwapBuffers (togl);
 
-  Tcl_SetResult(interp, (char*)ati->meshDisplay->getName(), TCL_STATIC);
+  Tcl_SetResult(interp, (char*)ati->meshDisplay->getName(), TCL_VOLATILE);
   return TCL_OK;
 }
 

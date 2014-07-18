@@ -71,7 +71,7 @@ PlvReadGroupMembersCmd(ClientData clientData, Tcl_Interp *interp,
     Tcl_SetResult(interp, "Cannot load group", TCL_STATIC);
     return TCL_ERROR;
   }
-  Tcl_SetResult(interp, strdup(names.c_str()), TCL_STATIC);
+  Tcl_SetResult(interp, strdup(names.c_str()), TCL_VOLATILE);
   return TCL_OK;
 }
 
@@ -79,7 +79,7 @@ int
 PlvGetNextGroupNameCmd(ClientData clientData, Tcl_Interp *interp, 
 		       int argc, char *argv[])
 {
-  Tcl_SetResult(interp, getNextUnusedGroupName(), TCL_STATIC);
+  Tcl_SetResult(interp, getNextUnusedGroupName(), TCL_VOLATILE);
   return TCL_OK;
 }
 
@@ -291,7 +291,7 @@ int PlvGetScanFilenameCmd(ClientData clientData, Tcl_Interp *interp,
   }
   RigidScan* scan = meshDisp->getMeshData();
 
-  Tcl_SetResult(interp, (char*)scan->get_name().c_str(), TCL_STATIC);
+  Tcl_SetResult(interp, (char*)scan->get_name().c_str(), TCL_VOLATILE);
   return TCL_OK;
 }
 

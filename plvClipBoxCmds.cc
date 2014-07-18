@@ -255,7 +255,7 @@ PlvClipToSelectionCmd(ClientData clientData, Tcl_Interp *interp,
     return TCL_OK;
 
   if (error)
-    Tcl_SetResult(interp, error, TCL_STATIC);
+    Tcl_SetResult(interp, error, TCL_VOLATILE);
   else
     Tcl_SetResult(interp,
       "At least one scan could not be clipped... "

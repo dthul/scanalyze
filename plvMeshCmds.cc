@@ -420,7 +420,7 @@ PlvGroupScansCmd(ClientData clientData, Tcl_Interp *interp,
       Tcl_SetResult(interp, "The group could not be created.", TCL_STATIC);
       return TCL_ERROR;
     }
-    Tcl_SetResult(interp, (char*)group->getName(), TCL_STATIC);
+    Tcl_SetResult(interp, (char*)group->getName(), TCL_VOLATILE);
 
   } else if (!strcmp (argv[1], "list")) {
 
