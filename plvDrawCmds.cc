@@ -305,7 +305,7 @@ PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
   glReadPixels(0, 0, theWidth, theHeight, GL_RGBA, GL_UNSIGNED_BYTE, cbuf);
   glDrawBuffer(GLenum(lastBuffer));
 
-  Tk_PhotoSetSize(handle, theWidth, theHeight);
+  Tk_PhotoSetSize(interp, handle, theWidth, theHeight);
 
   Tk_PhotoImageBlock block;
 
@@ -319,7 +319,7 @@ PlvFillPhotoCmd(ClientData clientData, Tcl_Interp *interp,
   block.width = theWidth;
   block.height = theHeight;
 
-  Tk_PhotoPutBlock(handle, &block, 0, 0, theWidth, theHeight, TK_PHOTO_COMPOSITE_SET);
+  Tk_PhotoPutBlock(interp, handle, &block, 0, 0, theWidth, theHeight, TK_PHOTO_COMPOSITE_SET);
 
   free(cbuf);
 

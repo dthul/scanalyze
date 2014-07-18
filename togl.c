@@ -149,7 +149,7 @@
 #endif
 #include <tcl.h>
 #include <tk.h>
-#include <tk-private/generic/tkInt.h>
+#include <tkInt.h>
 #if defined(X11)
 #if TK_MAJOR_VERSION==4 && TK_MINOR_VERSION==0
 #  include "tkInt4.0.h"

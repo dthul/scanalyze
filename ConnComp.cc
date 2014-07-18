@@ -9,16 +9,18 @@
 #ifndef _CONNCOMP_H_
 #define _CONNCOMP_H_
 
+#include <cassert>
 #include <vector>
 #include <iostream>
 #include <iomanip>
 
+using namespace std;
 
 //#define TEST_CONNCOMP
 
 class ConnComp {
 private:
-  
+
   vector<int>   label;
   int           max;
   int           next_group;
@@ -27,14 +29,14 @@ private:
   void display(void)
     {
       for (int i=0; i<label.size(); i++) {
-	cout << setw(3) << i << " : " 
+	cout << setw(3) << i << " : "
 	     << setw(3) << label[i] << endl;
       }
     }
 
-  int  get_label(int i) 
+  int  get_label(int i)
     {
-      if (label[i] != i) 
+      if (label[i] != i)
 	label[i] = get_label(label[i]);
       return label[i];
     }
@@ -60,8 +62,8 @@ public:
 #ifdef TEST_CONNCOMP
       display();
 #endif
-    }  
-  
+    }
+
   void connect(int a, int b)
     {
       assert(a >= 0 && b >= 0);
@@ -80,10 +82,10 @@ public:
     {
       next_group = 0;
     }
-  
+
   // fill the vector 'group' with all the elements that belong
   // to the next group
-  // return a boolean that's false if all the groups have 
+  // return a boolean that's false if all the groups have
   // been gotten already
   bool get_next_group(vector<int> &group)
     {

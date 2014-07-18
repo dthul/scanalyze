@@ -2,7 +2,7 @@
 // ColorUtils.h
 // Brian Curless / Matt Ginzton / Kari Pulli
 // Mon Jun 22 13:39:49 PDT 1998
-// 
+//
 // Utilities for dealing with colors
 //############################################################
 
@@ -10,8 +10,10 @@
 #ifndef _COLORUTILS_H_
 #define _COLORUTILS_H_
 
-#include "vector"
+#include <vector>
 #include "defines.h"
+
+using namespace std;
 
 class ColorSet
 {
