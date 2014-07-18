@@ -14,56 +14,57 @@ extern "C" {
  *	unsigned char	1 byte unsigned integer, 0...255
  *	short			2 byte signed integer, -32,768...32,767
  *	unsigned short	2 byte unsigned integer, 0...65,535
- *	long			4 byte signed integer, -2,147,483,648...2,147,483,647
+ *	long			4 byte signed integer,
+ *-2,147,483,648...2,147,483,647
  *	unsigned long	4 byte unsigned integer, 0...4,294,967,295
  *	real			a real variable natural to the machine
  *	int				at least as long as short
  *	unsigned int	at least as long as unsigned short
- *	
+ *
  *	All other types are to be enclosed in #ifdefs.
  */
 
 /* file constants, unpacked */
 
-#define MAXR		(0x00007fff<<gs->rshift)
-#define MAXRGS(gs) 	(0x00007fff<<(gs)->rshift)
-#define MINR		0
-  /*#define VOID		(0xffff8000<<gs->rshift)*/
-#define VOIDGS(gs)	(0xffff8000<<(gs)->rshift)
+#define MAXR (0x00007fff << gs->rshift)
+#define MAXRGS(gs) (0x00007fff << (gs)->rshift)
+#define MINR 0
+/*#define VOID		(0xffff8000<<gs->rshift)*/
+#define VOIDGS(gs) (0xffff8000 << (gs)->rshift)
 
 #ifndef NULL
-#define NULL	0				/* null address */
+#define NULL 0 /* null address */
 #endif
 
 /* math tools */
 
 #ifndef MAX
-#define MAX(a,b)	((a)>(b)?(a):(b))		/* return greater of a and b */
+#define MAX(a, b) ((a) > (b) ? (a) : (b)) /* return greater of a and b */
 #endif
 
 #ifndef MIN
-#define MIN(a,b)	((a)<(b)?(a):(b))		/* return lesser of a and b */
+#define MIN(a, b) ((a) < (b) ? (a) : (b)) /* return lesser of a and b */
 #endif
 
 #ifndef ABS
-#define ABS(i)		((i)<0?-(i):(i))		/* integer absolute value */
+#define ABS(i) ((i) < 0 ? -(i) : (i)) /* integer absolute value */
 #endif
 
-#define DELTA(a,b)	(ABS((a)-(b)))			/* int absolute difference */
-#define SCALE(n,s)	((((n)*(s))+50)/100)	/* int scale n by s percent */
-#define WRAPP(n,m)	(if((n)>=(m))(n)-=(m))	/* modulo positive wrap */
-#define WRAPN(n,m)	(if((n)<0)(n)+=(m))		/* modulo positive wrap */
+#define DELTA(a, b) (ABS((a) - (b)))            /* int absolute difference */
+#define SCALE(n, s) ((((n) * (s)) + 50) / 100)  /* int scale n by s percent */
+#define WRAPP(n, m) (if ((n) >= (m))(n) -= (m)) /* modulo positive wrap */
+#define WRAPN(n, m) (if ((n) < 0)(n) += (m))    /* modulo positive wrap */
 
 /* unit conversions */
 
-#define UMTOI(um)	((real)(um)*3.937e-5)	/* microns (um) to float inch */
-#define ITOUM(um)	((int)((um)*2.54e4))	/* inches to int microns */
-#define URTOD(ur)	((real)(ur)*5.7296e-5)	/* urads to float degrees */
+#define UMTOI(um) ((real)(um) * 3.937e-5)       /* microns (um) to float inch */
+#define ITOUM(um) ((int)((um) * 2.54e4))        /* inches to int microns */
+#define URTOD(ur) ((real)(ur) * 5.7296e-5)      /* urads to float degrees */
 #define DTOUR(deg)	((int)((deg)*1.74533e4)	/* degrees to int urads */
-#define DTOR(deg)	((deg)*1.7453292e-2)	/* degrees to float radians */
-#define RTOD(rad)	((rad)*57.295779)		/* radians to float degrees */
-#define URTOR(ur)	((real)(ur)*1.e-6)		/* radians to urads */
-#define RTOUR(ur)	(int)((ur)*1.e6)		/* radians to urads */
+#define DTOR(deg) ((deg) * 1.7453292e-2)        /* degrees to float radians */
+#define RTOD(rad) ((rad) * 57.295779)           /* radians to float degrees */
+#define URTOR(ur) ((real)(ur) * 1.e-6)          /* radians to urads */
+#define RTOUR(ur) (int)((ur) * 1.e6)            /* radians to urads */
 
 /* this structure defines 'grid file format'.  the file consists of
  * a parameter table followed immediatly by the data table.  the offset
@@ -97,54 +98,54 @@ extern "C" {
  * See header.c for details.
  */
 
-#define NAMELEN		40
-#define CREATE_MODE	0644		/* create image files with this mode */
+#define NAMELEN 40
+#define CREATE_MODE 0644 /* create image files with this mode */
 
 typedef struct {
 
-	/* internal private variables */
-	short *base;			/* base of data buffer */
-	long offset;			/* file offset to start of data, bytes */
+    /* internal private variables */
+    short *base; /* base of data buffer */
+    long offset; /* file offset to start of data, bytes */
 
-	/* file parameters */
-	char name[NAMELEN];			/* subject name */
-	time_t time;				/* original creation time */
-	short camera;				/* camera id number */
-	short setup;				/* camera setup code */
-	char saved;				/* file has been saved since modified */
-	char valid;				/* file buffer is valid */
+    /* file parameters */
+    char name[NAMELEN]; /* subject name */
+    time_t time;        /* original creation time */
+    short camera;       /* camera id number */
+    short setup;        /* camera setup code */
+    char saved;         /* file has been saved since modified */
+    char valid;         /* file buffer is valid */
 
-	/* data parameters */
-	short nlt;				/* number of latitude intervals */
-	short nlg;				/* number of longitude intervals */
-	short rshift;				/* shift to compress/expand radius data */
-	short lgshift;				/* shift to extract longitude from addr */
-	long flags;				/* misc file state flags, see below */
-	long ltincr;				/* distance between latitudes, um */
-	long lgincr;				/* distance between longitudes, urad */
-	long ltsize;				/* nlat * ltincr, um */
-	long lgsize;				/* nlg * lgincr, urad (always 2pi in urads) */
+    /* data parameters */
+    short nlt;     /* number of latitude intervals */
+    short nlg;     /* number of longitude intervals */
+    short rshift;  /* shift to compress/expand radius data */
+    short lgshift; /* shift to extract longitude from addr */
+    long flags;    /* misc file state flags, see below */
+    long ltincr;   /* distance between latitudes, um */
+    long lgincr;   /* distance between longitudes, urad */
+    long ltsize;   /* nlat * ltincr, um */
+    long lgsize;   /* nlg * lgincr, urad (always 2pi in urads) */
 
-	/* user parameters */
-	char filled;				/* fill flag, useless */
-	short smoothed;				/* smooth pass counter */
-	short ltmin, ltmax;			/* latitude window limits, inclusive */
-	short lgmin, lgmax;			/* longitude window limits, inclusive */
-	long rmin, rmax;			/* radius range, from last run of rminmax */
-#	ifdef IRIS
-		long float scale;		/* current scale */
-		long float rprop;		/* current radius proportion */
-#	else
-		double scale;			/* current scale */
-		double rprop;			/* current radius proportion */
-#	endif
+    /* user parameters */
+    char filled;        /* fill flag, useless */
+    short smoothed;     /* smooth pass counter */
+    short ltmin, ltmax; /* latitude window limits, inclusive */
+    short lgmin, lgmax; /* longitude window limits, inclusive */
+    long rmin, rmax;    /* radius range, from last run of rminmax */
+#ifdef IRIS
+    long float scale; /* current scale */
+    long float rprop; /* current radius proportion */
+#else
+    double scale; /* current scale */
+    double rprop; /* current radius proportion */
+#endif
 } GSPEC;
 
 /* macros for standardizing the use of the grid data. gs is a pointer to the
  * applicable GSSPEC table.  index is the offset of a data item in the
  * data. lt and lg are latitude and longitude indicies. r is the radius
  * in microns (um) of a data point. z is a position along the cylindrical
- * axis in microns. a is an angular coordinate around the cylinder in 
+ * axis in microns. a is an angular coordinate around the cylinder in
  * microradians (urad).
  *
  * INDEX generates an index value from latitude and logitude indicies.
@@ -152,44 +153,44 @@ typedef struct {
  * PUTR and GETR are used to store and retrieve data from the image.
  */
 
-#define INDEX(gs, lt, lg)	((lg) * (gs)->nlt + (lt))
-#define ADDR(gs, lt, lg)	((gs)->base + INDEX(gs, lt, lg))
+#define INDEX(gs, lt, lg) ((lg) * (gs)->nlt + (lt))
+#define ADDR(gs, lt, lg) ((gs)->base + INDEX(gs, lt, lg))
 
 #ifdef HIGHC
-#	define GETR(gs, lt, lg) 	     getr(gs,lt,lg)
-#	define PUTR(gs, lt, lg, r)       putr(gs,lt,lg,r)
+#define GETR(gs, lt, lg) getr(gs, lt, lg)
+#define PUTR(gs, lt, lg, r) putr(gs, lt, lg, r)
 #else
-#	define PUTR(gs, lt, lg, r)	(*ADDR(gs, lt, lg) = (r) >> (gs)->rshift)
-#	define GETR(gs, lt, lg)	((int)*ADDR(gs, lt, lg) << (gs)->rshift)
+#define PUTR(gs, lt, lg, r) (*ADDR(gs, lt, lg) = (r) >> (gs)->rshift)
+#define GETR(gs, lt, lg) ((int)*ADDR(gs, lt, lg) << (gs)->rshift)
 #endif
 
 /* flag bits for gs->flags */
 
-#define FLAG_RESERVED	0x000000ff	/* older files have ones here, ignore */
-#define FLAG_CARTESIAN	0x00000100	/* data is cartesian (vs. cyl) */
-#define FLAG_OLDHEADER	0x00000200	/* please write file with old header */
-#define FLAG_BILATERAL	0x00000400	/* bilateral image, ie: nus hands */
-#define FLAG_COLOR		0x00000800	/* image has associated color file */
-#define FLAG_THETARIGHT	0x00001000	/* theta is right hand rule */
-#define FLAG_INSIDE_OUT	0x00002000	/* inside surface is outside */
+#define FLAG_RESERVED 0x000000ff   /* older files have ones here, ignore */
+#define FLAG_CARTESIAN 0x00000100  /* data is cartesian (vs. cyl) */
+#define FLAG_OLDHEADER 0x00000200  /* please write file with old header */
+#define FLAG_BILATERAL 0x00000400  /* bilateral image, ie: nus hands */
+#define FLAG_COLOR 0x00000800      /* image has associated color file */
+#define FLAG_THETARIGHT 0x00001000 /* theta is right hand rule */
+#define FLAG_INSIDE_OUT 0x00002000 /* inside surface is outside */
 
 /* non-int public functions */
 
-extern GSPEC *cyread(GSPEC *gs,int fd);
-extern int cywrite(GSPEC *gs,int fd);
+extern GSPEC *cyread(GSPEC *gs, int fd);
+extern int cywrite(GSPEC *gs, int fd);
 extern void cyfree(GSPEC *gs);
-extern long getr(register GSPEC *gs,register int lt,register int lg);
-extern void putr(register GSPEC *gs,register int lt,register int lg,
-		 register int r);
-extern int gsget(GSPEC *gs,int fd);
-extern int gsput(GSPEC *gs,int fd);
-extern int gdget(GSPEC *gs,int fd);
-extern int gdput(GSPEC *gs,int fd);
+extern long getr(register GSPEC *gs, register int lt, register int lg);
+extern void putr(register GSPEC *gs, register int lt, register int lg,
+                 register int r);
+extern int gsget(GSPEC *gs, int fd);
+extern int gsput(GSPEC *gs, int fd);
+extern int gdget(GSPEC *gs, int fd);
+extern int gdput(GSPEC *gs, int fd);
 extern int gdallo(GSPEC *gs);
 extern long getheader(int fd);
-extern int getvalue(char *name,char *dest,int length);
+extern int getvalue(char *name, char *dest, int length);
 extern int makegsheader(GSPEC *gs);
-extern int writegsheader(GSPEC *gs,int fd);
+extern int writegsheader(GSPEC *gs, int fd);
 
 #ifdef __cplusplus
 }

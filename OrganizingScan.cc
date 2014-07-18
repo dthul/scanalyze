@@ -6,38 +6,24 @@
 // Tue May 30 16:41:09 PDT 2000
 //
 // Dummy scan/helper class for DisplayableOrganizingMesh
-// 
+//
 //////////////////////////////////////////////////////////////////////
-
 
 #include "OrganizingScan.h"
 #include <iostream>
 
+OrganizingScan::OrganizingScan() {}
 
-
-OrganizingScan::OrganizingScan()
-{
+MeshTransport *OrganizingScan::mesh(bool perVertex, bool stripped,
+                                    ColorSource color, int colorSize) {
+    cerr << " OrganizingScan::mesh was never intended to be called" << endl;
+    return NULL;
 }
 
-
-
-MeshTransport*
-OrganizingScan::mesh(bool         perVertex,
-		     bool         stripped,
-		     ColorSource  color,
-		     int          colorSize)
-{
-  cerr << " OrganizingScan::mesh was never intended to be called" << endl;
-  return NULL;
-}
-
-
-void
-OrganizingScan::computeBBox (void)
-{
-  // TODO, BUGBUG
-  // really need some form of bbox management
-  // does that mean we'll have to know who our children are?
+void OrganizingScan::computeBBox(void) {
+// TODO, BUGBUG
+// really need some form of bbox management
+// does that mean we'll have to know who our children are?
 #if 0
   bbox.clear();
   rot_ctr = Pnt3();
@@ -57,12 +43,9 @@ OrganizingScan::computeBBox (void)
 #endif
 }
 
+string OrganizingScan::getInfo(void) {
+    char info[1000];
 
-string
-OrganizingScan::getInfo (void)
-{
-  char info[1000];
-
-  sprintf (info, "Organizing group containing ?? members.\n\n");
-  return string (info) + RigidScan::getInfo();
+    sprintf(info, "Organizing group containing ?? members.\n\n");
+    return string(info) + RigidScan::getInfo();
 }

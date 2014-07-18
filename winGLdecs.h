@@ -6,12 +6,13 @@
  * 10/2/98  magi@cs.stanford.edu
  */
 
-
 #ifndef _WINAPI_FOR_GL_
 #define _WINAPI_FOR_GL_
 
 /* from winnt.h */
-#if (defined(_M_MRX000) || defined(_M_IX86) || defined(_M_ALPHA) || defined(_M_PPC)) && !defined(MIDL_PASS)
+#if (defined(_M_MRX000) || defined(_M_IX86) || defined(_M_ALPHA) ||            \
+     defined(_M_PPC)) &&                                                       \
+    !defined(MIDL_PASS)
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #else
 #define DECLSPEC_IMPORT
@@ -27,8 +28,8 @@
 #ifndef WINAPI
 /* from windef.h */
 #if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED)
-#define CALLBACK    __stdcall
-#define WINAPI      __stdcall
+#define CALLBACK __stdcall
+#define WINAPI __stdcall
 #else
 #define CALLBACK
 #define WINAPI
@@ -36,7 +37,7 @@
 #endif
 
 #ifndef APIENTRY
-#define APIENTRY    WINAPI
+#define APIENTRY WINAPI
 #endif
 
 /* from stddef.h */
@@ -44,6 +45,5 @@
 typedef unsigned short wchar_t;
 #define _WCHAR_T_DEFINED
 #endif
-
 
 #endif /* _WINAPI_FOR_GL_ */

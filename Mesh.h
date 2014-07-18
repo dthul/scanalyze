@@ -8,141 +8,133 @@
 #include "Bbox.h"
 #include <unordered_set>
 
-typedef unordered_set<int> TriList; // List of triangles attached to a single vtx
+typedef unordered_set<int>
+TriList; // List of triangles attached to a single vtx
 typedef unordered_set<int>::iterator TriListI;
 
 class Mesh {
-private:
+  private:
+    vector<Pnt3> vtx;
+    vector<short> nrm;
+    vector<Pnt3> orig_vtx; // Used by JED during fairing
+                           // we want to constrain the surface
+                           // to lie near the original noisy surface
 
-  vector<Pnt3> vtx;
-  vector<short> nrm;
-  vector<Pnt3> orig_vtx;    // Used by JED during fairing
-                            // we want to constrain the surface
-                            // to lie near the original noisy surface
+    vector<TriList> vtxTris; // The list of tris attached to each vtx
 
-  vector<TriList> vtxTris;  // The list of tris attached to each vtx
+    vec3uc *vertMatDiff;
+    vec2f *texture;
+    float *vertIntensity;
+    float *vertConfidence;
+    int hasVertNormals;
+    vector<char> bdry; // 1 for boundary vtx, used for registration
 
-  vec3uc *vertMatDiff;
-  vec2f *texture;
-  float *vertIntensity;
-  float *vertConfidence;
-  int hasVertNormals;
-  vector<char> bdry; // 1 for boundary vtx, used for registration
+    char texFileName[PATH_MAX];
 
-  char texFileName[PATH_MAX];
+    vector<int> tris;
+    /* store voxels each tri is from - for display voxel feature */
+    vector<float> fromVoxels;
+    bool hasVoxels;
 
-  vector<int> tris;
-  /* store voxels each tri is from - for display voxel feature */
-  vector<float> fromVoxels;
-  bool hasVoxels;
+    vector<int> tstrips;
+    int numTris;
+    vec3uc *triMatDiff;
 
-  vector<int> tstrips;
-  int numTris;
-  vec3uc *triMatDiff;
+    Bbox bbox;
 
-  Bbox bbox;
+    Pnt3 center;
+    float radius;
 
-  Pnt3  center;
-  float radius;
+    void subsample_points(float rate, vector<Pnt3> &pts);
+    void subsample_points(float rate, vector<Pnt3> &pts, vector<Pnt3> &nrms);
+    bool subsample_points(int n, vector<Pnt3> &pts);
+    bool subsample_points(int n, vector<Pnt3> &pts, vector<Pnt3> &nrms);
+    void remove_unused_vtxs(void);
+    void init(void);
 
-  void subsample_points(float rate, vector<Pnt3> &pts);
-  void subsample_points(float rate, vector<Pnt3> &pts,
-			vector<Pnt3> &nrms);
-  bool subsample_points(int n, vector<Pnt3> &pts);
-  bool subsample_points(int n, vector<Pnt3> &pts,
-			vector<Pnt3> &nrms);
-  void remove_unused_vtxs(void);
-  void init (void);
+    void computeBBox(); // private; call updateScale() instead
 
-  void computeBBox(); // private; call updateScale() instead
+  public:
+    Mesh();
+    Mesh(const vector<Pnt3> &_vtx, const vector<int> &_tris);
+    ~Mesh();
 
-public:
+    void flipNormals();
+    void initNormals(int useArea = FALSE);
 
-  Mesh();
-  Mesh (const vector<Pnt3>& _vtx, const vector<int>& _tris);
-  ~Mesh();
+    vector<int> &getTris();
+    vector<int> &getTstrips();
+    const Pnt3 &Vtx(int v) { return vtx[v]; }
 
-  void flipNormals();
-  void initNormals(int useArea = FALSE);
+    void simulateFaceNormals(vector<short> &facen);
 
-  vector<int>& getTris();
-  vector<int>& getTstrips();
-  const Pnt3& Vtx (int v) { return vtx[v]; }
+    void freeTris(void);
+    void freeTStrips(void);
 
-  void simulateFaceNormals (vector<short>& facen);
+    void updateScale();
+    void showBBox(void) { cout << bbox.min() << " " << bbox.max() << endl; }
 
-  void freeTris (void);
-  void freeTStrips (void);
+    bool bNeedsSave;
 
-  void updateScale();
-  void showBBox(void)
-    { cout << bbox.min() << " " << bbox.max() << endl; }
+    int num_tris(void);
+    int num_verts(void) { return vtx.size(); }
 
-  bool bNeedsSave;
+    void mark_boundary_verts(void);
 
-  int  num_tris(void);
-  int  num_verts(void)  { return vtx.size(); }
+    // routines for smoothing - JED
+    void dequantizationSmoothing(double maxDisplacement);
+    void restoreOrigVerts();
+    void saveOrigVerts();
+    void calcTriLists();
+    // -----------
 
-  void mark_boundary_verts(void);
+    Mesh *Decimate(int numFaces, int optLevel, float errLevel,
+                   float boundWeight,
+                   ResolutionCtrl::Decimator dec = ResolutionCtrl::decQslim);
+    void remove_stepedges(int percentile = 50, int factor = 4);
 
-  // routines for smoothing - JED
-  void dequantizationSmoothing(double maxDisplacement);
-  void restoreOrigVerts();
-  void saveOrigVerts();
-  void calcTriLists();
-  // -----------
+    int readPlyFile(const char *filename);
+    int writePlyFile(const char *filename, int useColorNotTexture,
+                     int writeNormals);
 
-  Mesh *Decimate (int numFaces, int optLevel,
-		  float errLevel, float boundWeight,
-		  ResolutionCtrl::Decimator dec = ResolutionCtrl::decQslim);
-  void remove_stepedges(int percentile = 50, int factor = 4);
-
-  int  readPlyFile (const char *filename);
-  int  writePlyFile (const char *filename, int useColorNotTexture,
-		     int writeNormals);
-
-  void addTri(int v1, int v2, int v3)
-    {
-      assert(tris.size()%3 == 0);
-      int vs = vtx.size();
-      if (v1 < 0 || v1 >= vs || v2 < 0 || v2 >= vs || v3 < 0 || v3 >= vs) {
-	cerr << "\n\nRed alert: invalid triangle "
-	     << v1 << " " << v2 << " "  << v3
-	     << " (tri " << tris.size()/3
-	     << ", valid range=0.." << vs-1 << ")\n" << endl;
-      } else {
-	tris.push_back(v1);        /* tris is a vector of ints */
-	tris.push_back(v2);
-	tris.push_back(v3);
-      }
+    void addTri(int v1, int v2, int v3) {
+        assert(tris.size() % 3 == 0);
+        int vs = vtx.size();
+        if (v1 < 0 || v1 >= vs || v2 < 0 || v2 >= vs || v3 < 0 || v3 >= vs) {
+            cerr << "\n\nRed alert: invalid triangle " << v1 << " " << v2 << " "
+                 << v3 << " (tri " << tris.size() / 3 << ", valid range=0.."
+                 << vs - 1 << ")\n" << endl;
+        } else {
+            tris.push_back(v1); /* tris is a vector of ints */
+            tris.push_back(v2);
+            tris.push_back(v3);
+        }
     }
 
-  void addVoxelInfo(int v1, int v2, int v3,
-		float fromVoxel1, float fromVoxel2, float fromVoxel3)
-    {
-      assert(tris.size()%3 == 0);
-      int vs = vtx.size();
-      if (v1 < 0 || v1 >= vs || v2 < 0 || v2 >= vs || v3 < 0 || v3 >= vs) {
-	cerr << "\n\nRed alert: invalid triangle "
-	     << v1 << " " << v2 << " "  << v3
-	     << " (tri " << tris.size()/3
-	     << ", valid range=0.." << vs-1 << ")\n" << endl;
-      } else {
-      	/* store voxels in fromVoxels - for display voxel feature */
-	fromVoxels.push_back(fromVoxel1);
-	fromVoxels.push_back(fromVoxel2);
-	fromVoxels.push_back(fromVoxel3);
-      }
+    void addVoxelInfo(int v1, int v2, int v3, float fromVoxel1,
+                      float fromVoxel2, float fromVoxel3) {
+        assert(tris.size() % 3 == 0);
+        int vs = vtx.size();
+        if (v1 < 0 || v1 >= vs || v2 < 0 || v2 >= vs || v3 < 0 || v3 >= vs) {
+            cerr << "\n\nRed alert: invalid triangle " << v1 << " " << v2 << " "
+                 << v3 << " (tri " << tris.size() / 3 << ", valid range=0.."
+                 << vs - 1 << ")\n" << endl;
+        } else {
+            /* store voxels in fromVoxels - for display voxel feature */
+            fromVoxels.push_back(fromVoxel1);
+            fromVoxels.push_back(fromVoxel2);
+            fromVoxels.push_back(fromVoxel3);
+        }
     }
 
-  void copyTriFrom (Mesh *mSrc, int src, int dst);
-  void copyVertFrom (Mesh *mSrc, int src, int dst);
+    void copyTriFrom(Mesh *mSrc, int src, int dst);
+    void copyVertFrom(Mesh *mSrc, int src, int dst);
 
-  friend class RangeGrid;
-  friend class GenericScan;
+    friend class RangeGrid;
+    friend class GenericScan;
 
-  // added by wsh for tweaking violins
-  void Warp();
+    // added by wsh for tweaking violins
+    void Warp();
 };
 
 /* typedef: optLevelT
@@ -156,9 +148,8 @@ public:
  *   - PLACE_OPTIMAL:   find the best position anywhere in space
  */
 
-//typedef enum {
+// typedef enum {
 //  PLACE_ENDPOINTS, PLACE_ENDORMID, PLACE_LINE, PLACE_OPTIMAL
 //} optLevelT;
-
 
 #endif

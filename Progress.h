@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // Progress.h
 //
 // Matt Ginzton
@@ -9,48 +9,41 @@
 //
 //############################################################
 
-
 #ifndef _PROGRESS_H_
 #define _PROGRESS_H_
 
-
 #include <tcl.h>
 
+class Progress {
+  public:
+    Progress(int end, const char *name = NULL, bool cancellable = false);
+    Progress(int end, const char *operation, const char *name,
+             bool cancellable = false);
 
-class Progress
-{
- public:
-  Progress (int end, const char* name = NULL, bool cancellable = false);
-  Progress (int end, const char* operation, const char* name, 
-	    bool cancellable = false);
+    ~Progress();
 
-  ~Progress();
+    bool update(int current);
+    bool updateInc(int increment = 1);
 
-  bool update    (int current);
-  bool updateInc (int increment = 1);
+  private:
+    void _init(int end, const char *name);
 
- private:
+    int value;
+    int maximum;
+    int lastUpdateTime;
+    int lastUpdateValue;
+    int nUpdates;
+    int iId;
+    int baseY;
+    char name[300];
+    double mProjMatrix[16];
 
-  void _init (int end, const char* name);
+    class BailDetector *pBailDetector;
 
-  int value;
-  int maximum;
-  int lastUpdateTime;
-  int lastUpdateValue;
-  int nUpdates;
-  int iId;
-  int baseY;
-  char name[300];
-  double mProjMatrix[16];
-
-  class BailDetector* pBailDetector;
-
-  static int nProgressBarsActive;
+    static int nProgressBarsActive;
 };
 
-
-int PlvProgressCmd(ClientData clientData, Tcl_Interp *interp, 
-		   int argc, char *argv[]);
-
+int PlvProgressCmd(ClientData clientData, Tcl_Interp *interp, int argc,
+                   char *argv[]);
 
 #endif // _PROGRESS_H_

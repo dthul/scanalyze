@@ -5,7 +5,8 @@
 // 4355 is "'this' used in base member initializer list"; the stl_rope
 //		class causes this every time.
 // 4786 is 'long_ass_identifier_name' : identifier was truncated to 255
-//		chars in the debug information" which lots of STL template classes
+//		chars in the debug information" which lots of STL template
+//classes
 //		(esp. map classes) cause.
 
-#pragma warning (disable: 4355 4786)
+#pragma warning(disable : 4355 4786)

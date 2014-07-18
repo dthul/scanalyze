@@ -35,7 +35,7 @@
 #include <time.h>
 
 #ifdef _MSC_VER
-#    define hypot _hypot
+#define hypot _hypot
 #endif /* _MSC_VER */
 
 #define strncasecmp strnicmp
@@ -57,9 +57,9 @@
  */
 
 #ifdef _MSC_VER
-#    define TK_READ_DATA_PENDING(f) ((f)->_cnt > 0)
+#define TK_READ_DATA_PENDING(f) ((f)->_cnt > 0)
 #else /* _MSC_VER */
-#    define TK_READ_DATA_PENDING(f) ((f)->level > 0)
+#define TK_READ_DATA_PENDING(f) ((f)->level > 0)
 #endif /* _MSC_VER */
 
 /*
@@ -67,9 +67,9 @@
  * under Windows.
  */
 
-#define TkFreeWindowId(dispPtr,w)
+#define TkFreeWindowId(dispPtr, w)
 #define TkInitXId(dispPtr)
-#define TkpCmapStressed(tkwin,colormap) (0)
+#define TkpCmapStressed(tkwin, colormap) (0)
 #define XFlush(display)
 #define XGrabServer(display)
 #define XUngrabServer(display)
@@ -79,10 +79,17 @@
  * The following functions are implemented as macros under Windows.
  */
 
-#define XFree(data) {if ((data) != NULL) ckfree((char *) (data));}
-#define XNoOp(display) {display->request++;}
-#define XSynchronize(display, bool) {display->request++;}
-#define XSync(display, bool) {display->request++;}
+#define XFree(data)                                                            \
+    {                                                                          \
+        if ((data) != NULL)                                                    \
+            ckfree((char *)(data));                                            \
+    }
+#define XNoOp(display)                                                         \
+    { display->request++; }
+#define XSynchronize(display, bool)                                            \
+    { display->request++; }
+#define XSync(display, bool)                                                   \
+    { display->request++; }
 #define XVisualIDFromVisual(visual) (visual->visualid)
 
 /*
@@ -90,11 +97,13 @@
  */
 
 #define TkGetNativeProlog(interp) TkGetProlog(interp)
-#define TkpGetPixel(p) (((((p)->red >> 8) & 0xff) \
-	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
+#define TkpGetPixel(p)                                                         \
+    (((((p)->red >> 8) & 0xff) | ((p)->green & 0xff00) |                       \
+      (((p)->blue << 8) & 0xff0000)) |                                         \
+     0x20000000)
 
 /*
- * These calls implement native bitmaps which are not currently 
+ * These calls implement native bitmaps which are not currently
  * supported under Windows.  The macros eliminate the calls.
  */
 
@@ -112,6 +121,6 @@ struct timezone {
 };
 
 extern int gettimeofday(struct timeval *, struct timezone *);
-EXTERN void		panic _ANSI_ARGS_(TCL_VARARGS(char *,format));
+EXTERN void panic _ANSI_ARGS_(TCL_VARARGS(char *, format));
 
 #endif /* _WINPORT */

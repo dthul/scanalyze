@@ -1,7 +1,6 @@
 // GroupUI.cc             manage interface to groupscan
 // created 1/30/99        magi@cs
 
-
 #include <vector>
 #include "DisplayMesh.h"
 #include "GroupScan.h"
@@ -9,90 +8,80 @@
 #include "ScanFactory.h"
 #include "plvGlobals.h"
 
-DisplayableMesh*
-groupScans (vector<DisplayableMesh*>& scans, char* nameToUse, bool bDirty)
-{
-  for (vector<DisplayableMesh*>::iterator pdm = scans.begin(); pdm != scans.end(); pdm++) {
-    (*pdm)->invalidateCachedData();    // memory won't be used for a while
-    (*pdm)->setVisible (false);
-  }
-
-  RigidScan* group = CreateScanGroup (scans, nameToUse, bDirty);
-  DisplayableMesh* dm = theScene->addMeshSet (group, false);
-
-  // The code below removes each child of the group from the
-  // vector theScene->meshSets, which is the place where all the
-  // meshes in the current scene are stored. This is in accordance
-  // with the strategy of storing only a list of all the "root"
-  // meshes, and then calling get_children_for_display etc. to
-  // get the remaining meshes if necessary.
-  vector <DisplayableMesh *>children;
-  string names;
-
-  GroupScan *g = dynamic_cast<GroupScan *>(group);
-  if (group) {
-    if (g->get_children_for_display (children)) {
-      for (int i = 0; i < children.size(); i++) {
-	for (vector<DisplayableMesh*>::iterator scan = theScene->meshSets.begin();
-	     scan != theScene->meshSets.end(); scan++) {
-	  if (!strcmp((*scan)->getName(), children[i]->getName())) {
-	    names += string (" ") + (*scan)->getName();
-	    theScene->meshSets.erase(scan);
-	    scan--;
-	  }
-	}
-      }
+DisplayableMesh *groupScans(vector<DisplayableMesh *> &scans, char *nameToUse,
+                            bool bDirty) {
+    for (vector<DisplayableMesh *>::iterator pdm = scans.begin();
+         pdm != scans.end(); pdm++) {
+        (*pdm)->invalidateCachedData(); // memory won't be used for a while
+        (*pdm)->setVisible(false);
     }
-  }
-  return dm;
+
+    RigidScan *group = CreateScanGroup(scans, nameToUse, bDirty);
+    DisplayableMesh *dm = theScene->addMeshSet(group, false);
+
+    // The code below removes each child of the group from the
+    // vector theScene->meshSets, which is the place where all the
+    // meshes in the current scene are stored. This is in accordance
+    // with the strategy of storing only a list of all the "root"
+    // meshes, and then calling get_children_for_display etc. to
+    // get the remaining meshes if necessary.
+    vector<DisplayableMesh *> children;
+    string names;
+
+    GroupScan *g = dynamic_cast<GroupScan *>(group);
+    if (group) {
+        if (g->get_children_for_display(children)) {
+            for (int i = 0; i < children.size(); i++) {
+                for (vector<DisplayableMesh *>::iterator scan =
+                         theScene->meshSets.begin();
+                     scan != theScene->meshSets.end(); scan++) {
+                    if (!strcmp((*scan)->getName(), children[i]->getName())) {
+                        names += string(" ") + (*scan)->getName();
+                        theScene->meshSets.erase(scan);
+                        scan--;
+                    }
+                }
+            }
+        }
+    }
+    return dm;
 }
 
+vector<DisplayableMesh *> ungroupScans(DisplayableMesh *group) {
+    assert(group);
+    bool wasVis = group->getVisible();
 
-vector<DisplayableMesh*>
-ungroupScans (DisplayableMesh* group)
-{
-  assert (group);
-  bool wasVis = group->getVisible();
+    RigidScan *scanGroup = group->getMeshData();
+    vector<DisplayableMesh *> scans = BreakScanGroup(scanGroup);
 
-  RigidScan* scanGroup = group->getMeshData();
-  vector<DisplayableMesh*> scans = BreakScanGroup (scanGroup);
-
-  if (scans.size()) {
-    for (vector<DisplayableMesh*>::iterator scan = scans.begin(); scan != scans.end(); scan++) {
-      (*scan)->setVisible (wasVis);
-      // add children back
-      theScene->meshSets.push_back(*scan);
+    if (scans.size()) {
+        for (vector<DisplayableMesh *>::iterator scan = scans.begin();
+             scan != scans.end(); scan++) {
+            (*scan)->setVisible(wasVis);
+            // add children back
+            theScene->meshSets.push_back(*scan);
+        }
+        theScene->deleteMeshSet(group);
     }
-    theScene->deleteMeshSet (group);
-  }
 
-  return scans;
+    return scans;
 }
-
 
 static int iGroups = 1;
-char *
-getNextUnusedGroupName ()
-{
-  char buf[256];
+char *getNextUnusedGroupName() {
+    char buf[256];
 
-  sprintf(buf, "group%d", iGroups++);
+    sprintf(buf, "group%d", iGroups++);
 
-  return (strdup(buf));
+    return (strdup(buf));
 }
 
-
-bool
-addToGroup (DisplayableMesh* group, DisplayableMesh* scan)
-{
-  // TODO
-  return false;
+bool addToGroup(DisplayableMesh *group, DisplayableMesh *scan) {
+    // TODO
+    return false;
 }
 
-
-bool
-removeFromGroup (DisplayableMesh* group, DisplayableMesh* scan)
-{
-  // TODO
-  return false;
+bool removeFromGroup(DisplayableMesh *group, DisplayableMesh *scan) {
+    // TODO
+    return false;
 }

@@ -7,16 +7,15 @@
 extern "C" {
 #endif
 
-int PlvReadCybCmd(ClientData clientData, Tcl_Interp *interp, 
-		  int argc, char *argv[]);
-int PlvBumpCybCmd(ClientData clientData, Tcl_Interp *interp, 
-		  int argc, char *argv[]);
-int PlvShadeCybCmd(ClientData clientData, Tcl_Interp *interp, 
-		   int argc, char *argv[]);
+int PlvReadCybCmd(ClientData clientData, Tcl_Interp *interp, int argc,
+                  char *argv[]);
+int PlvBumpCybCmd(ClientData clientData, Tcl_Interp *interp, int argc,
+                  char *argv[]);
+int PlvShadeCybCmd(ClientData clientData, Tcl_Interp *interp, int argc,
+                   char *argv[]);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

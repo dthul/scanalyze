@@ -1,13 +1,13 @@
 /*
  * (c) Copyright 1993, Silicon Graphics, Inc.
- * ALL RIGHTS RESERVED 
- * Permission to use, copy, modify, and distribute this software for 
+ * ALL RIGHTS RESERVED
+ * Permission to use, copy, modify, and distribute this software for
  * any purpose and without fee is hereby granted, provided that the above
  * copyright notice appear in all copies and that both the copyright notice
- * and this permission notice appear in supporting documentation, and that 
+ * and this permission notice appear in supporting documentation, and that
  * the name of Silicon Graphics, Inc. not be used in advertising
  * or publicity pertaining to distribution of the software without specific,
- * written prior permission. 
+ * written prior permission.
  *
  * THE MATERIAL EMBODIED ON THIS SOFTWARE IS PROVIDED TO YOU "AS-IS"
  * AND WITHOUT WARRANTY OF ANY KIND, EXPRESS, IMPLIED OR OTHERWISE,
@@ -21,8 +21,8 @@
  * ADVISED OF THE POSSIBILITY OF SUCH LOSS, HOWEVER CAUSED AND ON
  * ANY THEORY OF LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE
  * POSSESSION, USE OR PERFORMANCE OF THIS SOFTWARE.
- * 
- * US Government Users Restricted Rights 
+ *
+ * US Government Users Restricted Rights
  * Use, duplication, or disclosure by the Government is subject to
  * restrictions set forth in FAR 52.227.19(c)(2) or subparagraph
  * (c)(1)(ii) of the Rights in Technical Data and Computer Software
@@ -38,11 +38,13 @@
  */
 
 #ifdef __cplusplus
-this is weird; but MSVC likes it; and wont link from the IDE without it;
+this is weird;
+but MSVC likes it;
+and wont link from the IDE without it;
 #endif
 
 #ifdef WIN32
-#	include "winGLdecs.h"
+#include "winGLdecs.h"
 #endif
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -52,64 +54,62 @@ this is weird; but MSVC likes it; and wont link from the IDE without it;
 
 /*	accFrustum()
  *  The first 6 arguments are identical to the glFrustum() call.
- *  
- *  pixdx and pixdy are anti-alias jitter in pixels. 
+ *
+ *  pixdx and pixdy are anti-alias jitter in pixels.
  *  Set both equal to 0.0 for no anti-alias jitter.
- *  eyedx and eyedy are depth-of field jitter in pixels. 
+ *  eyedx and eyedy are depth-of field jitter in pixels.
  *  Set both equal to 0.0 for no depth of field effects.
  *
- *  focus is distance from eye to plane in focus. 
+ *  focus is distance from eye to plane in focus.
  *  focus must be greater than, but not equal to 0.0.
  *
- *  Note that accFrustum() calls glTranslatef().  You will 
- *  probably want to insure that your ModelView matrix has been 
+ *  Note that accFrustum() calls glTranslatef().  You will
+ *  probably want to insure that your ModelView matrix has been
  *  initialized to identity before calling accFrustum().
  */
 
 void accFrustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top,
-    GLdouble znear, GLdouble zfar, GLdouble pixdx, GLdouble pixdy, 
-    GLdouble eyedx, GLdouble eyedy, GLdouble focus)
-{
-    GLdouble xwsize, ywsize; 
+                GLdouble znear, GLdouble zfar, GLdouble pixdx, GLdouble pixdy,
+                GLdouble eyedx, GLdouble eyedy, GLdouble focus) {
+    GLdouble xwsize, ywsize;
     GLdouble dx, dy;
     GLint viewport[4];
 
-    glGetIntegerv (GL_VIEWPORT, viewport);
-	
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
     xwsize = right - left;
     ywsize = top - bottom;
-	
-    dx = -(pixdx*xwsize/(GLdouble) viewport[2] + eyedx*znear/focus);
-    dy = -(pixdy*ywsize/(GLdouble) viewport[3] + eyedy*znear/focus);
-	
+
+    dx = -(pixdx * xwsize / (GLdouble)viewport[2] + eyedx * znear / focus);
+    dy = -(pixdy * ywsize / (GLdouble)viewport[3] + eyedy * znear / focus);
+
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum (left + dx, right + dx, bottom + dy, top + dy, znear, zfar);
+    glFrustum(left + dx, right + dx, bottom + dy, top + dy, znear, zfar);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef (-eyedx, -eyedy, 0.0);
+    glTranslatef(-eyedx, -eyedy, 0.0);
 }
 
 /*  accPerspective()
- * 
+ *
  *  The first 4 arguments are identical to the gluPerspective() call.
- *  pixdx and pixdy are anti-alias jitter in pixels. 
+ *  pixdx and pixdy are anti-alias jitter in pixels.
  *  Set both equal to 0.0 for no anti-alias jitter.
- *  eyedx and eyedy are depth-of field jitter in pixels. 
+ *  eyedx and eyedy are depth-of field jitter in pixels.
  *  Set both equal to 0.0 for no depth of field effects.
  *
- *  focus is distance from eye to plane in focus. 
+ *  focus is distance from eye to plane in focus.
  *  focus must be greater than, but not equal to 0.0.
  *
  *  Note that accPerspective() calls accFrustum().
  */
-void accPerspective(GLdouble fovy, GLdouble aspect, 
-    GLdouble znear, GLdouble zfar, GLdouble pixdx, GLdouble pixdy, 
-    GLdouble eyedx, GLdouble eyedy, GLdouble focus)
-{
-    GLdouble fov2,left,right,bottom,top;
+void accPerspective(GLdouble fovy, GLdouble aspect, GLdouble znear,
+                    GLdouble zfar, GLdouble pixdx, GLdouble pixdy,
+                    GLdouble eyedx, GLdouble eyedy, GLdouble focus) {
+    GLdouble fov2, left, right, bottom, top;
 
-    fov2 = ((fovy*PI_) / 180.0) / 2.0;
+    fov2 = ((fovy * PI_) / 180.0) / 2.0;
 
     top = znear / (cos(fov2) / sin(fov2));
     bottom = -top;
@@ -117,8 +117,6 @@ void accPerspective(GLdouble fovy, GLdouble aspect,
     right = top * aspect;
     left = -right;
 
-    accFrustum (left, right, bottom, top, znear, zfar,
-	pixdx, pixdy, eyedx, eyedy, focus);
+    accFrustum(left, right, bottom, top, znear, zfar, pixdx, pixdy, eyedx,
+               eyedy, focus);
 }
-
- 

@@ -24,13 +24,13 @@
 #endif
 
 #if defined(__WIN32__) || defined(_WIN32)
-#   include "tkWinPort.h"
+#include "tkWinPort.h"
 #else
-#   if defined(MAC_TCL)
-#	include "tkMacPort.h"
-#   else
-#	include "../unix/tkUnixPort.h"
-#   endif
+#if defined(MAC_TCL)
+#include "tkMacPort.h"
+#else
+#include "../unix/tkUnixPort.h"
+#endif
 #endif
 
 #endif /* _TKPORT */

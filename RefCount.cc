@@ -12,16 +12,13 @@
 //
 ////////
 
-RefCount::~RefCount(
-    )
-{
-    assert( myRefCount == 0 );
+RefCount::~RefCount() {
+    assert(myRefCount == 0);
 #ifdef LEAK_TEST
-    int* leak = (int*)(~ myLeak);
+    int *leak = (int *)(~myLeak);
     delete leak;
 #endif
 }
-
 
 ////////
 //
@@ -29,10 +26,9 @@ RefCount::~RefCount(
 //
 ////////
 
-void RefCount::incRefCount()
-{
-    if ( this != NULL ) {
-	myRefCount++;
+void RefCount::incRefCount() {
+    if (this != NULL) {
+        myRefCount++;
     }
 }
 
@@ -42,13 +38,11 @@ void RefCount::incRefCount()
 //
 ////////
 
-void RefCount::decRefCount()
-{
-    if ( this != NULL ) {
-	assert( myRefCount >= 0 );
-	if ( --myRefCount == 0 ) {
-	    delete this;
-	}
+void RefCount::decRefCount() {
+    if (this != NULL) {
+        assert(myRefCount >= 0);
+        if (--myRefCount == 0) {
+            delete this;
+        }
     }
 }
-

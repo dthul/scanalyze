@@ -9,5 +9,3 @@ int Plv_Init(Tcl_Interp *interp);
 #ifdef __cplusplus
 }
 #endif
-
-

@@ -11,8 +11,7 @@
 
 #include <stdio.h>
 
-void __cmdassert(const char * expr, const char * file, int line)
-{
-  fprintf (stderr, "Benign assertion failed: %s, file %s, line %d\n",
-	   expr, file, line);
+void __cmdassert(const char *expr, const char *file, int line) {
+    fprintf(stderr, "Benign assertion failed: %s, file %s, line %d\n", expr,
+            file, line);
 }

@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // GenericScan.h
 //
 // Kari Pulli
@@ -22,106 +22,99 @@ class KDindtree;
 class RangeGrid;
 
 class GenericScan : public RigidScan {
-private:
+  private:
+    vector<Mesh *> meshes;
+    vector<KDindtree *> kdtree;
+    bool bDirty;
+    bool bNameSet;
 
-  vector<Mesh*> meshes;
-  vector<KDindtree *> kdtree;
-  bool bDirty;
-  bool bNameSet;
+    RangeGrid *myRangeGrid;
 
-  RangeGrid* myRangeGrid;
+    KDindtree *get_current_kdtree(void);
 
-  KDindtree* get_current_kdtree(void);
+    void insertMesh(Mesh *m, const string &filename, bool bLoaded = true,
+                    bool bAlwaysLoad = true, int nRes = 0);
+    Mesh *currentMesh(void);
+    Mesh *getMesh(int level);
+    inline Mesh *highestRes(void);
+    bool readSet(const string &fn);
+    bool readSingleFile(const string &fn);
 
-  void insertMesh(Mesh *m, const string& filename,
-		  bool bLoaded = true, bool bAlwaysLoad = true,
-		  int nRes = 0);
-  Mesh* currentMesh (void);
-  Mesh* getMesh (int level);
-  inline Mesh* highestRes (void);
-  bool readSet (const string& fn);
-  bool readSingleFile (const string& fn);
+    void _Init();
 
-  void _Init();
+  public:
+    // default constructor:
+    GenericScan(void);
+    // wrapper constructor to display a single mesh:
+    GenericScan(Mesh *mesh, const string &name);
+    ~GenericScan(void);
 
-public:
+    // perVertex: colors and normals for every vertex (not every 3)
+    // stripped:  triangle strips instead of triangles
+    // color: one of the enum values from RigidScan.h
+    // colorsize: # of bytes for color
+    virtual MeshTransport *mesh(bool perVertex = true, bool stripped = true,
+                                ColorSource color = colorNone,
+                                int colorSize = 3);
 
-      // default constructor:
-  GenericScan(void);
-      // wrapper constructor to display a single mesh:
-  GenericScan(Mesh* mesh, const string& name);
-  ~GenericScan(void);
+    int num_vertices(void);
+    void subsample_points(float rate, vector<Pnt3> &p, vector<Pnt3> &n);
 
-  // perVertex: colors and normals for every vertex (not every 3)
-  // stripped:  triangle strips instead of triangles
-  // color: one of the enum values from RigidScan.h
-  // colorsize: # of bytes for color
-  virtual MeshTransport* mesh(bool         perVertex = true,
-			      bool         stripped  = true,
-			      ColorSource  color = colorNone,
-			      int          colorSize = 3);
-  
-  int  num_vertices(void);
-  void subsample_points(float rate, vector<Pnt3> &p,
-			vector<Pnt3> &n);
+    void PrintVoxelInfo(); // added display voxel feature.  See
+    // GenericScan.cc for documentation - leslie
 
-  void PrintVoxelInfo();  // added display voxel feature.  See
-  // GenericScan.cc for documentation - leslie
- 
-  RigidScan* filtered_copy(const VertexFilter& filter);
-  virtual bool filter_inplace(const VertexFilter &filter);
-  virtual bool filter_vertices (const VertexFilter& filter, vector<Pnt3>& p);
+    RigidScan *filtered_copy(const VertexFilter &filter);
+    virtual bool filter_inplace(const VertexFilter &filter);
+    virtual bool filter_vertices(const VertexFilter &filter, vector<Pnt3> &p);
 
-  bool closest_point(const Pnt3 &p, const Pnt3 &n, 
-		     Pnt3 &cp, Pnt3 &cn,
-		     float thr = 1e33, bool bdry_ok = 0);
-  void computeBBox();
-  void flipNormals();
-  string getInfo (void);
+    bool closest_point(const Pnt3 &p, const Pnt3 &n, Pnt3 &cp, Pnt3 &cn,
+                       float thr = 1e33, bool bdry_ok = 0);
+    void computeBBox();
+    void flipNormals();
+    string getInfo(void);
 
-  // smoothing
-  void dequantizationSmoothing(int iterations, double maxDisplacement);
-  void commitSmoothingChanges();
-  
-  // file I/O methods
-  bool read(const string &fname);
+    // smoothing
+    void dequantizationSmoothing(int iterations, double maxDisplacement);
+    void commitSmoothingChanges();
 
-  // is data worth saving?
-  virtual bool is_modified (void);
-  // save to given name: if default, save to existing name if there is
-  // one, or return false if there's not
-  virtual bool write(const string& fname = string()); 
-  // for saving individual meshes
-  virtual bool write_resolution_mesh (int npolys,
-				      const string& fname = string(),
-				      Xform<float> xfBy = Xform<float>());
-  // for saving anything else
-  virtual bool write_metadata (MetaData data);
+    // file I/O methods
+    bool read(const string &fname);
 
+    // is data worth saving?
+    virtual bool is_modified(void);
+    // save to given name: if default, save to existing name if there is
+    // one, or return false if there's not
+    virtual bool write(const string &fname = string());
+    // for saving individual meshes
+    virtual bool write_resolution_mesh(int npolys,
+                                       const string &fname = string(),
+                                       Xform<float> xfBy = Xform<float>());
+    // for saving anything else
+    virtual bool write_metadata(MetaData data);
 
-  // ResolutionCtrl methods
-  int create_resolution_absolute (int budget = 0, Decimator dec = decQslim);
-  bool delete_resolution (int abs_res);
+    // ResolutionCtrl methods
+    int create_resolution_absolute(int budget = 0, Decimator dec = decQslim);
+    bool delete_resolution(int abs_res);
 
-  bool load_resolution (int i);
-  bool release_resolution (int nPolys);
+    bool load_resolution(int i);
+    bool release_resolution(int nPolys);
 
- private:
-  // file i/o helpers
-  void setd (const string& dir = string(), bool bCreate = false);
-  void pushd();
-  void popd();
+  private:
+    // file i/o helpers
+    void setd(const string &dir = string(), bool bCreate = false);
+    void pushd();
+    void popd();
 
-  string setdir;
-  string pusheddir;
-  int pushcount;
+    string setdir;
+    string pusheddir;
+    int pushcount;
 
-  Mesh* readMeshFile (const char* name);
-  bool getXformFilename (const char* meshName, char* xfName);
+    Mesh *readMeshFile(const char *name);
+    bool getXformFilename(const char *meshName, char *xfName);
 
-  // color helper
-  void setMTColor (Mesh* mesh, MeshTransport* mt,
-		   bool perVertex, ColorSource source, int colorsize);
+    // color helper
+    void setMTColor(Mesh *mesh, MeshTransport *mt, bool perVertex,
+                    ColorSource source, int colorsize);
 };
 
 #endif /* _GENERICSCAN_H_ */

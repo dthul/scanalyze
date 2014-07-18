@@ -10,49 +10,45 @@ class Mesh;
 class cStripeServer;
 
 class RangeGrid {
-private:
-  void addTriangleCheckLength(Mesh *mesh, 
-			      int vin1, int vin2, int vin3, 
-			      float maxLength);
-  void addTriangleCheckNormal(Mesh *mesh, 
-			      int vin1, int vin2, int vin3, 
-			      Pnt3 &viewDir, float minDot);
-public:
+  private:
+    void addTriangleCheckLength(Mesh *mesh, int vin1, int vin2, int vin3,
+                                float maxLength);
+    void addTriangleCheckNormal(Mesh *mesh, int vin1, int vin2, int vin3,
+                                Pnt3 &viewDir, float minDot);
 
-  int nlg;		// number of range columns (samples in x)
-  int nlt;		// number of rows (samples in y)
-  int interlaced;       // is it interlaced data?
-  int numSamples;       // number of range samples
-  Pnt3 *coords;	        // the range samples
-  float *confidence;    // confidence
-  float *intensity;     // intensity
-  vec3uc *matDiff;      // color
-  int *indices;	        // row x col indices to the positions
-  int hasColor;         // color information?
-  int hasIntensity;     // intensity information?
-  int hasConfidence;    // confidence information?
-  int multConfidence;   // multiply confidence?
-  int hasTexture;
-  int isLinearScan;
-  int ltMax;
-  int lgMax;
-  int ltMin;
-  int lgMin;
-  char **obj_info; 
-  int num_obj_info;
-  Pnt3 viewDir;
+  public:
+    int nlg;            // number of range columns (samples in x)
+    int nlt;            // number of rows (samples in y)
+    int interlaced;     // is it interlaced data?
+    int numSamples;     // number of range samples
+    Pnt3 *coords;       // the range samples
+    float *confidence;  // confidence
+    float *intensity;   // intensity
+    vec3uc *matDiff;    // color
+    int *indices;       // row x col indices to the positions
+    int hasColor;       // color information?
+    int hasIntensity;   // intensity information?
+    int hasConfidence;  // confidence information?
+    int multConfidence; // multiply confidence?
+    int hasTexture;
+    int isLinearScan;
+    int ltMax;
+    int lgMax;
+    int ltMin;
+    int lgMin;
+    char **obj_info;
+    int num_obj_info;
+    Pnt3 viewDir;
 
-  int isModelMakerScan;
+    int isModelMakerScan;
 
-  RangeGrid();
-  ~RangeGrid();
+    RangeGrid();
+    ~RangeGrid();
 
-  int readRangeGrid(const char *name);
-  int readCyfile(const char *name);
-  Mesh *toMesh(int subSamp, int hasTexture);
-
+    int readRangeGrid(const char *name);
+    int readCyfile(const char *name);
+    Mesh *toMesh(int subSamp, int hasTexture);
 };
-
 
 int is_range_grid_file(const char *filename);
 

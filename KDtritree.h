@@ -13,52 +13,47 @@
 #include <vector>
 
 struct KDsphere {
-  int   ind;
-  Pnt3  ctr;
-  float radius;
+    int ind;
+    Pnt3 ctr;
+    float radius;
 };
 
 class KDtritree {
-private:
+  private:
+    Pnt3 ctr;
+    float radius;
+    // if leaf, use ind to tell where the indices for
+    // the triangle are, else use to tell which dimension
+    // was used in splitting
+    int ind;
+    float split; // on which coordinate did the split happen
 
-  Pnt3  ctr;
-  float radius;
-  // if leaf, use ind to tell where the indices for
-  // the triangle are, else use to tell which dimension
-  // was used in splitting
-  int   ind;
-  float split; // on which coordinate did the split happen
-  
-  KDtritree  *child[2];
+    KDtritree *child[2];
 
-  void collapse_spheres(void);
+    void collapse_spheres(void);
 
-  void _search(const Pnt3 *pts, const int *inds, 
-	       const Pnt3 &p, Pnt3 &cp, float &d2) const;
-  
-public:
+    void _search(const Pnt3 *pts, const int *inds, const Pnt3 &p, Pnt3 &cp,
+                 float &d2) const;
 
-  KDtritree(const Pnt3 *pts, const int *triinds, 
-	    KDsphere *spheres, int n, int first = 1);
-  ~KDtritree();
+  public:
+    KDtritree(const Pnt3 *pts, const int *triinds, KDsphere *spheres, int n,
+              int first = 1);
+    ~KDtritree();
 
-  // just find the closest point
-  bool search(const Pnt3 *pts, const int *inds, const Pnt3 &p,
-	      Pnt3 &cp, float &d) const
-    {
-      float d2 = d*d;
-      _search(pts, inds, p, cp, d2);
-      if (d*d!=d2) {
-	d = sqrtf(d2);
-	return true;
-      } else {
-	return false;
-      }
+    // just find the closest point
+    bool search(const Pnt3 *pts, const int *inds, const Pnt3 &p, Pnt3 &cp,
+                float &d) const {
+        float d2 = d * d;
+        _search(pts, inds, p, cp, d2);
+        if (d * d != d2) {
+            d = sqrtf(d2);
+            return true;
+        } else {
+            return false;
+        }
     }
 };
 
-
-KDtritree *
-create_KDtritree(const Pnt3 *pts, const int *inds, int n);
+KDtritree *create_KDtritree(const Pnt3 *pts, const int *inds, int n);
 
 #endif

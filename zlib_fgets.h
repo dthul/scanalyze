@@ -7,36 +7,34 @@
 */
 #include <zlib.h>
 
+char *gzgets(char *str, int n, gzFile f) {
+    int count_read = 0;
+    char *s = str;
 
-char *gzgets(char *str, int n, gzFile f)
-{
-	int count_read = 0;
-	char *s = str;
+    if (n == 0)
+        return NULL;
+    if (n == 1) {
+        *s = '\0';
+        return NULL;
+    }
 
-	if (n == 0)
-		return NULL;
-	if (n == 1) {
-		*s = '\0';
-		return NULL;
-	}
+    while (1) {
+        if (!gzread(f, s, 1))
+            break;
+        count_read++;
+        if (count_read >= n - 1) {
+            *(s + 1) = '\0';
+            return str;
+        }
+        if (*s == '\n')
+            break;
+        s++;
+    }
 
-	while (1) {
-		if (!gzread(f, s, 1))
-			break;
-		count_read++;
-		if (count_read >= n-1) {
-			*(s+1) = '\0';
-			return str;
-		}
-		if (*s == '\n')
-			break;
-		s++;
-	}
-
-	if (!count_read)
-		return NULL;
-	*(s+1) = '\0';
-	return str;
+    if (!count_read)
+        return NULL;
+    *(s + 1) = '\0';
+    return str;
 }
 
 #endif

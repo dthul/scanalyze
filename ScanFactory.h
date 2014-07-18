@@ -6,29 +6,27 @@
 // It should not be necessary for other modules to directly create or
 // access *Scan pointers.
 
-
 #ifndef _SCANFACTORY_H_
 #define _SCANFACTORY_H_
-
 
 #include "RigidScan.h"
 class DisplayableMesh;
 
-RigidScan* CreateScanFromGeometry (const vector<Pnt3>& vtx,
-				   const vector<int>& tris,
-				   const string& name = string());
+RigidScan *CreateScanFromGeometry(const vector<Pnt3> &vtx,
+                                  const vector<int> &tris,
+                                  const string &name = string());
 
-RigidScan* CreateScanFromFile (const string& filename);
+RigidScan *CreateScanFromFile(const string &filename);
 
-RigidScan* CreateScanFromThinAir (float size, int type = 0);
+RigidScan *CreateScanFromThinAir(float size, int type = 0);
 
-RigidScan* CreateScanFromBbox (const string& filename,
-			       const Pnt3& min, const Pnt3& max);
+RigidScan *CreateScanFromBbox(const string &filename, const Pnt3 &min,
+                              const Pnt3 &max);
 
-RigidScan* CreateScanGroup (const vector<DisplayableMesh*>& members, 
-			    const char *nameToUse, bool bDirty);
-vector<DisplayableMesh*> BreakScanGroup (RigidScan* group);
+RigidScan *CreateScanGroup(const vector<DisplayableMesh *> &members,
+                           const char *nameToUse, bool bDirty);
+vector<DisplayableMesh *> BreakScanGroup(RigidScan *group);
 
-bool isScanLoaded (const RigidScan* scan);
+bool isScanLoaded(const RigidScan *scan);
 
 #endif // _SCANFACTORY_H_

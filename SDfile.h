@@ -1,5 +1,5 @@
 //############################################################
-// 
+//
 // SDfile.h
 //
 // Kari Pulli
@@ -20,123 +20,111 @@ class VertexFilter;
 typedef unsigned char uchar;
 
 struct sd_raw_pnt {
-  unsigned int config;
-  short        y,z;
-  float        nod, turn, tr_h;
-};  
+    unsigned int config;
+    short y, z;
+    float nod, turn, tr_h;
+};
 
 class SDfile {
 
-private:
-  unsigned int    version;
-  unsigned int    header_size;
-public:
-  float           other_screw;
-  float           scanner_trans;
-  float           scanner_vert;
-  unsigned int    scanner_config;
-private:
-  float           laser_intensity;
-  float           camera_sensitivity;
+  private:
+    unsigned int version;
+    unsigned int header_size;
 
-public:
-  CyberXform      xf;
-private:
-  float           frame_pitch;// screw pitch between frames
-  float           scan_screw; // "center" scan screw value 
-  unsigned int    n_pts;      // size of z_data and intensity_data
-  unsigned int    n_valid_pts;
-  unsigned int    pts_per_frame;
-  unsigned int    n_frames;   // number of frames
-  unsigned int   *row_start;  // index to z_data for start of row
-  unsigned short *first_good; // the first good column of row
-  unsigned short *first_bad;  // the first missing column of row
-  unsigned short *z_data;     // the raw z data
-  unsigned char  *intensity_data;
+  public:
+    float other_screw;
+    float scanner_trans;
+    float scanner_vert;
+    unsigned int scanner_config;
 
-  // preprocessing for space carving
-  bool  axis_proj_done;
-  float axis_proj_min, axis_proj_max;
+  private:
+    float laser_intensity;
+    float camera_sensitivity;
 
-  void  prepare_axis_proj(void);
+  public:
+    CyberXform xf;
 
-  void make_tstrip_horizontal(vector<int>  &tstrips,
-			      vector<char> &bdry);
-  void make_tstrip_vertical(vector<int>  &tstrips,
-			    vector<char> &bdry);
+  private:
+    float frame_pitch;  // screw pitch between frames
+    float scan_screw;   // "center" scan screw value
+    unsigned int n_pts; // size of z_data and intensity_data
+    unsigned int n_valid_pts;
+    unsigned int pts_per_frame;
+    unsigned int n_frames;      // number of frames
+    unsigned int *row_start;    // index to z_data for start of row
+    unsigned short *first_good; // the first good column of row
+    unsigned short *first_bad;  // the first missing column of row
+    unsigned short *z_data;     // the raw z data
+    unsigned char *intensity_data;
 
-  enum SubSampMode { fast, conf, holesGrow, filterAvg };
+    // preprocessing for space carving
+    bool axis_proj_done;
+    float axis_proj_min, axis_proj_max;
 
-  void fill_index_array(int  step, 
-			int  row,
-			SubSampMode subSampMode,
-			vector<int> &p,
-			vector<Pnt3>  &pnts,
-			vector<int>   &ssmap,
-			vector<uchar> &intensity,
-			vector<uchar> &confidence);
+    void prepare_axis_proj(void);
 
-  bool find_row_range(float screw, float radius, const Pnt3 &ctr,
-		      int rowrange[2]);
+    void make_tstrip_horizontal(vector<int> &tstrips, vector<char> &bdry);
+    void make_tstrip_vertical(vector<int> &tstrips, vector<char> &bdry);
 
-public:
-  SDfile(void);
-  ~SDfile(void);
+    enum SubSampMode { fast, conf, holesGrow, filterAvg };
 
-  bool read (const string &fname);
-  bool write (const string &fname);
+    void fill_index_array(int step, int row, SubSampMode subSampMode,
+                          vector<int> &p, vector<Pnt3> &pnts,
+                          vector<int> &ssmap, vector<uchar> &intensity,
+                          vector<uchar> &confidence);
 
-  void fill_holes(int max_missing, int thresh);
+    bool find_row_range(float screw, float radius, const Pnt3 &ctr,
+                        int rowrange[2]);
 
-  int  valid_pts(void) { return n_valid_pts; }
+  public:
+    SDfile(void);
+    ~SDfile(void);
 
-  void make_tstrip(vector<int>  &tstrips,
-		   vector<char> &bdry);
+    bool read(const string &fname);
+    bool write(const string &fname);
 
-  void subsampled_tstrip(int            step, 
-			 char          *behavior,
-			 vector<int>   &tstrips,
-			 vector<char>  &bdry,
-			 vector<Pnt3>  &pnts,
-			 vector<uchar> &intensity,
-			 vector<uchar> &confidence,
-			 vector<int>   &ssmap);
+    void fill_holes(int max_missing, int thresh);
 
-  void set_xf(int row, bool both = true);
+    int valid_pts(void) { return n_valid_pts; }
 
-  void get_pnts_and_intensities(vector<Pnt3>  &pnts,
-				vector<uchar> &intensity);
+    void make_tstrip(vector<int> &tstrips, vector<char> &bdry);
 
-  // access a data point, transformed or in laser coords
-  // row is the frame, col is a point on scanline,
-  // col even: frame 0; col odd: frame 1
-  // returns false if there is no such point
-  bool get_point(int r, int c, Pnt3 &p, bool transformed = true);
+    void subsampled_tstrip(int step, char *behavior, vector<int> &tstrips,
+                           vector<char> &bdry, vector<Pnt3> &pnts,
+                           vector<uchar> &intensity, vector<uchar> &confidence,
+                           vector<int> &ssmap);
 
-  Xform<float> vrip_reorientation_frame(void);
+    void set_xf(int row, bool both = true);
 
-  bool find_data(float screw, float y_in, 
-		 int &row,unsigned short &y,
-		 unsigned short &z);
+    void get_pnts_and_intensities(vector<Pnt3> &pnts, vector<uchar> &intensity);
 
-  int  count_valid_pnts(void);
+    // access a data point, transformed or in laser coords
+    // row is the frame, col is a point on scanline,
+    // col even: frame 0; col odd: frame 1
+    // returns false if there is no such point
+    bool get_point(int r, int c, Pnt3 &p, bool transformed = true);
 
-  void filtered_copy(const VertexFilter &filter,
-		     SDfile &sdnew);
-  void get_piece(int firstFrame, int lastFrame,
-		 SDfile &sdnew);
+    Xform<float> vrip_reorientation_frame(void);
 
-  int  num_frames(void) { return n_frames; }
-  Bbox get_bbox(void);
+    bool find_data(float screw, float y_in, int &row, unsigned short &y,
+                   unsigned short &z);
 
-  // for space carving
-  int sphere_status(const Pnt3 &ctr, float r);
+    int count_valid_pnts(void);
 
-  // for auto calibration
-  int dump_pts_laser_subsampled(ofstream &out, int nPnts);
+    void filtered_copy(const VertexFilter &filter, SDfile &sdnew);
+    void get_piece(int firstFrame, int lastFrame, SDfile &sdnew);
 
-  Pnt3 raw_for_ith      (int   i, sd_raw_pnt &data);
-  Pnt3 raw_for_ith_valid(int   i, sd_raw_pnt &data);
+    int num_frames(void) { return n_frames; }
+    Bbox get_bbox(void);
+
+    // for space carving
+    int sphere_status(const Pnt3 &ctr, float r);
+
+    // for auto calibration
+    int dump_pts_laser_subsampled(ofstream &out, int nPnts);
+
+    Pnt3 raw_for_ith(int i, sd_raw_pnt &data);
+    Pnt3 raw_for_ith_valid(int i, sd_raw_pnt &data);
 };
 
 #endif

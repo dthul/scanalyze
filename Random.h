@@ -13,33 +13,30 @@
 
 #ifdef WIN32
 #define srand48 srand
-static double drand48 (void)
-{
-	return rand() / (float)RAND_MAX;
-}
+static double drand48(void) { return rand() / (float)RAND_MAX; }
 #endif
 
-
 class Random {
-private:
-  static long TimeSeed(void)
-    { return (long) time(NULL); }
-  
-public:
-  Random(unsigned long initSeed = TimeSeed())
-    { srand48(initSeed); }
-  ~Random(void) {}
+  private:
+    static long TimeSeed(void) { return (long)time(NULL); }
 
-  void setSeed(unsigned long newSeed = TimeSeed())
-    { srand48(newSeed); }
+  public:
+    Random(unsigned long initSeed = TimeSeed()) { srand48(initSeed); }
+    ~Random(void) {}
 
-  double operator()()
+    void setSeed(unsigned long newSeed = TimeSeed()) { srand48(newSeed); }
+
+    double operator()()
     // return a random number [0.0,1.0)
-    { return drand48(); }
+    {
+        return drand48();
+    }
 
-  double operator()(double fact)
+    double operator()(double fact)
     // return a random number [0.0,fact)
-    { return fact*drand48(); }
+    {
+        return fact * drand48();
+    }
 };
 
 #endif

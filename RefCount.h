@@ -7,7 +7,6 @@ As opposed to much of the other source code, it had no copyright statement.
     Fri Mar 12 06:27:39 CET 1999
 */
 
-
 ////////////////////////////////////////////////////////////////////////
 //
 // File: RefCount.h
@@ -42,22 +41,20 @@ As opposed to much of the other source code, it had no copyright statement.
 
 // #define LEAK_TEST
 
-class RefCount
-{
-public:
+class RefCount {
+  public:
     //
     // The constructor just needs to initialize the reference count
     // on the object.
     //
 
-    RefCount()
-	{
-	    myRefCount = 0;
+    RefCount() {
+        myRefCount = 0;
 #ifdef LEAK_TEST
-	    int* leak = new int;
-	    myLeak = ~ long(leak);
+        int *leak = new int;
+        myLeak = ~long(leak);
 #endif
-	}
+    }
 
     //
     // Every base class needs a virtual destructor.
@@ -71,11 +68,11 @@ public:
     // class.  Compiler didn't like:
     //     template <class Target> friend class Ref;
     //
-    
+
     void incRefCount();
     void decRefCount();
 
-private:
+  private:
     int myRefCount;
 
 #ifdef LEAK_TEST
@@ -91,7 +88,7 @@ private:
 // The target class must be derived from RefCount.
 //
 // To use Refs, first make a class that derives from RefCount, like
-// this: 
+// this:
 //
 //	class Foo : public RefCount
 // 	{
@@ -155,18 +152,13 @@ private:
 //
 ////////////////////////////////////////////////////////////////////////
 
-template <class Target>
-class Ref
-{
-public:
+template <class Target> class Ref {
+  public:
     //
     // Be default, we point to NULL.
     //
 
-    Ref()
-	{
-	    myTarget = NULL;
-	}
+    Ref() { myTarget = NULL; }
 
     //
     // These two constructors just acquire ownership of an object by
@@ -174,35 +166,27 @@ public:
     // handle the case when the pointer is NULL.)
     //
 
-    Ref( Target* target )
-	{
-	    target->incRefCount();
-	    myTarget = target;
-	}
+    Ref(Target *target) {
+        target->incRefCount();
+        myTarget = target;
+    }
 
-    Ref( const Ref& other )
-	{
-	    other.myTarget->incRefCount();
-	    myTarget = other.myTarget;
-	}
+    Ref(const Ref &other) {
+        other.myTarget->incRefCount();
+        myTarget = other.myTarget;
+    }
 
     //
     // Destroying this reference object drops the reference count.
     //
 
-    ~Ref()
-	{
-	    myTarget->decRefCount();
-	}
+    ~Ref() { myTarget->decRefCount(); }
 
     //
     // A function for those rare cases when -> or casting is not right.
     //
-    
-    Target* getTarget() 
-	{
-	    return myTarget;
-	}
+
+    Target *getTarget() { return myTarget; }
 
     //
     // Assignment adds a reference.  (The reference to the object we
@@ -210,47 +194,39 @@ public:
     // to self.)
     //
 
-    Ref& operator =( const Ref& other )
-	{
-	    other.myTarget->incRefCount();
-	    myTarget->decRefCount();
-	    this->myTarget = other.myTarget;
-	    return *this;
-	}
+    Ref &operator=(const Ref &other) {
+        other.myTarget->incRefCount();
+        myTarget->decRefCount();
+        this->myTarget = other.myTarget;
+        return *this;
+    }
 
-    Ref& operator =( Target* target )
-	{
-	    target->incRefCount();
-	    myTarget->decRefCount();
-	    this->myTarget = target;
-	    return *this;
-	}
+    Ref &operator=(Target *target) {
+        target->incRefCount();
+        myTarget->decRefCount();
+        this->myTarget = target;
+        return *this;
+    }
 
     //
     // We can cast to a Target*.  This is used when calling a function
     // that takes a Target*.
     //
 
-    operator Target* () const
-	{
-	    return myTarget;
-	}
+    operator Target *() const { return myTarget; }
 
     //
     // Overloading "->" allows a Ref to be used just like a pointer.
     //
 
-    Target* operator ->() const
-	{
-	    return myTarget;
-	}
+    Target *operator->() const { return myTarget; }
 
-private:
+  private:
     //
     // This is the pointer to the object we are managing.
     //
 
-    Target*	myTarget;
+    Target *myTarget;
 };
 
 #endif // _REF_COUNT_H

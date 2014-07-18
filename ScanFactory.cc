@@ -13,113 +13,90 @@
 #include "GroupScan.h"
 #include "ProxyScan.h"
 
-
-RigidScan*
-CreateScanFromGeometry (const vector<Pnt3>& vtx,
-			const vector<int>& tris,
-			const string& name)
-{
-  Mesh* mesh = new Mesh (vtx, tris);
-  GenericScan* gs = new GenericScan (mesh, name);
-  return gs;
+RigidScan *CreateScanFromGeometry(const vector<Pnt3> &vtx,
+                                  const vector<int> &tris, const string &name) {
+    Mesh *mesh = new Mesh(vtx, tris);
+    GenericScan *gs = new GenericScan(mesh, name);
+    return gs;
 }
 
+static bool has_ending(const string &filename, const string &ending) {
+    int lenf = filename.size();
+    int lene = ending.size();
+    if (lenf <= lene)
+        return FALSE;
 
-static bool
-has_ending(const string& filename, const string& ending)
-{
-  int lenf = filename.size();
-  int lene = ending.size();
-  if (lenf <= lene)
-    return FALSE;
-
-  return (ending == filename.substr (lenf - lene, lenf));
+    return (ending == filename.substr(lenf - lene, lenf));
 }
 
+RigidScan *CreateScanFromFile(const string &filename) {
+    RigidScan *scan = NULL;
+    if (has_ending(filename, ".ply"))
+        scan = new GenericScan;
+    else if (has_ending(filename, ".ply.gz"))
+        scan = new GenericScan;
+    else if (has_ending(filename, ".set"))
+        scan = new GenericScan;
+    else if (has_ending(filename, ".sd"))
+        scan = new CyberScan;
+    else if (has_ending(filename, ".sd.gz"))
+        scan = new CyberScan;
+    else if (has_ending(filename, ".cta"))
+        scan = new MMScan;
+    else if (has_ending(filename, ".mms"))
+        scan = new MMScan;
+    else if (has_ending(filename, ".pts"))
+        scan = new CyraScan;
+    else
+        scan = new GenericScan;
 
-RigidScan*
-CreateScanFromFile (const string& filename)
-{
-  RigidScan *scan = NULL;
-  if      (has_ending(filename, ".ply"))
-    scan = new GenericScan;
-  else if (has_ending(filename, ".ply.gz"))
-    scan = new GenericScan;
-  else if (has_ending(filename, ".set"))
-    scan = new GenericScan;
-  else if (has_ending(filename, ".sd"))
-    scan = new CyberScan;
-  else if (has_ending(filename, ".sd.gz"))
-    scan = new CyberScan;
-  else if (has_ending(filename, ".cta"))
-    scan = new MMScan;
-  else if (has_ending(filename, ".mms"))
-    scan = new MMScan;
-  else if (has_ending(filename, ".pts"))
-    scan = new CyraScan;
-  else
-    scan = new GenericScan;
-
-  if (scan) {
-    if (!scan->read (filename)) {
-      delete scan;
-      scan = NULL;
+    if (scan) {
+        if (!scan->read(filename)) {
+            delete scan;
+            scan = NULL;
+        }
     }
-  }
 
-  return scan;
+    return scan;
 }
 
+RigidScan *CreateScanFromThinAir(float size, int type) {
+    // note -- types not supported; just for future options
 
-RigidScan*
-CreateScanFromThinAir (float size, int type)
-{
-  // note -- types not supported; just for future options
-
-  RigidScan* scan = new SyntheticScan (size);
-  return scan;
+    RigidScan *scan = new SyntheticScan(size);
+    return scan;
 }
 
+RigidScan *CreateScanGroup(const vector<DisplayableMesh *> &members,
+                           const char *nameToUse, bool bDirty) {
+    RigidScan *scan = new GroupScan(members, bDirty);
+    scan->set_name(strdup(nameToUse));
 
-RigidScan*
-CreateScanGroup (const vector<DisplayableMesh*>& members, const char *nameToUse, bool bDirty)
-{
-  RigidScan* scan = new GroupScan (members, bDirty);
-  scan->set_name (strdup(nameToUse));
-
-  return scan;
+    return scan;
 }
 
-
-vector<DisplayableMesh*>
-BreakScanGroup (RigidScan* scan)
-{
-  vector<DisplayableMesh*> members;
-  GroupScan* group = dynamic_cast<GroupScan*> (scan);
-  if (group) {
-    if (group->get_children_for_display (members)) {
-      for (vector<DisplayableMesh*>::iterator mem = members.begin();
-	   mem < members.end(); mem++) {
-	group->RemoveScan (*mem);
-      }
+vector<DisplayableMesh *> BreakScanGroup(RigidScan *scan) {
+    vector<DisplayableMesh *> members;
+    GroupScan *group = dynamic_cast<GroupScan *>(scan);
+    if (group) {
+        if (group->get_children_for_display(members)) {
+            for (vector<DisplayableMesh *>::iterator mem = members.begin();
+                 mem < members.end(); mem++) {
+                group->RemoveScan(*mem);
+            }
+        }
+    } else {
+        members.clear();
     }
-  } else {
-    members.clear();
-  }
 
-  return members;
+    return members;
 }
 
-
-RigidScan*
-CreateScanFromBbox (const string& name, const Pnt3& min, const Pnt3& max)
-{
-  return new ProxyScan (name, min, max);
+RigidScan *CreateScanFromBbox(const string &name, const Pnt3 &min,
+                              const Pnt3 &max) {
+    return new ProxyScan(name, min, max);
 }
 
-
-bool
-isScanLoaded (const RigidScan* scan)
-{
-  return dynamic_cast<const ProxyScan*> (scan) == NULL;
+bool isScanLoaded(const RigidScan *scan) {
+    return dynamic_cast<const ProxyScan *>(scan) == NULL;
 }

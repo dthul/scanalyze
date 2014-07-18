@@ -26,17 +26,16 @@
  * interfaces are available for use, but are not supported.
  */
 
-EXTERN void		TkConsoleCreate(void);
-EXTERN int		TkConsoleInit(Tcl_Interp *interp);
-EXTERN int      main( int argc, char *argv[] );
+EXTERN void TkConsoleCreate(void);
+EXTERN int TkConsoleInit(Tcl_Interp *interp);
+EXTERN int main(int argc, char *argv[]);
 
 /*
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		setargv _ANSI_ARGS_((int *argcPtr, char ***argvPtr));
-static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(char *,format));
-
+static void setargv _ANSI_ARGS_((int *argcPtr, char ***argvPtr));
+static void WishPanic _ANSI_ARGS_(TCL_VARARGS(char *, format));
 
 /*
  *----------------------------------------------------------------------
@@ -56,11 +55,10 @@ static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(char *,format));
  */
 
 int APIENTRY
-WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
-    HINSTANCE hInstance;
-    HINSTANCE hPrevInstance;
-    LPSTR lpszCmdLine;
-    int nCmdShow;
+WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow) HINSTANCE hInstance;
+HINSTANCE hPrevInstance;
+LPSTR lpszCmdLine;
+int nCmdShow;
 {
     char **argv, *p, **arg;
     int argc;
@@ -74,7 +72,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      */
 
     setlocale(LC_ALL, "C");
-
 
     /*
      * Increase the application queue size from default value of 8.
@@ -95,16 +92,15 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 
     TkConsoleCreate();
 
-
-	/*
-	 * C runtime i/o (printf) still goes to the Windows console, not the Tk one.
-	 * so we need one of those too -- this is ugly --
-	 * and I don't even know how to reinitialize cout to work.
-	 * Consider this a "for now" hack.
-	 */
-	AllocConsole();
-	freopen ("CON", "w", stdout);
-	freopen ("CON", "w", stderr);
+    /*
+     * C runtime i/o (printf) still goes to the Windows console, not the Tk one.
+     * so we need one of those too -- this is ugly --
+     * and I don't even know how to reinitialize cout to work.
+     * Consider this a "for now" hack.
+     */
+    AllocConsole();
+    freopen("CON", "w", stdout);
+    freopen("CON", "w", stderr);
 
     setargv(&argc, &argv);
 
@@ -116,19 +112,17 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     GetModuleFileName(NULL, buffer, sizeof(buffer));
     argv[0] = buffer;
 
-	// magi -- all of scanalyze likes / better than \, so replace all of argv
-	for (arg = argv; arg < argv + argc; arg++)
-	{
-		for (p = *arg; *p != '\0'; p++) {
-			if (*p == '\\') {
-				*p = '/';
-			}
-		}
-	}
+    // magi -- all of scanalyze likes / better than \, so replace all of argv
+    for (arg = argv; arg < argv + argc; arg++) {
+        for (p = *arg; *p != '\0'; p++) {
+            if (*p == '\\') {
+                *p = '/';
+            }
+        }
+    }
 
     return main(argc, argv);
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -146,23 +140,19 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
  *----------------------------------------------------------------------
  */
 
-void
-WishPanic TCL_VARARGS_DEF(char *,arg1)
-{
+void WishPanic TCL_VARARGS_DEF(char *, arg1) {
     va_list argList;
     char buf[1024];
     char *format;
 
-    format = TCL_VARARGS_START(char *,arg1,argList);
+    format = TCL_VARARGS_START(char *, arg1, argList);
     vsprintf(buf, format, argList);
 
     MessageBeep(MB_ICONEXCLAMATION);
     MessageBox(NULL, buf, "Fatal Error in Togl",
-	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+               MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 #ifdef _MSC_VER
-    _asm {
-        int 3
-    }
+    _asm { int 3 }
 #endif
     ExitProcess(1);
 }
@@ -194,9 +184,9 @@ WishPanic TCL_VARARGS_DEF(char *,arg1)
  */
 
 static void
-setargv(argcPtr, argvPtr)
-    int *argcPtr;		/* Filled with number of argument strings. */
-    char ***argvPtr;		/* Filled with argument strings (malloc'd). */
+setargv(argcPtr,
+        argvPtr) int *argcPtr; /* Filled with number of argument strings. */
+char ***argvPtr;               /* Filled with argument strings (malloc'd). */
 {
     char *cmdLine, *p, *arg, *argSpace;
     char **argv;
@@ -211,74 +201,73 @@ setargv(argcPtr, argvPtr)
 
     size = 2;
     for (p = cmdLine; *p != '\0'; p++) {
-	if (isspace(*p)) {
-	    size++;
-	    while (isspace(*p)) {
-		p++;
-	    }
-	    if (*p == '\0') {
-		break;
-	    }
-	}
+        if (isspace(*p)) {
+            size++;
+            while (isspace(*p)) {
+                p++;
+            }
+            if (*p == '\0') {
+                break;
+            }
+        }
     }
-    argSpace = (char *) ckalloc((unsigned) (size * sizeof(char *)
-	    + strlen(cmdLine) + 1));
-    argv = (char **) argSpace;
+    argSpace = (char *)ckalloc(
+        (unsigned)(size * sizeof(char *) + strlen(cmdLine) + 1));
+    argv = (char **)argSpace;
     argSpace += size * sizeof(char *);
     size--;
 
     p = cmdLine;
     for (argc = 0; argc < size; argc++) {
-	argv[argc] = arg = argSpace;
-	while (isspace(*p)) {
-	    p++;
-	}
-	if (*p == '\0') {
-	    break;
-	}
+        argv[argc] = arg = argSpace;
+        while (isspace(*p)) {
+            p++;
+        }
+        if (*p == '\0') {
+            break;
+        }
 
-	inquote = 0;
-	slashes = 0;
-	while (1) {
-	    copy = 1;
-	    while (*p == '\\') {
-		slashes++;
-		p++;
-	    }
-	    if (*p == '"') {
-		if ((slashes & 1) == 0) {
-		    copy = 0;
-		    if ((inquote) && (p[1] == '"')) {
-			p++;
-			copy = 1;
-		    } else {
-			inquote = !inquote;
-		    }
+        inquote = 0;
+        slashes = 0;
+        while (1) {
+            copy = 1;
+            while (*p == '\\') {
+                slashes++;
+                p++;
+            }
+            if (*p == '"') {
+                if ((slashes & 1) == 0) {
+                    copy = 0;
+                    if ((inquote) && (p[1] == '"')) {
+                        p++;
+                        copy = 1;
+                    } else {
+                        inquote = !inquote;
+                    }
                 }
                 slashes >>= 1;
             }
 
             while (slashes) {
-		*arg = '\\';
-		arg++;
-		slashes--;
-	    }
+                *arg = '\\';
+                arg++;
+                slashes--;
+            }
 
-	    if ((*p == '\0') || (!inquote && isspace(*p))) {
-		break;
-	    }
-	    if (copy != 0) {
-		*arg = *p;
-		arg++;
-	    }
-	    p++;
+            if ((*p == '\0') || (!inquote && isspace(*p))) {
+                break;
+            }
+            if (copy != 0) {
+                *arg = *p;
+                arg++;
+            }
+            p++;
         }
-	*arg = '\0';
-	argSpace = arg + 1;
+        *arg = '\0';
+        argSpace = arg + 1;
     }
     argv[argc] = NULL;
 
     *argcPtr = argc;
     *argvPtr = argv;
 }
-

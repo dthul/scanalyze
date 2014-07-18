@@ -1,7 +1,6 @@
 #ifndef _PLV_SCENE_
 #define _PLV_SCENE_
 
-
 #include "Bbox.h"
 #include "Pnt3.h"
 #include "vector"
@@ -10,99 +9,105 @@
 #include "plvGlobals.h"
 #include "DisplayMesh.h"
 
-
 class GlobalReg;
 class RigidScan;
 class VertexFilter;
 
-
 class Scene {
- private:  // private data
+  private:             // private data
+    Bbox bbox;         // Bounding box around vertices in scene
+    Trackball homePos; // copy of orientation info for set/goHome
+    int resOverride;   // master scene resolution, high/low/default
 
-  Bbox      bbox;        // Bounding box around vertices in scene
-  Trackball homePos;     // copy of orientation info for set/goHome
-  int       resOverride; // master scene resolution, high/low/default
+    int slowPolyCount; // min. # of polys that deserve a status bar
+                       // while rendering
 
-  int       slowPolyCount; // min. # of polys that deserve a status bar
-                           // while rendering
+    vector<DisplayableMesh *>::iterator findSceneMesh(DisplayableMesh *mesh);
 
-  vector<DisplayableMesh*>::iterator findSceneMesh (DisplayableMesh* mesh);
+  public:                               // public data
+    vector<DisplayableMesh *> meshSets; // ROOT mesh sets in scene only
+    ColorSet meshColors;  // to obtain next color for false-color mode
+    GlobalReg *globalReg; // registration information
+    Tcl_Interp *interp;
 
- public:   // public data
+  public: // public methods
+    Scene(Tcl_Interp *_interp);
+    ~Scene();
 
-  vector<DisplayableMesh *> meshSets;   // ROOT mesh sets in scene only
-  ColorSet meshColors;    // to obtain next color for false-color mode
-  GlobalReg* globalReg;   // registration information
-  Tcl_Interp* interp;
+    DisplayableMesh *addMeshSet(RigidScan *scan, bool bRecenterCamera = true,
+                                char *nameToUse = NULL);
+    void addMeshInternal(DisplayableMesh *scan);
+    void deleteMeshSet(DisplayableMesh *deadMesh);
+    bool renameMeshSet(DisplayableMesh *mesh, const char *nameToUse);
+    void freeMeshes();
 
- public:   // public methods
-  Scene (Tcl_Interp* _interp);
-  ~Scene();
+    enum {
+        resLow,
+        resHigh,
+        resNextLow,
+        resNextHigh,
+        resTempLow,
+        resTempHigh,
+        resDefault
+    };
+    void setMeshResolution(int res);
+    int getMeshResolution();
 
-  DisplayableMesh* addMeshSet(RigidScan* scan,
-			      bool bRecenterCamera = true,
-			      char* nameToUse = NULL);
-  void     addMeshInternal (DisplayableMesh* scan);
-  void     deleteMeshSet (DisplayableMesh* deadMesh);
-  bool     renameMeshSet (DisplayableMesh* mesh, const char* nameToUse);
-  void     freeMeshes();
+    bool wantMeshBBox(DisplayableMesh *mesh = NULL);
+    bool meshes_written_stripped(void);
 
-  enum   { resLow, resHigh, resNextLow, resNextHigh,
-	   resTempLow, resTempHigh, resDefault };
-  void     setMeshResolution(int res);
-  int      getMeshResolution();
+    typedef enum { async, sync, flush } bboxSyncMode;
+    void computeBBox(bboxSyncMode synchronous = async); // delay if possible
+    void centerCamera();
 
-  bool     wantMeshBBox (DisplayableMesh* mesh = NULL);
-  bool     meshes_written_stripped (void);
+    typedef enum {
+        none,
+        name,
+        date,
+        visibility,
+        loaded,
+        polycount,
+        dirname
+    } sortCriteria;
+    void sortSceneMeshes(vector<DisplayableMesh *> &sortedList,
+                         vector<sortCriteria> &criteria,
+                         bool bDictionarySort = true,
+                         bool bListInvisible = true);
 
-  typedef enum { async, sync, flush } bboxSyncMode;
-  void     computeBBox (bboxSyncMode synchronous = async); // delay if possible
-  void     centerCamera();
+    void invalidateDisplayCaches();
 
-  typedef enum {
-    none, name, date, visibility, loaded,
-    polycount, dirname
-  } sortCriteria;
-  void     sortSceneMeshes (vector<DisplayableMesh*>& sortedList,
-			    vector<sortCriteria>& criteria,
-			    bool bDictionarySort = true,
-			    bool bListInvisible = true);
+    void flipNormals(void);
 
-  void     invalidateDisplayCaches();
+    float sceneRadius(void) const;
+    Pnt3 worldCenter(void);
+    const Bbox &worldBbox(void) const { return bbox; }
 
-  void     flipNormals (void);
+    void flattenCameraXform(void);
 
-  float    sceneRadius (void) const;
-  Pnt3     worldCenter (void);
-  const Bbox& worldBbox (void) const {return bbox;}
+    void setHome(void);
+    void goHome(void);
 
-  void     flattenCameraXform (void);
+    int getSlowPolyCount(void);
+    void setSlowPolyCount(int count);
 
-  void     setHome (void);
-  void     goHome  (void);
-
-  int      getSlowPolyCount (void);
-  void     setSlowPolyCount (int count);
-
-  // file i/o
-  bool     readSessionFile (char* name);
-  bool     writeSessionFile (char* name);
-  bool     setScanLoadedStatus (DisplayableMesh* dm, bool load);
+    // file i/o
+    bool readSessionFile(char *name);
+    bool writeSessionFile(char *name);
+    bool setScanLoadedStatus(DisplayableMesh *dm, bool load);
 };
 
-
 // maybe these should be Scene members, but for now they're global
-DisplayableMesh *FindMeshDisplayInfo(const char *name);// hashed -- fast
+DisplayableMesh *FindMeshDisplayInfo(const char *name); // hashed -- fast
 
-//The first one only looks at root scans for a match, the
-//second one looks at the leaves as well. For most purposes the first
-//one suffices, but there may be instances such in groups when you
-//need to find non-roots.
-DisplayableMesh *FindMeshDisplayInfo(RigidScan* scan); // linsrch -- slow
-DisplayableMesh *GetMeshForRigidScan (RigidScan *scan); // walks over hashtable
+// The first one only looks at root scans for a match, the
+// second one looks at the leaves as well. For most purposes the first
+// one suffices, but there may be instances such in groups when you
+// need to find non-roots.
+DisplayableMesh *FindMeshDisplayInfo(RigidScan *scan); // linsrch -- slow
+DisplayableMesh *GetMeshForRigidScan(RigidScan *scan); // walks over hashtable
 
 int AddMeshSetToHash(DisplayableMesh *mesh);
 const char *GetTbObjName(TbObj *tb);
 int MeshSetHashDelete(char *name);
 
-#endif   // _PLV_SCENE_
+#endif // _PLV_SCENE_
